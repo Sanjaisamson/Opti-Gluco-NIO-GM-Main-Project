@@ -1,0 +1,20 @@
+
+###
+//Create a new folder
+POST http://localhost:3000/product/register
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsImlhdCI6MTcwODI2NDc3MCwiZXhwIjoxNzA4MjY1MzcwfQ.BxpELu1eGqLLOZHTTku6cSa4fZMuOl1cuXiP0WjQ0JU
+Content-Type: application/json
+
+{
+    "productCode" : "OG_PR_01"
+}
+###
+
+###
+POST  http://localhost:3000/product/remove
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsImlhdCI6MTcwODI3ODk1NCwiZXhwIjoxNzA4Mjc5NTU0fQ.QUZCI5P3GLuzRVr4mDxO0MeipAo0z1yQ0Tp8eMT5Bhw
+
+
+###
+POST  http://localhost:3000/product/read-data
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsImlhdCI6MTcwODI3ODk1NCwiZXhwIjoxNzA4Mjc5NTU0fQ.QUZCI5P3GLuzRVr4mDxO0MeipAo0z1yQ0Tp8eMT5Bhw

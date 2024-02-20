@@ -2,7 +2,6 @@ const httpErrors = require('http-errors');
 const productServices = require('../services/productServices')
 
 async function registerProduct(req,res,next){
-
     try {
         const userId = req.user.user_id
         const userName = req.user.user_name
@@ -15,7 +14,6 @@ async function registerProduct(req,res,next){
         const productRegistrationError = httpErrors(400, 'This user cant register a product!!')
         next(productRegistrationError);
     }
-
 }
 
 async function removeProduct(req,res,next){
@@ -27,7 +25,6 @@ async function removeProduct(req,res,next){
         const productremoveError = httpErrors(400, 'This user cant remove product!!')
         next(productremoveError);
     }
-
 }
 
 async function readData(req, res, next){
@@ -36,7 +33,8 @@ async function readData(req, res, next){
         const readData = await productServices.readData(userId)
         return res.send(readData)
     } catch (error) {
-        
+        const productremoveError = httpErrors(400, 'This user cant read data!!')
+        next(productremoveError);
     }
 }
 

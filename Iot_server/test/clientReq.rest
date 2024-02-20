@@ -1,0 +1,23 @@
+###
+
+POST http://localhost:3500/client/read-data
+Content-Type: application/json
+
+{
+    "user_id" : 2,
+    "product_id" : "OG-PR-01"
+}
+
+###
+
+###
+
+POST http://localhost:3500/client/status
+Content-Type: application/json
+
+{
+    "job_id": "01HQ38CBAMJKWGTHFKN36Q6E2N"
+}
+
+
+###

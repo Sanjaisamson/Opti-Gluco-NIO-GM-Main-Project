@@ -40,7 +40,6 @@ async function logoutUser(req, res, next) {
         res.clearCookie('jwt')
         return res.send(logout)
     } catch (err) {
-        console.log(err)
         const logoutError = httpErrors(401, 'Unauthorized : logout failed!');
         next(logoutError)
     }

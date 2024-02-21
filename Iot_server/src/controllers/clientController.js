@@ -1,16 +1,22 @@
-const e = require("express");
 const clientServices = require("../services/clientServices");
+const cron = require("node-cron");
 
 async function readData(req, res, next) {
   try {
-    const userId = req.body.user_id;
-    const productId = req.body.product_id;
-    const payload = { userId, productId };
-    const { job_id, job_status } = await clientServices.createJob(payload);
-    res.send({ job_id: job_id, status: job_status });
-    const clientService = await clientServices.readData(job_id, job_status);
-    console.log(clientService);
-    return { clientService };
+    const { user_id, product_code, requestId, captureDelay, totalTime } =
+      req.body;
+    const { job_id, job_status } = await clientServices.createJob(product_code);
+    let { images, jobStatus } = await clientServices.executeCronjob(
+      job_id,
+      job_status,
+      requestId
+    );
+    if (jobStatus === "failed" && images.length < 15) {
+      throw new Error(500, "Internal error");
+    }
+    const updatedStatus = await clientServices.updateStatus(jobStatus, job_id);
+    console.log("job finished successfully");
+    return res.send(images);
   } catch (error) {
     throw error;
   }

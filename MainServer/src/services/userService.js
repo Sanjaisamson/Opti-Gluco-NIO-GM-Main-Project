@@ -39,7 +39,7 @@ async function loginUser(loginData) {
       },
     });
     if (!findUser || findUser.length === 0) {
-      throw new Error("sorry user does not exist!!");
+      throw new Error(400, "sorry user does not exist!!");
     }
     const isVerified = await bcrypt.compare(password, findUser.user_password);
     if (!isVerified) {

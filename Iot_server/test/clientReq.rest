@@ -5,7 +5,8 @@ Content-Type: application/json
 
 {
     "user_id" : 2,
-    "product_id" : "OG-PR-01"
+    "product_code" : "OG_PR_01",
+    "request_id" : ""
 }
 
 ###

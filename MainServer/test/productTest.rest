@@ -17,4 +17,4 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsImlhd
 
 ###
 POST  http://localhost:3000/product/read-data
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsImlhdCI6MTcwODMyMjM2NSwiZXhwIjoxNzA4MzIyOTY1fQ.Q87XBYsMPvhCpyX03Oz1NQsbgkUnleFXh4oEMrY6tl4
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsImlhdCI6MTcwODU0NDQ5NSwiZXhwIjoxNzA4NTQ1MDk1fQ.Xku0mefPPNlEKRXPDc_ZPCFOPzTfjzD2kSWDaq1N25E

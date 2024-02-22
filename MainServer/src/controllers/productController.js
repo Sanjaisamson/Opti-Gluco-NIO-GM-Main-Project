@@ -33,15 +33,29 @@ async function removeProduct(req, res, next) {
   }
 }
 
-async function readData(req, res, next) {
+async function initiateJob(req, res, next) {
   try {
-    const userId = req.user.user_id;
-    const readData = await productServices.readData(userId);
-    return res.send(readData);
+    const newJob = await productServices.initiateJob(req.user.user_id);
+    console.log("newJob at controller level", newJob);
+    const updateJobData = await productServices.updateJobData(
+      newJob.jobId,
+      newJob.jobStatus,
+      newJob.requestId
+    );
+    return res.send({ newJob, updateJobData });
   } catch (error) {
-    const productremoveError = httpErrors(400, "This user cant read data!!");
-    next(productremoveError);
+    throw error;
   }
 }
 
-module.exports = { registerProduct, removeProduct, readData };
+async function statusupdate(req, res, next) {
+  try {
+    console.log("controller.leve jobId", req.body.jobId);
+    console.log("controller.leve jobStatus", req.body.jobStatus);
+    console.log("controller.leve requestId", req.body.requestCode);
+  } catch (error) {
+    throw error;
+  }
+}
+
+module.exports = { registerProduct, removeProduct, initiateJob, statusupdate };

@@ -8,19 +8,10 @@ const requestLogTable = sequelize.define("requestLogTable", {
     primaryKey: true,
     autoIncrement: true,
   },
+  request_code: DataTypes.STRING,
   product_code: DataTypes.STRING,
   user_id: DataTypes.INTEGER,
   job_id: DataTypes.STRING,
   job_status: DataTypes.STRING,
 });
-
-requestLogTable
-  .sync({ alter: true })
-  .then(() => {
-    console.log("requestLogTable synchronized successfully.");
-  })
-  .catch((error) => {
-    console.error("Error synchronizing requestLogTable:", error);
-  });
-
 module.exports = { requestLogTable };

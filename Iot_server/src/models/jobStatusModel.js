@@ -7,17 +7,10 @@ const jobStatusTable = sequelize.define("jobStatusTable", {
     type: DataTypes.INTEGER,
     primaryKey: true,
     autoIncrement: true,
+    allowNull: false,
   },
   job_id: DataTypes.STRING,
   job_status: DataTypes.STRING,
 });
-jobStatusTable
-  .sync({ alter: true })
-  .then(() => {
-    console.log("jobStatusTable synchronized successfully.");
-  })
-  .catch((error) => {
-    console.error("Error synchronizing jobStatusTable:", error);
-  });
 
 module.exports = { jobStatusTable };

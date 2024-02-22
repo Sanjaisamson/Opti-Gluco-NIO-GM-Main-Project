@@ -3,77 +3,106 @@ const http = require("http");
 const fs = require("fs");
 require("dotenv").config();
 const { exec } = require("child_process");
+const errorConstants = require("../constants/errorConstants");
+const { JOB_STATUS, CRON_CONSTANTS } = require("../constants/jobConstants");
 const { jobStatusTable } = require("../models/jobStatusModel");
 const { jobDataTable } = require("../models/jobDataModel");
+const { AppError, InternalError } = require("../ERROR/appError");
 const cron = require("node-cron");
 const { resolve } = require("path");
 const { rejects } = require("assert");
 
-async function createJob(product_code) {
+async function createJob(productCode) {
   try {
-    let jobId;
-    let jobStatus;
-    console.log("service level bare", product_code);
-    console.log("service level env", process.env.PRODUCT_CODE);
-    if (product_code === process.env.PRODUCT_CODE) {
-      jobId = ulid();
-      jobStatus = "job Initiated";
-    } else {
-      jobStatus = "failed";
-      throw new Error(400, "product_id not matching !!!");
+    if (productCode === process.env.PRODUCT_CODE) {
+      const jobId = ulid();
+      const jobStatus = JOB_STATUS.INITIATED;
+      const newJob = await jobStatusTable.create({
+        job_id: jobId,
+        job_status: jobStatus,
+      });
+      return { jobId, jobStatus };
     }
-    const newJob = await jobStatusTable.create({
-      job_id: jobId,
-      job_status: jobStatus,
-    });
-    return { job_id: newJob.job_id, job_status: newJob.job_status };
   } catch (error) {
     throw error;
   }
 }
-async function readData(job_id, jobStatus, requestId) {
+async function readData(jobId, jobStatus, requestId) {
   return new Promise(async (resolve, rejects) => {
     try {
       const filename =
         "C:\\Users\\SANJAI\\OneDrive\\Documents\\Main_Project\\dummy_data\\bg picture - Copy - Copy.jpg"; //`image${i}.jpg`
       const fileData = fs.readFileSync(filename);
-      jobStatus = "completed";
-      const jobLog = await jobDataTable.create({
-        job_id: job_id,
-        job_status: jobStatus,
-        request_id: requestId,
-        file_name: filename,
-      });
-      resolve({ job_id, jobStatus, filename, fileData });
+      jobStatus = JOB_STATUS.PROGRESS;
+      resolve({ jobId, jobStatus, filename, fileData, requestId });
     } catch (error) {
-      console.log(error);
-      job_status = "failed";
-      console.log("service f1 catch level :", jobStatus);
-      resolve({ jobStatus });
-      throw error;
+      rejects(error);
     }
   });
 }
-async function executeCronjob(job_id, jobStatus, requestId) {
-  return new Promise(async (resolve, reject) => {
+async function executeCronjob(jobId, jobStatus, requestId) {
+  return new Promise(async (resolve, rejects) => {
     try {
-      console.log("service level before starting", jobStatus);
       let count = 0;
       const images = [];
       let cronJob = null;
-      cronJob = cron.schedule("*/1 * * * * *", async () => {
-        const data = await readData(job_id, jobStatus, requestId);
+      let data;
+      cronJob = cron.schedule(CRON_CONSTANTS.CRONE_JOB_INTERVAL, async () => {
+        try {
+          data = await readData(jobId, jobStatus, requestId);
+        } catch (error) {
+          cronJob.stop();
+          const job = await jobStatusTable.findOne({
+            where: { job_id: jobId },
+          });
+          job.job_status = JOB_STATUS.FAILED;
+          await job.save();
+          rejects(error);
+        }
         count++;
         images.push({ name: data.filename, data: data.fileData });
+
+        const jobLog = await jobDataTable.create({
+          job_id: data.job_id,
+          job_status: JOB_STATUS.SUCCESS,
+          request_id: data.requestId,
+          file_name: data.filename,
+        });
         console.log(count);
-        if (count >= 3) {
-          console.log("service level after cronjob", data.jobStatus);
+        if (count >= CRON_CONSTANTS.JOB_COUNT) {
           cronJob && cronJob.stop();
           resolve({ images: images, jobStatus: data.jobStatus });
         }
+        console.log("hai!!!!");
+        const requestData = JSON.stringify({
+          jobId: data.jobId,
+          jobStatus: data.jobStatus,
+          requestCode: requestId,
+        });
+        const response = await fetch(
+          "http://localhost:3000/product/update-status",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Content-Length": Buffer.byteLength(requestData),
+            },
+            body: requestData,
+          }
+        );
+        if (!response.ok) {
+          throw new Error("status updation Network response was not ok");
+        }
+        const updationReq = await response.json();
+        console.log(updationReq);
       });
     } catch (error) {
-      throw error;
+      const job = await jobStatusTable.findOne({
+        where: { job_id: jobId },
+      });
+      job.job_status = JOB_STATUS.FAILED;
+      await job.save();
+      rejects(error);
     }
   });
 }
@@ -84,22 +113,7 @@ async function updateStatus(jobStatus, jobId) {
     });
     job.job_status = jobStatus;
     await job.save();
-  } catch (error) {
-    throw error(400, "error to update status");
-  }
-}
-async function checkStatus(jobId) {
-  try {
-    const jobStatus = await jobStatusTable.findOne({
-      where: {
-        job_id: jobId,
-      },
-    });
-    if (!jobStatus || jobStatus.length === 0) {
-      throw new Error(500, "No job is existed for this Id");
-    }
-    const currentStatus = jobStatus.job_status;
-    return { currentStatus };
+    return { jobStatus: job.job_status };
   } catch (error) {
     throw error;
   }
@@ -107,7 +121,6 @@ async function checkStatus(jobId) {
 module.exports = {
   createJob,
   readData,
-  checkStatus,
   executeCronjob,
   updateStatus,
 };

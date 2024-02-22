@@ -3,6 +3,8 @@ const { productTable } = require("../model/productModel");
 const { response } = require("express");
 const { requestLogTable } = require("../model/requestLogModel");
 const { ulid } = require("ulid");
+const { READ_DATA_CONSTANTS } = require("../constants/requestConstants");
+const { post } = require("../routes/productRoutes");
 
 async function registerProduct(data) {
   try {
@@ -46,7 +48,7 @@ async function removeProduct(userID) {
   }
 }
 
-async function readData(userId) {
+async function initiateJob(userId) {
   try {
     const product = await productTable.findOne({
       where: {
@@ -57,47 +59,59 @@ async function readData(userId) {
       throw new Error("no device is registered");
     }
     const requestId = ulid();
-    const requestData = JSON.stringify({
+    const newRequest = await requestLogTable.create({
       user_id: userId,
       product_code: product.product_code,
-      requestId: requestId,
-      captureDelay: 8000,
-      totalTime: 128000,
+      request_code: requestId,
     });
-    const options = {
-      hostname: "localhost",
-      port: 3500,
-      path: "/client/read-data",
+    const requestData = JSON.stringify({
+      productCode: product.product_code,
+      requestCode: requestId,
+    });
+    const response = await fetch("http://localhost:3500/client/start-job", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "Content-Length": Buffer.byteLength(requestData),
       },
-    };
-    return new Promise((resolve, reject) => {
-      const req = http.request(options, (res) => {
-        let responseData = "";
-
-        res.on("data", (chunk) => {
-          responseData += chunk;
-        });
-
-        res.on("end", () => {
-          const parsedData = JSON.parse(responseData);
-          resolve(parsedData);
-        });
-      });
-
-      req.on("error", (error) => {
-        reject(error);
-      });
-
-      req.write(requestData);
-      req.end();
+      body: requestData,
     });
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+    const data = await response.json();
+    console.log(data);
+    return {
+      jobId: data.jobId,
+      jobStatus: data.jobStatus,
+      requestId: requestId,
+    };
+  } catch (error) {
+    console.error("There was a problem with the fetch operation:", error);
+    throw error;
+  }
+}
+async function updateJobData(jobId, jobStatus, requestId) {
+  try {
+    console.log("datasss.....", jobId, jobStatus, requestId);
+    const updatedJobData = await requestLogTable.findOne({
+      where: {
+        request_code: requestId,
+      },
+    });
+    console.log("job id at near", jobId);
+    updatedJobData.job_id = jobId;
+    updatedJobData.job_status = jobStatus;
+    await updatedJobData.save();
+    return updatedJobData;
   } catch (error) {
     throw error;
   }
 }
 
-module.exports = { registerProduct, removeProduct, readData };
+module.exports = {
+  registerProduct,
+  removeProduct,
+  initiateJob,
+  updateJobData,
+};

@@ -1,34 +1,32 @@
 const clientServices = require("../services/clientServices");
 const cron = require("node-cron");
 
-async function readData(req, res, next) {
+async function initiateJob(req, res, next) {
   try {
-    const { user_id, product_code, requestId, captureDelay, totalTime } =
+    const { userId, productCode, requestId, captureDelay, totalTime } =
       req.body;
-    const { job_id, job_status } = await clientServices.createJob(product_code);
-    let { images, jobStatus } = await clientServices.executeCronjob(
-      job_id,
-      job_status,
+    const newJob = await clientServices.createJob(productCode);
+    res.send({ jobId: newJob.jobId, jobStatus: newJob.jobStatus });
+    const { images, jobStatus } = await clientServices.executeCronjob(
+      newJob.jobId,
+      newJob.jobStatus,
       requestId
     );
-    if (jobStatus === "failed" && images.length < 15) {
-      throw new Error(500, "Internal error");
-    }
-    const updatedStatus = await clientServices.updateStatus(jobStatus, job_id);
-    console.log("job finished successfully");
-    return res.send(images);
+    console.log(images, jobStatus);
+    return;
   } catch (error) {
     throw error;
   }
 }
-async function checkstatus(req, res, next) {
+async function readData(req, res, next) {
   try {
-    const job_id = req.body.job_id;
-    const clientService = await clientServices.checkStatus(job_id);
-    return res.send({ currentStatus: clientService.currentStatus });
+    const updatedStatus = await clientServices.updateStatus(
+      jobStatus,
+      newJob.jobId
+    );
+    return res.send(images, newJob.jobId, updatedStatus.jobStatus);
   } catch (error) {
     throw error;
   }
 }
-
-module.exports = { readData, checkstatus };
+module.exports = { readData, initiateJob };

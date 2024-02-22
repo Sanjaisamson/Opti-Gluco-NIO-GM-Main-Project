@@ -13,10 +13,11 @@ productRouter.post(
   authHandler.accessTokenVerification,
   productController.removeProduct
 );
+productRouter.post("/update-status", productController.statusupdate);
 productRouter.post(
-  "/read-data",
+  "/start-job",
   authHandler.accessTokenVerification,
-  productController.readData
+  productController.initiateJob
 );
 
 module.exports = productRouter;

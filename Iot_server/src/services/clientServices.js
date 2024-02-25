@@ -45,6 +45,7 @@ async function executeCronjob(jobId, jobStatus, requestId) {
     try {
       let count = 0;
       const images = [];
+      console.log(Array.isArray(images));
       let cronJob = null;
       let data;
       cronJob = cron.schedule(CRON_CONSTANTS.CRONE_JOB_INTERVAL, async () => {
@@ -71,13 +72,13 @@ async function executeCronjob(jobId, jobStatus, requestId) {
         console.log(count);
         if (count >= CRON_CONSTANTS.JOB_COUNT) {
           cronJob && cronJob.stop();
+          console.log("images at ecxe ", typeof images);
           resolve({ images: images, jobStatus: data.jobStatus });
         }
-        console.log("hai!!!!");
         const requestData = JSON.stringify({
           jobId: data.jobId,
           jobStatus: data.jobStatus,
-          requestCode: requestId,
+          requestCode: data.requestId,
         });
         const response = await fetch(
           "http://localhost:3000/product/update-status",
@@ -94,7 +95,6 @@ async function executeCronjob(jobId, jobStatus, requestId) {
           throw new Error("status updation Network response was not ok");
         }
         const updationReq = await response.json();
-        console.log(updationReq);
       });
     } catch (error) {
       const job = await jobStatusTable.findOne({
@@ -118,9 +118,46 @@ async function updateStatus(jobStatus, jobId) {
     throw error;
   }
 }
+
+async function sendResult(images, requestId, jobId, userId) {
+  try {
+    console.log("image at iotserver", typeof images);
+    const job = await jobStatusTable.findOne({
+      where: { job_id: jobId },
+    });
+    job.job_status = JOB_STATUS.SUCCESS;
+    await job.save();
+    const requestData = JSON.stringify({
+      userId: userId,
+      jobStatus: JOB_STATUS.SUCCESS,
+      requestId: requestId,
+      images: images,
+    });
+    const response = await fetch("http://localhost:3000/product/results", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Content-Length": Buffer.byteLength(requestData),
+      },
+      body: requestData,
+    });
+    if (!response.ok) {
+      throw new Error("result sending  Network response was not ok");
+    }
+    const updationReq = await response.json();
+  } catch (error) {
+    const job = await jobStatusTable.findOne({
+      where: { job_id: jobId },
+    });
+    job.job_status = JOB_STATUS.FAILED;
+    await job.save();
+    throw error;
+  }
+}
 module.exports = {
   createJob,
   readData,
   executeCronjob,
   updateStatus,
+  sendResult,
 };

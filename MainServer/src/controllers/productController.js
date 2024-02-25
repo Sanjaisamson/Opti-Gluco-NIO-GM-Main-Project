@@ -36,7 +36,6 @@ async function removeProduct(req, res, next) {
 async function initiateJob(req, res, next) {
   try {
     const newJob = await productServices.initiateJob(req.user.user_id);
-    console.log("newJob at controller level", newJob);
     const updateJobData = await productServices.updateJobData(
       newJob.jobId,
       newJob.jobStatus,
@@ -48,14 +47,33 @@ async function initiateJob(req, res, next) {
   }
 }
 
-async function statusupdate(req, res, next) {
+async function updatestatus(req, res, next) {
   try {
-    console.log("controller.leve jobId", req.body.jobId);
-    console.log("controller.leve jobStatus", req.body.jobStatus);
-    console.log("controller.leve requestId", req.body.requestCode);
+    const { requestCode, jobStatus } = req.body;
+    const updatedStatus = await productServices.updateStatus(
+      requestCode,
+      jobStatus
+    );
+    return updatedStatus;
   } catch (error) {
     throw error;
   }
 }
+async function getResult(req, res, next) {
+  try {
+    const { images, requestId, userId } = req.body;
+    const result = await productServices.getResult(images, requestId, userId);
+    return res.status(200);
+  } catch (error) {
+    console.log("error at controller level", error);
+    throw error;
+  }
+}
 
-module.exports = { registerProduct, removeProduct, initiateJob, statusupdate };
+module.exports = {
+  registerProduct,
+  removeProduct,
+  initiateJob,
+  updatestatus,
+  getResult,
+};

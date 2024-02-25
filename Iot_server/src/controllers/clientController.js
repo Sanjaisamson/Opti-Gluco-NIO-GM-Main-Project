@@ -3,16 +3,21 @@ const cron = require("node-cron");
 
 async function initiateJob(req, res, next) {
   try {
-    const { userId, productCode, requestId, captureDelay, totalTime } =
+    const { userId, productCode, requestCode, captureDelay, totalTime } =
       req.body;
     const newJob = await clientServices.createJob(productCode);
     res.send({ jobId: newJob.jobId, jobStatus: newJob.jobStatus });
     const { images, jobStatus } = await clientServices.executeCronjob(
       newJob.jobId,
       newJob.jobStatus,
-      requestId
+      requestCode
     );
-    console.log(images, jobStatus);
+    const result = await clientServices.sendResult(
+      images,
+      requestCode,
+      newJob.jobId,
+      userId
+    );
     return;
   } catch (error) {
     throw error;

@@ -5,6 +5,7 @@ const { requestLogTable } = require("../model/requestLogModel");
 const { ulid } = require("ulid");
 const { READ_DATA_CONSTANTS } = require("../constants/requestConstants");
 const { post } = require("../routes/productRoutes");
+const { cloudinary } = require("../databases/cloudinary");
 
 async function registerProduct(data) {
   try {
@@ -67,6 +68,7 @@ async function initiateJob(userId) {
     const requestData = JSON.stringify({
       productCode: product.product_code,
       requestCode: requestId,
+      userId: userId,
     });
     const response = await fetch("http://localhost:3500/client/start-job", {
       method: "POST",
@@ -93,19 +95,51 @@ async function initiateJob(userId) {
 }
 async function updateJobData(jobId, jobStatus, requestId) {
   try {
-    console.log("datasss.....", jobId, jobStatus, requestId);
     const updatedJobData = await requestLogTable.findOne({
       where: {
         request_code: requestId,
       },
     });
-    console.log("job id at near", jobId);
     updatedJobData.job_id = jobId;
     updatedJobData.job_status = jobStatus;
     await updatedJobData.save();
     return updatedJobData;
   } catch (error) {
+    console.error("There was a problem with updateJobData operation:", error);
     throw error;
+  }
+}
+async function updateStatus(requestId, jobStatus) {
+  try {
+    const updatedJobData = await requestLogTable.findOne({
+      where: {
+        request_code: requestId,
+      },
+    });
+    updatedJobData.job_status = jobStatus;
+    await updatedJobData.save();
+    return updatedJobData;
+  } catch (error) {}
+}
+
+async function getResult(images, requestId, userId) {
+  try {
+    console.log("at main server staring level", Array.isArray(images));
+    console.log(images);
+    const uploadedImages = [];
+    for (let i = 0; i < images.length; i++) {
+      const imageData = images[i].data.data;
+      const result = await cloudinary.uploader.upload(imageData, {
+        folder: `${requestId}.${userId}`,
+        public_id: `${requestId}.${i + 1}`,
+      });
+      console.log(result);
+      uploadedImages.push(result.secure_url);
+    }
+
+    return uploadedImages;
+  } catch (error) {
+    console.error(error);
   }
 }
 
@@ -114,4 +148,6 @@ module.exports = {
   removeProduct,
   initiateJob,
   updateJobData,
+  updateStatus,
+  getResult,
 };

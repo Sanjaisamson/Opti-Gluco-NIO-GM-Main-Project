@@ -2,7 +2,7 @@
 ###
 //Create a new folder
 POST http://localhost:3000/product/register
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsImlhdCI6MTcwODI2NDc3MCwiZXhwIjoxNzA4MjY1MzcwfQ.BxpELu1eGqLLOZHTTku6cSa4fZMuOl1cuXiP0WjQ0JU
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTcwODk0MTU1MiwiZXhwIjoxNzA4OTQyMTUyfQ.5f2rvhIf_aOG7ZsEnEWlG4chuFlJHS-wVMKgMfLHQC0
 Content-Type: application/json
 
 {
@@ -14,13 +14,8 @@ Content-Type: application/json
 POST  http://localhost:3000/product/remove
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsImlhdCI6MTcwODMyMjM2NSwiZXhwIjoxNzA4MzIyOTY1fQ.Q87XBYsMPvhCpyX03Oz1NQsbgkUnleFXh4oEMrY6tl4
 
-
-###
-POST  http://localhost:3000/product/read-data
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsImlhdCI6MTcwODYwNTUyOCwiZXhwIjoxNzA4NjA2MTI4fQ.yDf32sDgz6NEeCyXo7f9bGDLd_GI6rq9dZSsVbLtEIQ
-
 ###
 
 ###
 POST  http://localhost:3000/product/start-job
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsImlhdCI6MTcwODc1OTY2MSwiZXhwIjoxNzA4NzYwMjYxfQ.P4yN1TyDyEYhSs9K7U8MG6N5j2Aoxz7dwlqxHR1pEPE
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTcwOTAxNTI4NCwiZXhwIjoxNzA5MDE2NDg0fQ.S7lxp5RefyrhoDxqMb62StLwTGawzmQ0pF01vG3RNwU

@@ -8,8 +8,8 @@ const resultDataTable = sequelize.define("resultDataTable", {
     primaryKey: true,
     autoIncrement: true,
   },
-  request_Id: DataTypes.STRING,
-  product_code: DataTypes.STRING,
+  request_id: DataTypes.STRING,
   user_id: DataTypes.STRING,
+  folder_path: DataTypes.STRING,
 });
-module.exports = { requestLogTable };
+module.exports = { resultDataTable };

@@ -41,7 +41,7 @@ async function initiateJob(req, res, next) {
       newJob.jobStatus,
       newJob.requestId
     );
-    return res.send({ newJob, updateJobData });
+    return res.send({ newJob });
   } catch (error) {
     throw error;
   }
@@ -63,9 +63,8 @@ async function getResult(req, res, next) {
   try {
     const { images, requestId, userId } = req.body;
     const result = await productServices.getResult(images, requestId, userId);
-    return res.status(200);
+    return res.status(200).send(result);
   } catch (error) {
-    console.log("error at controller level", error);
     throw error;
   }
 }

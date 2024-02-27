@@ -4,12 +4,6 @@ const sequelize = new Sequelize("opti_gluco_device_DB", "", "", {
   dialect: "sqlite",
   synchronize: true,
   logging: false,
-  pool: {
-    max: 5, // Adjust max pool size as needed
-    min: 0,
-    acquire: 30000,
-    idle: 10000,
-  },
 });
 
 const dbConnect = () => {

@@ -1,11 +1,16 @@
 const http = require("http");
-const { productTable } = require("../model/productModel");
-const { response } = require("express");
-const { requestLogTable } = require("../model/requestLogModel");
+const fs = require("fs");
+const path = require("path");
 const { ulid } = require("ulid");
+const { productTable } = require("../model/productModel");
+const { requestLogTable } = require("../model/requestLogModel");
+const { resultDataTable } = require("../model/resultDataModel");
 const { READ_DATA_CONSTANTS } = require("../constants/requestConstants");
-const { post } = require("../routes/productRoutes");
 const { cloudinary } = require("../databases/cloudinary");
+const { defaultStorageDir } = require("../config/storagePath");
+const {
+  JOB_STATUS,
+} = require("../../../Iot_server/src/constants/jobConstants");
 
 async function registerProduct(data) {
   try {
@@ -50,6 +55,7 @@ async function removeProduct(userID) {
 }
 
 async function initiateJob(userId) {
+  const requestId = ulid();
   try {
     const product = await productTable.findOne({
       where: {
@@ -59,7 +65,6 @@ async function initiateJob(userId) {
     if (!product || product.length === 0) {
       throw new Error("no device is registered");
     }
-    const requestId = ulid();
     const newRequest = await requestLogTable.create({
       user_id: userId,
       product_code: product.product_code,
@@ -79,17 +84,29 @@ async function initiateJob(userId) {
       body: requestData,
     });
     if (!response.ok) {
+      const request = await requestLogTable.findOne({
+        where: {
+          request_code: requestId,
+        },
+      });
+      request.job_status = JOB_STATUS.FAILED;
+      request.save();
       throw new Error("Network response was not ok");
     }
     const data = await response.json();
-    console.log(data);
     return {
       jobId: data.jobId,
       jobStatus: data.jobStatus,
       requestId: requestId,
     };
   } catch (error) {
-    console.error("There was a problem with the fetch operation:", error);
+    const request = await requestLogTable.findOne({
+      where: {
+        request_code: requestId,
+      },
+    });
+    request.job_status = JOB_STATUS.FAILED;
+    request.save();
     throw error;
   }
 }
@@ -105,7 +122,6 @@ async function updateJobData(jobId, jobStatus, requestId) {
     await updatedJobData.save();
     return updatedJobData;
   } catch (error) {
-    console.error("There was a problem with updateJobData operation:", error);
     throw error;
   }
 }
@@ -119,27 +135,58 @@ async function updateStatus(requestId, jobStatus) {
     updatedJobData.job_status = jobStatus;
     await updatedJobData.save();
     return updatedJobData;
-  } catch (error) {}
+  } catch (error) {
+    const request = await requestLogTable.findOne({
+      where: {
+        request_code: requestId,
+      },
+    });
+    request.job_status = JOB_STATUS.FAILED;
+    request.save();
+    throw error;
+  }
 }
 
 async function getResult(images, requestId, userId) {
   try {
-    console.log("at main server staring level", Array.isArray(images));
-    console.log(images);
-    const uploadedImages = [];
+    const folderPath = path.join(defaultStorageDir, requestId);
+    const newFolder = fs.mkdirSync(folderPath, { recursive: true });
     for (let i = 0; i < images.length; i++) {
       const imageData = images[i].data.data;
-      const result = await cloudinary.uploader.upload(imageData, {
-        folder: `${requestId}.${userId}`,
-        public_id: `${requestId}.${i + 1}`,
+      const imageBuffer = Buffer.from(imageData);
+      // *******the name of image must be change after integrating the processor
+      const imageName = images[i].name;
+      const filename = `${i}`;
+      const filePath = path.join(defaultStorageDir, requestId, filename);
+      const writedFile = fs.writeFile(filePath, imageBuffer, (err) => {
+        if (err) {
+          throw err;
+        }
       });
-      console.log(result);
-      uploadedImages.push(result.secure_url);
     }
-
-    return uploadedImages;
+    const result = await resultDataTable.create({
+      request_id: requestId,
+      user_id: userId,
+      folder_path: folderPath,
+    });
+    const request = await requestLogTable.findOne({
+      where: {
+        request_code: requestId,
+      },
+    });
+    request.job_status = JOB_STATUS.SUCCESS;
+    request.save();
+    console.log("file saved suceessfully");
+    return request;
   } catch (error) {
-    console.error(error);
+    const request = await requestLogTable.findOne({
+      where: {
+        request_code: requestId,
+      },
+    });
+    request.job_status = JOB_STATUS.FAILED;
+    request.save();
+    throw error;
   }
 }
 

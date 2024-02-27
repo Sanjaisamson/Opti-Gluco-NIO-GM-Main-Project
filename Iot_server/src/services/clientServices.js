@@ -9,48 +9,61 @@ const { jobStatusTable } = require("../models/jobStatusModel");
 const { jobDataTable } = require("../models/jobDataModel");
 const { AppError, InternalError } = require("../ERROR/appError");
 const cron = require("node-cron");
-const { resolve } = require("path");
-const { rejects } = require("assert");
 
 async function createJob(productCode) {
   try {
     if (productCode === process.env.PRODUCT_CODE) {
       const jobId = ulid();
+      console.log(jobId);
       const jobStatus = JOB_STATUS.INITIATED;
+      console.log("service level job id :", jobId);
       const newJob = await jobStatusTable.create({
         job_id: jobId,
         job_status: jobStatus,
       });
-      return { jobId, jobStatus };
+      return { jobId: newJob.job_id, jobStatus: newJob.job_status };
     }
   } catch (error) {
     throw error;
   }
 }
-async function readData(jobId, jobStatus, requestId) {
+async function readData(jobId, jobStatus, requestId, count) {
   return new Promise(async (resolve, rejects) => {
     try {
-      const filename =
-        "C:\\Users\\SANJAI\\OneDrive\\Documents\\Main_Project\\dummy_data\\bg picture - Copy - Copy.jpg"; //`image${i}.jpg`
-      const fileData = fs.readFileSync(filename);
-      jobStatus = JOB_STATUS.PROGRESS;
-      resolve({ jobId, jobStatus, filename, fileData, requestId });
+      const filename = `image${count}.jpg`;
+      const command = `raspistill -o ${filename} -tl 8000 -t 128000`;
+      exec(command, (error, stdout, stderr) => {
+        if (error) {
+          console.error(`Error capturing images: ${error.message}`);
+          rejects(new Error(`Error capturing images: ${error.message}`));
+          return;
+        }
+        if (stderr) {
+          console.error(`Error capturing images: ${stderr}`);
+          rejects(new Error(`Error capturing images: ${stderr}`));
+          return;
+        }
+        console.log("Images captured successfully...");
+        const fileData = fs.readFileSync(filename);
+        const jobStatus = JOB_STATUS.PROGRESS;
+        resolve({ jobId, jobStatus, filename, fileData, requestId });
+      });
     } catch (error) {
       rejects(error);
     }
   });
 }
-async function executeCronjob(jobId, jobStatus, requestId) {
+async function executeCronjob(jobId, jobStatus, requestId, userId) {
   return new Promise(async (resolve, rejects) => {
     try {
       let count = 0;
       const images = [];
-      console.log(Array.isArray(images));
       let cronJob = null;
       let data;
+      console.log("job Id : ", jobId);
       cronJob = cron.schedule(CRON_CONSTANTS.CRONE_JOB_INTERVAL, async () => {
         try {
-          data = await readData(jobId, jobStatus, requestId);
+          data = await readData(jobId, jobStatus, requestId, count);
         } catch (error) {
           cronJob.stop();
           const job = await jobStatusTable.findOne({
@@ -72,7 +85,7 @@ async function executeCronjob(jobId, jobStatus, requestId) {
         console.log(count);
         if (count >= CRON_CONSTANTS.JOB_COUNT) {
           cronJob && cronJob.stop();
-          console.log("images at ecxe ", typeof images);
+          const result = await sendResult(images, requestId, jobId, userId);
           resolve({ images: images, jobStatus: data.jobStatus });
         }
         const requestData = JSON.stringify({
@@ -92,6 +105,11 @@ async function executeCronjob(jobId, jobStatus, requestId) {
           }
         );
         if (!response.ok) {
+          const job = await jobStatusTable.findOne({
+            where: { job_id: jobId },
+          });
+          job.job_status = JOB_STATUS.FAILED;
+          await job.save();
           throw new Error("status updation Network response was not ok");
         }
         const updationReq = await response.json();
@@ -121,7 +139,6 @@ async function updateStatus(jobStatus, jobId) {
 
 async function sendResult(images, requestId, jobId, userId) {
   try {
-    console.log("image at iotserver", typeof images);
     const job = await jobStatusTable.findOne({
       where: { job_id: jobId },
     });
@@ -142,9 +159,13 @@ async function sendResult(images, requestId, jobId, userId) {
       body: requestData,
     });
     if (!response.ok) {
+      const job = await jobStatusTable.findOne({
+        where: { job_id: jobId },
+      });
+      job.job_status = JOB_STATUS.FAILED;
+      await job.save();
       throw new Error("result sending  Network response was not ok");
     }
-    const updationReq = await response.json();
   } catch (error) {
     const job = await jobStatusTable.findOne({
       where: { job_id: jobId },

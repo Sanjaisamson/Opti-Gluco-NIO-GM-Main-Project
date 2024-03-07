@@ -4,18 +4,18 @@ const productServices = require("../services/productServices");
 async function registerProduct(req, res, next) {
   try {
     const userId = req.user.user_id;
-    const userName = req.user.user_name;
     const productCode = req.body.productCode;
-    console.log(req.body);
-    const data = { userId, userName, productCode };
-    const registeredProduct = await productServices.registerProduct(data);
+    const registeredProduct = await productServices.registerProduct(
+      userId,
+      productCode
+    );
     return res.send(registeredProduct);
   } catch (error) {
     const productRegistrationError = httpErrors(
       400,
       "This user cant register a product!!"
     );
-    next(productRegistrationError);
+    return res.sendStatus(400);
   }
 }
 
@@ -23,7 +23,7 @@ async function removeProduct(req, res, next) {
   try {
     const userId = req.user.user_id;
     const removedProduct = await productServices.removeProduct(userId);
-    return res.send(removedProduct);
+    return res.send({ removedProduct });
   } catch (error) {
     const productremoveError = httpErrors(
       400,
@@ -33,15 +33,28 @@ async function removeProduct(req, res, next) {
   }
 }
 
+async function listProducts(req, res, next) {
+  try {
+    const products = await productServices.listProducts(req.user.user_id);
+    return res.send(products);
+  } catch (error) {
+    const productListError = httpErrors(401, "Product not found!!");
+    next(productListError);
+  }
+}
+
 async function initiateJob(req, res, next) {
   try {
     const newJob = await productServices.initiateJob(req.user.user_id);
+    if (newJob === null) {
+      return res.sendStatus(404);
+    }
     const updateJobData = await productServices.updateJobData(
       newJob.jobId,
       newJob.jobStatus,
       newJob.requestId
     );
-    return res.send({ newJob });
+    return res.send(newJob);
   } catch (error) {
     throw error;
   }
@@ -49,10 +62,11 @@ async function initiateJob(req, res, next) {
 
 async function updatestatus(req, res, next) {
   try {
-    const { requestCode, jobStatus } = req.body;
+    const { requestId, jobStatus, jobId } = req.body;
     const updatedStatus = await productServices.updateStatus(
-      requestCode,
-      jobStatus
+      requestId,
+      jobStatus,
+      jobId
     );
     return updatedStatus;
   } catch (error) {
@@ -69,10 +83,25 @@ async function getResult(req, res, next) {
   }
 }
 
+async function checkJobStatus(req, res, next) {
+  try {
+    const { jobId, requestId } = req.body;
+    const statusResponse = await productServices.checkJobStatus(
+      jobId,
+      requestId
+    );
+    return res.status(200).send(statusResponse);
+  } catch (error) {
+    throw error;
+  }
+}
+
 module.exports = {
   registerProduct,
   removeProduct,
   initiateJob,
   updatestatus,
   getResult,
+  listProducts,
+  checkJobStatus,
 };

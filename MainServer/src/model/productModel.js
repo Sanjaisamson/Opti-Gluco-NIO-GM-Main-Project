@@ -10,6 +10,8 @@ const productTable = sequelize.define("productDetails", {
   },
   product_code: DataTypes.STRING,
   user_id: DataTypes.INTEGER,
-  user_name: DataTypes.STRING,
 });
-module.exports = { productTable };
+
+module.exports = {
+  productTable,
+};

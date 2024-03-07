@@ -12,22 +12,20 @@ const {
   JOB_STATUS,
 } = require("../../../Iot_server/src/constants/jobConstants");
 
-async function registerProduct(data) {
+async function registerProduct(userId, productCode) {
   try {
     const product = await productTable.findOne({
       where: {
-        user_id: data.userId,
+        user_id: userId,
       },
     });
-    if (!product) {
+    if (!product || product.length === 0) {
       const newProduct = await productTable.create({
-        user_id: data.userId,
-        user_name: data.userName,
-        product_code: data.productCode,
+        user_id: userId,
+        product_code: productCode,
       });
       return newProduct;
     }
-    throw new Error("sorry user already have a product");
   } catch (error) {
     throw error;
   }
@@ -54,7 +52,24 @@ async function removeProduct(userID) {
   }
 }
 
+async function listProducts(userId) {
+  try {
+    const products = await productTable.findAll({
+      where: {
+        user_id: userId,
+      },
+    });
+    if (!products || products.length === 0) {
+      return products;
+    }
+    return products;
+  } catch (error) {
+    throw error;
+  }
+}
+
 async function initiateJob(userId) {
+  const dummyResult = null;
   const requestId = ulid();
   try {
     const product = await productTable.findOne({
@@ -63,7 +78,7 @@ async function initiateJob(userId) {
       },
     });
     if (!product || product.length === 0) {
-      throw new Error("no device is registered");
+      return dummyResult;
     }
     const newRequest = await requestLogTable.create({
       user_id: userId,
@@ -72,7 +87,7 @@ async function initiateJob(userId) {
     });
     const requestData = JSON.stringify({
       productCode: product.product_code,
-      requestCode: requestId,
+      requestId: requestId,
       userId: userId,
     });
     const response = await fetch("http://localhost:3500/client/start-job", {
@@ -91,7 +106,7 @@ async function initiateJob(userId) {
       });
       request.job_status = JOB_STATUS.FAILED;
       request.save();
-      throw new Error("Network response was not ok");
+      return dummyResult;
     }
     const data = await response.json();
     return {
@@ -125,13 +140,14 @@ async function updateJobData(jobId, jobStatus, requestId) {
     throw error;
   }
 }
-async function updateStatus(requestId, jobStatus) {
+async function updateStatus(requestId, jobStatus, jobId) {
   try {
     const updatedJobData = await requestLogTable.findOne({
       where: {
         request_code: requestId,
       },
     });
+    updatedJobData.job_id = jobId;
     updatedJobData.job_status = jobStatus;
     await updatedJobData.save();
     return updatedJobData;
@@ -169,23 +185,42 @@ async function getResult(images, requestId, userId) {
       user_id: userId,
       folder_path: folderPath,
     });
-    const request = await requestLogTable.findOne({
-      where: {
-        request_code: requestId,
+    const requestLogResult = await requestLogTable.update(
+      {
+        job_status: JOB_STATUS.SUCCESS,
       },
-    });
-    request.job_status = JOB_STATUS.SUCCESS;
-    request.save();
-    console.log("file saved suceessfully");
-    return request;
+      {
+        where: {
+          request_code: requestId,
+        },
+      }
+    );
+    console.log("file saved successfully.......");
+    return requestLogResult;
   } catch (error) {
-    const request = await requestLogTable.findOne({
+    const result = await requestLogTable.update(
+      {
+        job_status: JOB_STATUS.FAILED,
+      },
+      {
+        where: {
+          request_code: requestId,
+        },
+      }
+    );
+    throw error;
+  }
+}
+
+async function checkJobStatus(jobId, requestId) {
+  try {
+    const jobStatus = await requestLogTable.findOne({
       where: {
         request_code: requestId,
       },
     });
-    request.job_status = JOB_STATUS.FAILED;
-    request.save();
+    return jobStatus;
+  } catch (error) {
     throw error;
   }
 }
@@ -197,4 +232,6 @@ module.exports = {
   updateJobData,
   updateStatus,
   getResult,
+  listProducts,
+  checkJobStatus,
 };

@@ -25,7 +25,7 @@ async function accessTokenVerification(req, res, next) {
     req.user = authenticatedUser;
     next();
   } catch (error) {
-    throw error;
+    return res.sendStatus(404);
   }
 }
 

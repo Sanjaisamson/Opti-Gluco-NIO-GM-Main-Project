@@ -1,48 +1,73 @@
-import React, { useState } from 'react';
-import { View, TextInput, StyleSheet, ImageBackground } from 'react-native';
-import {NavigationContainer} from '@react-navigation/native';
-import {signInWithEmailAndPassword} from "firebase/auth";
-import { useNavigation } from '@react-navigation/native';
-import {auth} from './firebase';
-import { Text, Button } from 'react-native-paper';
-
-// const bgimage = require ('../assets/bgimage.jpg');
+import React, { useState } from "react";
+import { View, TextInput, StyleSheet, Vibration } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useNavigation } from "@react-navigation/native";
+import { Text, Button } from "react-native-paper";
+import { Constants } from "../src/constants/env";
+import axios from "axios";
+import "core-js/stable/atob";
+import { jwtDecode } from "jwt-decode";
 
 const LoginScreen = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [text, onChangeText] = React.useState('Useless Text');
-  const [number, onChangeNumber] = React.useState('');
-  const [registrationStatus , setRegistrationStatus] = useState('');
-  const navigation = useNavigation(); 
-
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loginStatus, setLoginStatus] = useState("");
+  const navigation = useNavigation();
 
   const handleRegister = () => {
-    navigation.navigate('Register');
+    navigation.navigate("Register");
   };
 
   const handleLogin = async () => {
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      console.log('User logged in:', userCredential.user.email);
-      setRegistrationStatus('login successfully');
-      navigation.navigate('Home');
+      const requestData = JSON.stringify({
+        mailId: email,
+        password: password,
+      });
+      const response = await axios.post(
+        `http://${Constants.localhost}:${Constants.port}/api/login`,
+        requestData,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          withCredentials: true,
+        }
+      );
+      if (response.status === 200) {
+        setLoginStatus("Success");
+        const responseData = response.data;
+        console.log(responseData.accessToken);
+        await AsyncStorage.setItem("accessToken", responseData.accessToken);
+        navigation.navigate("Home", {
+          userId: responseData.userServicesRes.user_id,
+          accessToken: responseData.accessToken,
+          userName: responseData.userServicesRes.user_name,
+        });
+      } else {
+        setLoginStatus("failed");
+        Vibration.vibrate(1000);
+        throw new Error("Network response was not ok");
+      }
     } catch (error) {
-      console.error('Error logging in user:', error);
+      setLoginStatus("failed");
+      Vibration.vibrate(1000);
+      console.error("Error logging in user:", error);
     }
   };
 
   return (
-    
     <View style={styles.container}>
       <View>
-      <Text style={styles.title} variant="displayMedium" >Login</Text>
+        <Text style={styles.title} variant="displayMedium">
+          Login
+        </Text>
       </View>
       <TextInput
         style={styles.input}
         placeholder="Email"
         onChangeText={setEmail}
-        clearTextOnFocus = {true}
+        clearTextOnFocus={true}
         value={email}
         autoCapitalize="none"
       />
@@ -50,58 +75,80 @@ const LoginScreen = () => {
         style={styles.input}
         placeholder="Password"
         onChangeText={setPassword}
-        clearTextOnFocus = {true}
+        clearTextOnFocus={true}
         value={password}
         secureTextEntry
       />
-      <View style = {styles.fixToText} >
-      <Button style = {styles.button} icon="login" mode="elevated" title="Login" onPress={handleLogin}>Login</Button>
-      {registrationStatus === 'Success' && <Text style={styles.successMessage}>Registration Successful!</Text>}
-      {registrationStatus === 'Error' && <Text style={styles.errorMessage}>Registration Failed. Please try again.</Text>}
+      <View style={styles.fixToText}>
+        <Button
+          style={styles.button}
+          icon="login"
+          mode="elevated"
+          title="Login"
+          onPress={handleLogin}
+        >
+          Login
+        </Button>
+      </View>
+      <View>
+        {loginStatus === "Success" && (
+          <Text style={styles.successMessage}>Login Successful!</Text>
+        )}
+        {loginStatus === "Error" && (
+          <Text style={styles.errorMessage}>
+            Login Failed. Please try again.
+          </Text>
+        )}
       </View>
 
-      <View style = {styles.footer}>
+      <View style={styles.footer}>
         <Text>Create an account</Text>
-      <Button icon="login" mode="text" title="Register" onPress={handleRegister} >sign up</Button>
+        <Button
+          icon="login"
+          mode="text"
+          title="Register"
+          onPress={handleRegister}
+        >
+          sign up
+        </Button>
       </View>
     </View>
-    
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   input: {
     height: 40,
-    width : 200,
+    width: 200,
     margin: 12,
     borderWidth: 1,
     padding: 10,
   },
   fixToText: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
-  button:{
-    alignItems:'center',
-    borderBlockColor: 'blue'
+  button: {
+    alignItems: "center",
+    borderBlockColor: "blue",
   },
   successMessage: {
-    color: 'green',
+    color: "green",
     marginTop: 10,
   },
   errorMessage: {
-    color: 'red',
+    color: "red",
     marginTop: 10,
   },
   footer: {
     margin: 12,
     padding: 60,
-  }
+  },
 });
 
-export default LoginScreen
+export default LoginScreen;

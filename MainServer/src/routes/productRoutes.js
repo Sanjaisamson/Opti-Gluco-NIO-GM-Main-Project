@@ -18,7 +18,13 @@ productRouter.post(
   authHandler.accessTokenVerification,
   productController.initiateJob
 );
+productRouter.post(
+  "/list-products",
+  authHandler.accessTokenVerification,
+  productController.listProducts
+);
 productRouter.post("/update-status", productController.updatestatus);
 productRouter.post("/results", productController.getResult);
+productRouter.post("/check-job-status", productController.checkJobStatus);
 
 module.exports = productRouter;

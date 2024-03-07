@@ -1,0 +1,8 @@
+{
+  "workbench.colorTheme": "Kimbie Dark",
+  "rest-client.environmentVariables": {
+    "local": {
+      "baseUrl": "https://localhost:3000"
+    }
+  }
+}

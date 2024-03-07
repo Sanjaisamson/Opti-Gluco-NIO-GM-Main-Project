@@ -2,7 +2,7 @@
 ###
 //Create a new folder
 POST http://localhost:3000/product/register
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTcwODk0MTU1MiwiZXhwIjoxNzA4OTQyMTUyfQ.5f2rvhIf_aOG7ZsEnEWlG4chuFlJHS-wVMKgMfLHQC0
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTcwOTI5MjcwOCwiZXhwIjoxNzA5MjkzOTA4fQ.QgJlzinrMx1mkvrYNzS0uyUcpYq8f0NfLmIqeJhuv94
 Content-Type: application/json
 
 {
@@ -11,11 +11,27 @@ Content-Type: application/json
 ###
 
 ###
-POST  http://localhost:3000/product/remove
+POST  {{baseUrl}}/product/remove
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsImlhdCI6MTcwODMyMjM2NSwiZXhwIjoxNzA4MzIyOTY1fQ.Q87XBYsMPvhCpyX03Oz1NQsbgkUnleFXh4oEMrY6tl4
 
 ###
+###
+POST  http://localhost:3000/product/list-products
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTcwOTI5MjcwOCwiZXhwIjoxNzA5MjkzOTA4fQ.QgJlzinrMx1mkvrYNzS0uyUcpYq8f0NfLmIqeJhuv94
 
 ###
+###
 POST  http://localhost:3000/product/start-job
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsImlhdCI6MTcwOTAxNTI4NCwiZXhwIjoxNzA5MDE2NDg0fQ.S7lxp5RefyrhoDxqMb62StLwTGawzmQ0pF01vG3RNwU
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjE0LCJpYXQiOjE3MDk3MjU3MzgsImV4cCI6MTcwOTcyNjkzOH0.5ZCaf_rs85lld7tUcHNTdRoze7pykCQ9RvzizxEkk-8
+###
+POST  http://localhost:3000/product/check-job-status
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjE0LCJpYXQiOjE3MDk3MTAxMTQsImV4cCI6MTcwOTcxMTMxNH0.ijhiw4mSG_grDlNNLtdr6GkqWhxZZfn03tNdcnm9aIg
+Content-Type: application/json
+
+{
+    "jobId": "01HR995GYSEEB8FSGR0WW6TNS9",
+    "requestId":"01HR995GX86716W23YWD0T6RK8"
+}
+
+
+###

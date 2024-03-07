@@ -11,6 +11,7 @@ const jobStatusTable = sequelize.define("jobStatusTable", {
   },
   job_id: DataTypes.STRING,
   job_status: DataTypes.STRING,
+  request_id: DataTypes.STRING,
 });
 
 module.exports = { jobStatusTable };

@@ -5,12 +5,12 @@ const { authConfig } = require("../config/authConfig");
 async function createUser(req, res, next) {
   try {
     const signupPayload = {
-      userName: req.body.username,
-      mailId: req.body.mailid,
+      userName: req.body.userName,
+      mailId: req.body.mailId,
       password: req.body.password,
     };
-    const userServicesRes = await userServices.createUser(signupPayload);
-    return res.send(userServicesRes);
+    const { userId } = await userServices.createUser(signupPayload);
+    return res.sendStatus(200);
   } catch (err) {
     const signupError = httpErrors(
       401,
@@ -23,7 +23,7 @@ async function createUser(req, res, next) {
 async function loginUser(req, res, next) {
   try {
     const loginPayload = {
-      mailId: req.body.mailid,
+      mailId: req.body.mailId,
       password: req.body.password,
     };
     const userServicesRes = await userServices.loginUser(loginPayload);
@@ -35,7 +35,7 @@ async function loginUser(req, res, next) {
       httpOnly: true,
       maxAge: authConfig.cookieExpiry.maxAge,
     });
-    res.send({ refreshToken, accessToken });
+    res.send({ accessToken, userServicesRes });
   } catch (error) {
     const loginError = httpErrors(401, "Unauthorized : User Login failed!");
     next(loginError);
@@ -44,9 +44,9 @@ async function loginUser(req, res, next) {
 
 async function logoutUser(req, res, next) {
   try {
-    const logout = await userServices.logoutUser(req.user);
+    const logout = await userServices.logoutUser(req.user.user_id);
     res.clearCookie("jwt");
-    return res.send(logout);
+    return res.sendStatus(200);
   } catch (err) {
     const logoutError = httpErrors(401, "Unauthorized : logout failed!");
     next(logoutError);

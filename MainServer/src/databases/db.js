@@ -1,4 +1,5 @@
 const Sequelize = require("sequelize");
+
 const sequelize = new Sequelize("opti_gluco_database", "postgres", "1234", {
   host: "localhost",
   port: "5432",

@@ -1,5 +1,6 @@
 const { userTable } = require("../model/userModel");
 const { tokenTable } = require("../model/refreshTokenModel");
+const { productTable } = require("../model/productModel");
 const bcrypt = require("bcrypt");
 const { authConfig } = require("../config/authConfig");
 const jwt = require("jsonwebtoken");
@@ -10,19 +11,18 @@ async function createUser(signupData) {
     const { userName, mailId, password } = signupData;
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
-    const findUser = await userTable.findAll({
+    const findUser = await userTable.findOne({
       where: {
         user_mail: mailId,
       },
     });
-    console.log(findUser.user_name);
     if (!findUser || findUser.length === 0) {
       const addUser = await userTable.create({
         user_name: userName,
         user_mail: mailId,
         user_password: hashedPassword,
       });
-      return { addUser };
+      return { userId: addUser.user_id };
     }
     throw new Error("user with same mail id exist!!");
   } catch (err) {
@@ -53,7 +53,6 @@ async function loginUser(loginData) {
 
 async function generateTokens(userId) {
   try {
-    console.log(userId);
     const accessToken = jwt.sign(
       { userId },
       process.env.ACCESS_TOKEN_SECRET,
@@ -67,7 +66,6 @@ async function generateTokens(userId) {
     );
     return { accessToken: accessToken, refreshToken: refreshToken };
   } catch (err) {
-    console.log(err);
     throw err;
   }
 }
@@ -84,24 +82,22 @@ async function saveToken(userId, refreshToken) {
     user.refresh_token = refreshToken;
     await user.save();
   } catch (error) {
-    console.log(err);
     throw err;
   }
 }
 
-async function logoutUser(userHeader) {
+async function logoutUser(userId) {
   try {
     const user = await tokenTable.destroy({
       where: {
-        user_id: userHeader.user_id,
+        user_id: userId,
       },
     });
     if (!user || user.length === 0) {
-      throw err;
+      return;
     }
-    return userHeader.user_name;
+    return user;
   } catch (err) {
-    console.log(err);
     throw err;
   }
 }

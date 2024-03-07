@@ -10,7 +10,12 @@ const CRON_CONSTANTS = {
   JOB_COUNT: 3,
 };
 
+const DUMMY_DATA = {
+  job_id: "dummy_Job_id",
+};
+
 module.exports = {
   JOB_STATUS,
   CRON_CONSTANTS,
+  DUMMY_DATA,
 };

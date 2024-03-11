@@ -33,5 +33,8 @@ Content-Type: application/json
     "requestId":"01HR995GX86716W23YWD0T6RK8"
 }
 
-
+###
+###
+POST  http://localhost:3000/product/recent-readings
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjE0LCJpYXQiOjE3MDk4ODMzNDMsImV4cCI6MTcwOTg4NDU0M30.-Qz9Pz_i4Vcz-xNBVD7ZhNIuFL9zkm_E8qUzExT7_PE
 ###

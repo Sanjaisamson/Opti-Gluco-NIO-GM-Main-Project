@@ -24,6 +24,7 @@ async function initiateJob(req, res, next) {
       dummyJobStatus,
       requestId
     );
+    return res.sendStatus(404).send(dummyJobStatus);
   }
 }
 module.exports = { initiateJob };

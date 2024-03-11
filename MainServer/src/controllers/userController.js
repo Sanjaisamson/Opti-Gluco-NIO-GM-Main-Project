@@ -16,7 +16,7 @@ async function createUser(req, res, next) {
       401,
       "Unauthorized : User Registration failed!"
     );
-    next(signupError);
+    return res.send(signupError);
   }
 }
 
@@ -38,7 +38,7 @@ async function loginUser(req, res, next) {
     res.send({ accessToken, userServicesRes });
   } catch (error) {
     const loginError = httpErrors(401, "Unauthorized : User Login failed!");
-    next(loginError);
+    return res.send(loginError);
   }
 }
 
@@ -49,7 +49,7 @@ async function logoutUser(req, res, next) {
     return res.sendStatus(200);
   } catch (err) {
     const logoutError = httpErrors(401, "Unauthorized : logout failed!");
-    next(logoutError);
+    return res.send(logoutError);
   }
 }
 

@@ -25,6 +25,7 @@ async function accessTokenVerification(req, res, next) {
     req.user = authenticatedUser;
     next();
   } catch (error) {
+    console.log(error);
     return res.sendStatus(404);
   }
 }
@@ -50,7 +51,7 @@ async function refreshTokenVerification(req, res, next) {
     });
     next();
   } catch (error) {
-    throw error;
+    return res.sendStatus(500);
   }
 }
 

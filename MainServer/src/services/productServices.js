@@ -5,12 +5,16 @@ const { ulid } = require("ulid");
 const { productTable } = require("../model/productModel");
 const { requestLogTable } = require("../model/requestLogModel");
 const { resultDataTable } = require("../model/resultDataModel");
-const { READ_DATA_CONSTANTS } = require("../constants/requestConstants");
+const {
+  READ_DATA_CONSTANTS,
+  RECENT_DATA_CONSTANTS,
+} = require("../constants/requestConstants");
 const { cloudinary } = require("../databases/cloudinary");
 const { defaultStorageDir } = require("../config/storagePath");
 const {
   JOB_STATUS,
 } = require("../../../Iot_server/src/constants/jobConstants");
+const { Console } = require("console");
 
 async function registerProduct(userId, productCode) {
   try {
@@ -59,6 +63,7 @@ async function listProducts(userId) {
         user_id: userId,
       },
     });
+    console.log("products", products);
     if (!products || products.length === 0) {
       return products;
     }
@@ -163,7 +168,7 @@ async function updateStatus(requestId, jobStatus, jobId) {
   }
 }
 
-async function getResult(images, requestId, userId) {
+async function processingResult(images, requestId, userId) {
   try {
     const folderPath = path.join(defaultStorageDir, requestId);
     const newFolder = fs.mkdirSync(folderPath, { recursive: true });
@@ -225,13 +230,51 @@ async function checkJobStatus(jobId, requestId) {
   }
 }
 
+async function listRecentReadings(userId, currentPage, itemsPerPage) {
+  try {
+    console.log("request is here", currentPage, itemsPerPage);
+    let status = RECENT_DATA_CONSTANTS.success;
+    const recentReadings = await resultDataTable.findAll({
+      where: {
+        user_id: userId.toString(),
+      },
+    });
+    if (!recentReadings || recentReadings.length === 0) {
+      status = RECENT_DATA_CONSTANTS.failure;
+      return status;
+    }
+    totalRecords = recentReadings.length;
+    console.log(totalRecords);
+    const totalPages = Math.ceil(totalRecords / itemsPerPage);
+    const offset = (currentPage - 1) * itemsPerPage;
+    console.log("offset ", offset);
+    console.log(totalPages);
+
+    // Step 4: Execute query with LIMIT and OFFSET
+    const paginatedReadings = recentReadings.slice(
+      offset,
+      offset + itemsPerPage
+    );
+    return {
+      data: paginatedReadings,
+      status: status,
+      totalPages: totalPages,
+      currentPage: currentPage,
+      offset: offset,
+    };
+  } catch (error) {
+    throw error;
+  }
+}
+
 module.exports = {
   registerProduct,
   removeProduct,
   initiateJob,
   updateJobData,
   updateStatus,
-  getResult,
+  processingResult,
   listProducts,
   checkJobStatus,
+  listRecentReadings,
 };

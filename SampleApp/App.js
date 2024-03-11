@@ -8,6 +8,7 @@ import RegistrationPage from "./src/registerPage";
 import HomePage from "./src/homePage";
 import AddProduct from "./src/addProduct";
 import ProfileScreen from "./src/profilePage";
+import RecentData from "./src/recentDataPage";
 import { createDrawerNavigator } from "@react-navigation/drawer";
 import ProductScreen from "./src/productPage";
 // import SignupPage from './src/SignupPage';
@@ -30,6 +31,7 @@ const App = () => {
         <Stack.Screen name="Profile" component={ProfileScreen} />
         <Stack.Screen name="Product" component={ProductScreen} />
         <Stack.Screen name="AddProduct" component={AddProduct} />
+        <Stack.Screen name="RecentData" component={RecentData} />
       </Stack.Navigator>
     </NavigationContainer>
   );

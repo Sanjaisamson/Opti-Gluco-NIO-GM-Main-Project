@@ -4,4 +4,8 @@ const READ_DATA_CONSTANTS = {
   PORT: 3500,
 };
 
-module.exports = { READ_DATA_CONSTANTS };
+const RECENT_DATA_CONSTANTS = {
+  success: "ok",
+  failure: "Empty",
+};
+module.exports = { READ_DATA_CONSTANTS, RECENT_DATA_CONSTANTS };

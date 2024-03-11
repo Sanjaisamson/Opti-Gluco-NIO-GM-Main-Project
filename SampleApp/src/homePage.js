@@ -256,6 +256,22 @@ const HomeScreen = () => {
         );
       }
     };
+    const handleRecentData = async () => {
+      try {
+        let listRecentDataAccessToken = await AsyncStorage.getItem(
+          "accessToken"
+        );
+        const decodedToken = jwtDecode(listRecentDataAccessToken);
+        const currentTime = Date.now() / 1000;
+        if (decodedToken.exp < currentTime) {
+          const newToken = await refreshAccessToken(decodedToken.userId);
+          listRecentDataAccessToken = newToken;
+        }
+        navigation.navigate("RecentData");
+      } catch (error) {
+        setStatus("catched Error");
+      }
+    };
     return (
       <View>
         <Appbar.Header>
@@ -294,6 +310,7 @@ const HomeScreen = () => {
               </Card.Content>
             </Card>
           )}
+          <View />
           <View>
             {loading ? (
               <Text style={styles.loadingText}>Loading...</Text>
@@ -325,6 +342,9 @@ const HomeScreen = () => {
               {showAlert({ id: 1, msg: "Sorry, reading failed...." })}
             </>
           )}
+        </View>
+        <View>
+          <Button onPress={handleRecentData}>Recent Results</Button>
         </View>
         <Appbar.Header />
       </View>

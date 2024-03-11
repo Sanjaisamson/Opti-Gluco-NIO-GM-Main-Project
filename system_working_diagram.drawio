@@ -1,0 +1,71 @@
+<mxfile host="app.diagrams.net" modified="2024-03-10T17:33:25.221Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36" etag="9vibLanpCJ2ZsouQ_geU" version="23.1.4" type="device">
+  <diagram name="Page-1" id="9Cyy82lyoBaak_UYkrAP">
+    <mxGraphModel dx="1050" dy="522" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="5GiWQ5kFwCjWLmF6CQLi-2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="5GiWQ5kFwCjWLmF6CQLi-1" target="5GiWQ5kFwCjWLmF6CQLi-3">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="240" y="100" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="5GiWQ5kFwCjWLmF6CQLi-1" value="User" style="shape=actor;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="120" y="70" width="50" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="5GiWQ5kFwCjWLmF6CQLi-5" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="5GiWQ5kFwCjWLmF6CQLi-3" target="5GiWQ5kFwCjWLmF6CQLi-4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="5GiWQ5kFwCjWLmF6CQLi-3" value="User Place the Opti-Gluco Device on the Finger" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="260" y="70" width="120" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="5GiWQ5kFwCjWLmF6CQLi-7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="5GiWQ5kFwCjWLmF6CQLi-4" target="5GiWQ5kFwCjWLmF6CQLi-6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="5GiWQ5kFwCjWLmF6CQLi-4" value="Initiate the Opti-Gluco Device to take the reading using Mobile app&amp;nbsp;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="480" y="70" width="120" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="5GiWQ5kFwCjWLmF6CQLi-9" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="5GiWQ5kFwCjWLmF6CQLi-6" target="5GiWQ5kFwCjWLmF6CQLi-8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="5GiWQ5kFwCjWLmF6CQLi-6" value="The device Take the Reading.&amp;nbsp;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="680" y="70" width="120" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="5GiWQ5kFwCjWLmF6CQLi-11" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="5GiWQ5kFwCjWLmF6CQLi-8" target="5GiWQ5kFwCjWLmF6CQLi-10">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="5GiWQ5kFwCjWLmF6CQLi-8" value="The user waits for processing the result" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="680" y="250" width="120" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="5GiWQ5kFwCjWLmF6CQLi-13" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="5GiWQ5kFwCjWLmF6CQLi-10" target="5GiWQ5kFwCjWLmF6CQLi-12">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="430" y="300" />
+              <mxPoint x="430" y="300" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="5GiWQ5kFwCjWLmF6CQLi-10" value="The Images are analyzed by the ML part of the System and provide the Final Reading" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="480" y="250" width="120" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="5GiWQ5kFwCjWLmF6CQLi-14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="5GiWQ5kFwCjWLmF6CQLi-12" target="5GiWQ5kFwCjWLmF6CQLi-1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="5GiWQ5kFwCjWLmF6CQLi-12" value="The user gets final Glucose level on the Mobile App" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="260" y="250" width="120" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="5GiWQ5kFwCjWLmF6CQLi-15" value="The Process Repeats&amp;nbsp;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;rotation=90;" vertex="1" parent="1">
+          <mxGeometry x="95" y="198" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="5GiWQ5kFwCjWLmF6CQLi-19" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="440" y="440" as="targetPoint" />
+            <mxPoint x="420" y="300" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="5GiWQ5kFwCjWLmF6CQLi-20" value="The saved final rates can be used for further analysis" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="380" y="440" width="120" height="60" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

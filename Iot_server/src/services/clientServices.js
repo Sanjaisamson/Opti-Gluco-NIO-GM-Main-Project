@@ -89,7 +89,7 @@ async function executeCronjob(jobId, jobStatus, requestId, userId) {
         count++;
         images.push({ name: data.filename, data: data.fileData });
         const jobLog = await jobDataTable.create({
-          job_id: data.job_id,
+          job_id: data.jobId,
           job_status: JOB_STATUS.SUCCESS,
           request_id: data.requestId,
           file_name: data.filename,

@@ -24,7 +24,6 @@ async function createUser(signupData) {
       });
       return { userId: addUser.user_id };
     }
-    throw new Error("user with same mail id exist!!");
   } catch (err) {
     throw err;
   }

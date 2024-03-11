@@ -2,7 +2,13 @@ import React, { useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { Constants } from "../src/constants/env";
-import { View, FlatList, TouchableOpacity, RefreshControl } from "react-native";
+import {
+  View,
+  FlatList,
+  TouchableOpacity,
+  RefreshControl,
+  StyleSheet,
+} from "react-native";
 import { Text, Card } from "react-native-paper";
 import { jwtDecode } from "jwt-decode";
 
@@ -11,7 +17,7 @@ const RecentData = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [items, setItems] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
-  const itemsPerPage = 5;
+  const itemsPerPage = 3;
 
   useEffect(() => {
     fetchData(currentPage);
@@ -91,7 +97,7 @@ const RecentData = () => {
   const renderPaginationButtons = (currentPage, offset, totalPages) => {
     const buttons = [];
 
-    for (let i = currentPage; i < totalPages; i++) {
+    for (let i = 1; i < totalPages; i++) {
       buttons.push(
         <TouchableOpacity
           key={i}
@@ -103,7 +109,7 @@ const RecentData = () => {
             borderRadius: 5,
           }}
         >
-          <Text style={{ color: "white" }}>{i + 1}</Text>
+          <Text style={{ color: "white" }}>{i}</Text>
         </TouchableOpacity>
       );
     }
@@ -116,47 +122,42 @@ const RecentData = () => {
     setTimeout(() => setRefreshing(false), 1000); // Simulated refresh
   };
 
-  const handleEmpty = () => {
-    return <Text>No Data</Text>;
-  };
-
-  const renderItem = () => {
-    return (
+  return (
+    <View style={{ flex: 1 }}>
       <View>
+        <Text style={styles.title}>Your Recent Readings....</Text>
+      </View>
+
+      <View
+        style={{
+          flex: 1,
+          flexDirection: "row",
+          flexWrap: "wrap",
+          justifyContent: "center",
+        }}
+      >
         {items && items.length > 0 ? (
           items.map((item, index) => (
-            <Card key={index}>
-              <Card.Title title="Recent readings" />
+            <Card key={index} style={styles.card}>
               <Card.Content>
-                <Text>id : {item.result_id}</Text>
+                <Text style={styles.text}>Reading - ID: {item.result_id}</Text>
+                <Text style={styles.text}>
+                  Reading - Time: {item.createdAt}
+                </Text>
+                <Text style={styles.text}>Blood-Glucose Level :</Text>
                 {/* Add additional fields as needed */}
               </Card.Content>
             </Card>
           ))
         ) : (
-          <Card>
-            <Card.Title title="Recent Readings" />
+          <Card style={styles.card}>
             <Card.Content>
-              <Text>No Products available .....</Text>
+              <Text>No Products available...</Text>
             </Card.Content>
           </Card>
         )}
       </View>
-    );
-  };
-
-  return (
-    <View style={{ flex: 1 }}>
-      <FlatList
-        data={items} // Access the 'data' array directly
-        renderItem={renderItem}
-        keyExtractor={(item) => item.result_id.toString()}
-        ListEmptyComponent={handleEmpty}
-        windowSize={10}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
-        }
-      />
+      <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
       <View
         style={{
           flexDirection: "row",
@@ -169,5 +170,32 @@ const RecentData = () => {
     </View>
   );
 };
+const styles = StyleSheet.create({
+  card: {
+    margin: 10,
+    padding: 6,
+    backgroundColor: "#f0f0f0",
+    borderRadius: 25,
+    shadowColor: "#010205", //"#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  text: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  title: {
+    fontSize: 30,
+    fontWeight: "bold",
+    justifyContent: "center",
+    margin: 50,
+  },
+});
 
 export default RecentData;

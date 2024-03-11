@@ -344,7 +344,7 @@ const HomeScreen = () => {
           )}
         </View>
         <View>
-          <Button onPress={handleRecentData}>Recent Results</Button>
+          <Button onPress={handleRecentData}>Recent Readings </Button>
         </View>
         <Appbar.Header />
       </View>

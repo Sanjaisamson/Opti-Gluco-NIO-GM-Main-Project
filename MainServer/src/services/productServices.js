@@ -249,8 +249,6 @@ async function listRecentReadings(userId, currentPage, itemsPerPage) {
     const offset = (currentPage - 1) * itemsPerPage;
     console.log("offset ", offset);
     console.log(totalPages);
-
-    // Step 4: Execute query with LIMIT and OFFSET
     const paginatedReadings = recentReadings.slice(
       offset,
       offset + itemsPerPage

@@ -115,7 +115,6 @@ async function initiateJob(userId) {
       requestId: requestId,
     };
   } catch (error) {
-    console.log(error);
     const request = await requestLogTable.findOne({
       where: {
         request_code: requestId,
@@ -220,7 +219,6 @@ async function checkJobStatus(jobId, requestId) {
         request_code: requestId,
       },
     });
-    console.log("Job status", jobStatus);
     return jobStatus;
   } catch (error) {
     throw error;

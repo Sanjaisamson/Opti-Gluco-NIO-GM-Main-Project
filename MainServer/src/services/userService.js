@@ -1,14 +1,12 @@
 const { userTable } = require("../model/userModel");
 const { tokenTable } = require("../model/refreshTokenModel");
-const { productTable } = require("../model/productModel");
 const bcrypt = require("bcrypt");
 const { authConfig } = require("../config/authConfig");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
-async function createUser(signupData) {
+async function createUser(userName, mailId, password) {
   try {
-    const { userName, mailId, password } = signupData;
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
     const findUser = await userTable.findOne({
@@ -29,9 +27,8 @@ async function createUser(signupData) {
   }
 }
 
-async function loginUser(loginData) {
+async function loginUser(mailId, password) {
   try {
-    const { mailId, password } = loginData;
     const findUser = await userTable.findOne({
       where: {
         user_mail: mailId,

@@ -4,12 +4,12 @@ const { authConfig } = require("../config/authConfig");
 
 async function createUser(req, res, next) {
   try {
-    const signupPayload = {
-      userName: req.body.userName,
-      mailId: req.body.mailId,
-      password: req.body.password,
-    };
-    const { userId } = await userServices.createUser(signupPayload);
+    const { userName, mailId, password } = req.body;
+    const { userId } = await userServices.createUser(
+      userName,
+      mailId,
+      password
+    );
     return res.sendStatus(200);
   } catch (err) {
     const signupError = httpErrors(
@@ -22,11 +22,8 @@ async function createUser(req, res, next) {
 
 async function loginUser(req, res, next) {
   try {
-    const loginPayload = {
-      mailId: req.body.mailId,
-      password: req.body.password,
-    };
-    const userServicesRes = await userServices.loginUser(loginPayload);
+    const { mailId, password } = req.body;
+    const userServicesRes = await userServices.loginUser(mailId, password);
     const { refreshToken, accessToken } = await userServices.generateTokens(
       userServicesRes.user_id
     );

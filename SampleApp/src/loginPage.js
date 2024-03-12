@@ -6,7 +6,6 @@ import { Text, Button } from "react-native-paper";
 import { Constants } from "../src/constants/env";
 import axios from "axios";
 import "core-js/stable/atob";
-import { jwtDecode } from "jwt-decode";
 
 const LoginScreen = () => {
   const [email, setEmail] = useState("");
@@ -37,7 +36,6 @@ const LoginScreen = () => {
       if (response.status === 200) {
         setLoginStatus("Success");
         const responseData = response.data;
-        console.log(responseData.accessToken);
         await AsyncStorage.setItem("accessToken", responseData.accessToken);
         navigation.navigate("Home", {
           userId: responseData.userServicesRes.user_id,
@@ -52,7 +50,6 @@ const LoginScreen = () => {
     } catch (error) {
       setLoginStatus("failed");
       Vibration.vibrate(1000);
-      console.error("Error logging in user:", error);
     }
   };
 

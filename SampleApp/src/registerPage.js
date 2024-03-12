@@ -4,6 +4,7 @@ import { Text, Button } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
 import { Constants } from "../src/constants/env";
 import axios from "axios";
+
 const RegisterScreen = () => {
   const [userName, setUserName] = useState("");
   const [email, setEmail] = useState("");
@@ -18,7 +19,6 @@ const RegisterScreen = () => {
         mailId: email,
         password: password,
       });
-      console.log("initiated call");
 
       const response = await axios.post(
         `http://${Constants.localhost}:${Constants.port}/api/signup`,
@@ -34,12 +34,10 @@ const RegisterScreen = () => {
       if (response.status === 200) {
         setRegistrationStatus("Success");
         navigation.navigate("Login");
-        console.log("Response data:", response.data);
       } else {
         throw new Error("Network response was not ok");
       }
     } catch (error) {
-      console.error("Error registering user:", error);
       setRegistrationStatus("Error");
     }
   };

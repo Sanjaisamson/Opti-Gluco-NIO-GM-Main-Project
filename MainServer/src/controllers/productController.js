@@ -57,7 +57,6 @@ async function initiateJob(req, res, next) {
     );
     return res.send(newJob);
   } catch (error) {
-    console.log("error at controller");
     const initiateJobError = httpErrors(400, "This user cant initiate job!!");
     return res.sendStatus(404);
   }
@@ -101,7 +100,6 @@ async function processingResult(req, res, next) {
 async function checkJobStatus(req, res, next) {
   try {
     const { jobId, requestId } = req.body;
-    console.log(jobId, requestId);
     const statusResponse = await productServices.checkJobStatus(
       jobId,
       requestId

@@ -4,20 +4,14 @@ import {
   View,
   StyleSheet,
   Alert,
-  SafeAreaView,
   ScrollView,
-  SectionList,
   StatusBar,
   Dimensions,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import "core-js/stable/atob";
 import { jwtDecode } from "jwt-decode";
-import {
-  CommonActions,
-  useRoute,
-  useNavigation,
-} from "@react-navigation/native";
+import { useRoute, useNavigation } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import {
   Text,
@@ -27,11 +21,8 @@ import {
   Button,
   Card,
   PaperProvider,
-  Divider,
-  Menu,
   Modal,
   Portal,
-  IconButton,
 } from "react-native-paper";
 import { Constants } from "../src/constants/env";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
@@ -71,7 +62,7 @@ const HomeScreen = () => {
         navigation.navigate("Login");
       }
     } catch (error) {
-      setStatus("catched error");
+      setStatus("failed");
     }
   }
 
@@ -125,7 +116,7 @@ const HomeScreen = () => {
             setProductList(listProductResponse.data);
           }
         } catch (error) {
-          setStatus("catched error");
+          setStatus("failed");
         }
       };
       fetchData();
@@ -156,7 +147,7 @@ const HomeScreen = () => {
           setStatus("product removing failed");
         }
       } catch (error) {
-        setStatus("catched error");
+        setStatus("failed");
       }
     };
 
@@ -184,7 +175,7 @@ const HomeScreen = () => {
           setStatus("status checking successfull");
           const count = 0;
           const responseData = response.data;
-          console.log("checker !!!", response.status);
+          console.log("checker !!!");
           return responseData;
         }
       } catch (error) {
@@ -216,7 +207,6 @@ const HomeScreen = () => {
           }
         );
         if (response.status === 200) {
-          console.log("response status", response.status);
           const responseData = response.data;
           setStatus("Processing");
           setLoading(true);
@@ -232,9 +222,7 @@ const HomeScreen = () => {
             }
           }, 1000);
         }
-        console.log(response.status);
       } catch (error) {
-        console.log(error);
         setStatus("failed");
       }
     };
@@ -253,7 +241,6 @@ const HomeScreen = () => {
           { cancelable: false }
         );
       } else {
-        console.log("error occured");
         Alert.alert(
           "Opti-Gluco",
           msg,
@@ -271,7 +258,7 @@ const HomeScreen = () => {
       try {
         navigation.navigate("RecentData");
       } catch (error) {
-        setStatus("catched Error");
+        setStatus("failed");
       }
     };
     const addProduct = () => {
@@ -279,7 +266,6 @@ const HomeScreen = () => {
         userId: userId,
       });
     };
-    console.log("staus", status);
     return (
       <View>
         <Appbar.Header>
@@ -345,7 +331,7 @@ const HomeScreen = () => {
           {status === "failed" && (
             <>
               <Text style={styles.errorMessage}>
-                Reading Failed. Please try again.
+                Sorry!! Failed. Please try again.
               </Text>
               {showAlert({ id: 1, msg: "Sorry, reading failed...." })}
             </>
@@ -360,7 +346,7 @@ const HomeScreen = () => {
   }
   function ProfileTab() {
     const route = useRoute();
-    const { userId, userName, accessToken } = route.params;
+    const { userId, userName } = route.params;
     const windowWidth = Dimensions.get("window").width;
     const windowHeight = Dimensions.get("window").height;
     const [visible, setVisible] = React.useState(false);
@@ -399,13 +385,13 @@ const HomeScreen = () => {
         if (response.status === 200) {
           navigation.navigate("Login");
           const responseData = response.data;
+          await AsyncStorage.removeItem("accessToken");
           setLogout(true);
-          console.log("logout data", responseData);
         } else {
           throw new Error("Network response was not ok");
         }
       } catch (error) {
-        console.error("Error logging in user:", error);
+        setLogout(false);
       }
     };
     return (

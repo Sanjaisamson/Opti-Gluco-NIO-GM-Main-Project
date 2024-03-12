@@ -50,9 +50,6 @@ async function listProducts(req, res, next) {
 async function initiateJob(req, res, next) {
   try {
     const newJob = await productServices.initiateJob(req.user.user_id);
-    if (newJob === null) {
-      return res.sendStatus(404);
-    }
     const updateJobData = await productServices.updateJobData(
       newJob.jobId,
       newJob.jobStatus,
@@ -60,8 +57,9 @@ async function initiateJob(req, res, next) {
     );
     return res.send(newJob);
   } catch (error) {
+    console.log("error at controller");
     const initiateJobError = httpErrors(400, "This user cant initiate job!!");
-    return res.send(initiateJobError);
+    return res.sendStatus(404);
   }
 }
 
@@ -103,6 +101,7 @@ async function processingResult(req, res, next) {
 async function checkJobStatus(req, res, next) {
   try {
     const { jobId, requestId } = req.body;
+    console.log(jobId, requestId);
     const statusResponse = await productServices.checkJobStatus(
       jobId,
       requestId
@@ -116,7 +115,6 @@ async function checkJobStatus(req, res, next) {
 
 async function listRecentReadings(req, res) {
   try {
-    console.log("request at controller");
     const recentReadings = await productServices.listRecentReadings(
       req.user.user_id,
       req.body.currentPage,
@@ -126,7 +124,8 @@ async function listRecentReadings(req, res) {
       return res.send({ data: recentReadings });
     }
   } catch (error) {
-    throw error;
+    const dataListingError = httpErrors(400, "This user cant List recent data");
+    return res.send(dataListingError);
   }
 }
 

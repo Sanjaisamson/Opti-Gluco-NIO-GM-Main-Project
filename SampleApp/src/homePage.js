@@ -1,6 +1,15 @@
 import "react-native-gesture-handler";
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet, Alert } from "react-native";
+import {
+  View,
+  StyleSheet,
+  Alert,
+  SafeAreaView,
+  ScrollView,
+  SectionList,
+  StatusBar,
+  Dimensions,
+} from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import "core-js/stable/atob";
 import { jwtDecode } from "jwt-decode";
@@ -20,6 +29,9 @@ import {
   PaperProvider,
   Divider,
   Menu,
+  Modal,
+  Portal,
+  IconButton,
 } from "react-native-paper";
 import { Constants } from "../src/constants/env";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
@@ -33,6 +45,35 @@ const HomeScreen = () => {
   const [progress, setProgress] = useState(0.2);
   const [progressColor, setProgressColor] = useState("#ff0000");
   const { userId, userName, accessToken } = route.params;
+
+  async function refreshAccessToken() {
+    try {
+      const accessToken = await AsyncStorage.getItem("accessToken");
+      const requestData = JSON.stringify({
+        userId: userId,
+      });
+      const response = await axios.post(
+        `http://${Constants.localhost}:${Constants.port}/api/refresh`,
+        requestData,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          withCredentials: true,
+        }
+      );
+      if (response.status === 200) {
+        const responseData = response.data;
+        await AsyncStorage.setItem("accessToken", responseData.accessToken);
+        return responseData.accessToken;
+      } else {
+        setStatus("refreshing token failed ");
+        navigation.navigate("Login");
+      }
+    } catch (error) {
+      setStatus("catched error");
+    }
+  }
 
   function HomeTab() {
     return (
@@ -89,40 +130,6 @@ const HomeScreen = () => {
       };
       fetchData();
     }, []);
-    async function refreshAccessToken() {
-      try {
-        const accessToken = await AsyncStorage.getItem("accessToken");
-        const requestData = JSON.stringify({
-          userId: userId,
-        });
-        const response = await axios.post(
-          `http://${Constants.localhost}:${Constants.port}/api/refresh`,
-          requestData,
-          {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-              "Content-Type": "application/json",
-            },
-            withCredentials: true,
-          }
-        );
-        if (response.status === 200) {
-          const responseData = response.data;
-          await AsyncStorage.setItem("accessToken", responseData.accessToken);
-          return responseData.accessToken;
-        } else {
-          setStatus("refreshing token failed ");
-          navigation.navigate("Login");
-        }
-      } catch (error) {
-        setStatus("catched error");
-      }
-    }
-    const addProduct = () => {
-      navigation.navigate("AddProduct", {
-        userId: userId,
-      });
-    };
 
     const removeProduct = async () => {
       try {
@@ -177,7 +184,7 @@ const HomeScreen = () => {
           setStatus("status checking successfull");
           const count = 0;
           const responseData = response.data;
-          console.log("checker !!!");
+          console.log("checker !!!", response.status);
           return responseData;
         }
       } catch (error) {
@@ -209,6 +216,7 @@ const HomeScreen = () => {
           }
         );
         if (response.status === 200) {
+          console.log("response status", response.status);
           const responseData = response.data;
           setStatus("Processing");
           setLoading(true);
@@ -224,8 +232,10 @@ const HomeScreen = () => {
             }
           }, 1000);
         }
+        console.log(response.status);
       } catch (error) {
-        setStatus(" catched Error ");
+        console.log(error);
+        setStatus("failed");
       }
     };
 
@@ -243,6 +253,7 @@ const HomeScreen = () => {
           { cancelable: false }
         );
       } else {
+        console.log("error occured");
         Alert.alert(
           "Opti-Gluco",
           msg,
@@ -258,20 +269,17 @@ const HomeScreen = () => {
     };
     const handleRecentData = async () => {
       try {
-        let listRecentDataAccessToken = await AsyncStorage.getItem(
-          "accessToken"
-        );
-        const decodedToken = jwtDecode(listRecentDataAccessToken);
-        const currentTime = Date.now() / 1000;
-        if (decodedToken.exp < currentTime) {
-          const newToken = await refreshAccessToken(decodedToken.userId);
-          listRecentDataAccessToken = newToken;
-        }
         navigation.navigate("RecentData");
       } catch (error) {
         setStatus("catched Error");
       }
     };
+    const addProduct = () => {
+      navigation.navigate("AddProduct", {
+        userId: userId,
+      });
+    };
+    console.log("staus", status);
     return (
       <View>
         <Appbar.Header>
@@ -334,7 +342,7 @@ const HomeScreen = () => {
               {showAlert({ id: 2, msg: "product removed successfully" })}
             </>
           )}
-          {status === "catched error" && (
+          {status === "failed" && (
             <>
               <Text style={styles.errorMessage}>
                 Reading Failed. Please try again.
@@ -353,27 +361,27 @@ const HomeScreen = () => {
   function ProfileTab() {
     const route = useRoute();
     const { userId, userName, accessToken } = route.params;
-
+    const windowWidth = Dimensions.get("window").width;
+    const windowHeight = Dimensions.get("window").height;
     const [visible, setVisible] = React.useState(false);
+    const [isLoggedOut, setLogout] = useState(false);
 
-    const openMenu = () => setVisible(true);
-
-    const closeMenu = () => setVisible(false);
-
-    const _goBack = () => console.log("Went back");
-
-    const _handleSearch = () => console.log("Searching");
-
-    const menuIcon = () => {
-      openMenu();
-    };
+    const showModal = () => setVisible(true);
+    const hideModal = () => setVisible(false);
+    const containerStyle = { backgroundColor: "white", padding: 20 };
 
     const editProfile = () => {
       console.log("edit profile menu clicked !!!");
     };
-
     const logout = async () => {
       try {
+        let logoutAccessToken = await AsyncStorage.getItem("accessToken");
+        const decodedToken = jwtDecode(logoutAccessToken);
+        const currentTime = Date.now() / 1000;
+        if (decodedToken.exp < currentTime) {
+          const newToken = await refreshAccessToken();
+          logoutAccessToken = newToken;
+        }
         const requestData = JSON.stringify({
           userId: userId,
         });
@@ -382,7 +390,7 @@ const HomeScreen = () => {
           requestData,
           {
             headers: {
-              Authorization: `Bearer ${accessToken}`,
+              Authorization: `Bearer ${logoutAccessToken}`,
               "Content-Type": "application/json",
             },
             withCredentials: true,
@@ -391,6 +399,7 @@ const HomeScreen = () => {
         if (response.status === 200) {
           navigation.navigate("Login");
           const responseData = response.data;
+          setLogout(true);
           console.log("logout data", responseData);
         } else {
           throw new Error("Network response was not ok");
@@ -401,38 +410,185 @@ const HomeScreen = () => {
     };
     return (
       <PaperProvider>
-        <View>
-          <Appbar.Header>
-            <Appbar.BackAction onPress={_goBack} />
-            <Appbar.Content title="Profile" />
-            <Appbar.Action icon="magnify" onPress={_handleSearch} />
-            <Appbar.Action icon="dots-vertical" onPress={menuIcon} />
-          </Appbar.Header>
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "center",
-            }}
-          >
-            <Menu
-              style={styles.menu}
-              visible={visible}
-              onDismiss={closeMenu}
-              anchor={<Button onPress={openMenu}></Button>}
-              anchorPosition="bottom"
-            >
-              <Menu.Item onPress={editProfile} title="Edit Profile" />
-              <Menu.Item onPress={logout} title="Logout " />
-            </Menu>
-          </View>
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
           <View>
-            <Avatar.Image
-              size={100}
-              source={require("../assets/avatar icon .jpg")} // C:\Users\SANJAI\OneDrive\Documents\Main_Project\SampleApp\assets\avatar icon .jpg
-            />
+            <View
+              style={{
+                alignContent: "center",
+                fontWeight: "bold",
+                paddingTop: StatusBar.currentHeight,
+                marginTop: 30,
+              }}
+            >
+              <Text
+                style={{
+                  textAlign: "center",
+                  fontWeight: "bold",
+                  fontSize: 20,
+                }}
+              >
+                Profile
+              </Text>
+            </View>
+            <View>
+              <Card style={styles.card}>
+                <Card.Content>
+                  <View style={{ flexDirection: "row", alignItems: "center" }}>
+                    <Avatar.Image
+                      size={50}
+                      source={require("../assets/avatar icon .jpg")}
+                    />
+                    <View style={{ marginLeft: 10 }}>
+                      <Text
+                        style={{
+                          textAlign: "center",
+                          fontWeight: "bold",
+                          fontSize: 20,
+                        }}
+                      >
+                        {userName}
+                      </Text>
+                    </View>
+                    <View>
+                      <Button icon="pen" onPress={editProfile}></Button>
+                    </View>
+                  </View>
+                </Card.Content>
+              </Card>
+            </View>
+            <View>
+              <View>
+                <Text style={styles.header}>Account Settings</Text>
+              </View>
+              <View style={styles.item}>
+                <Card style={styles.cardContent}>
+                  <Card.Content
+                    style={{ flexDirection: "row", alignItems: "center" }}
+                  >
+                    <View>
+                      <Text style={styles.title}>Logout</Text>
+                    </View>
+                    <View style={{ marginLeft: 255 }}>
+                      <Button
+                        icon="chevron-right"
+                        title="Register"
+                        onPress={showModal}
+                      ></Button>
+                    </View>
+                  </Card.Content>
+                </Card>
+              </View>
+              <View>
+                <Text style={styles.header}>About</Text>
+              </View>
+              <View style={styles.item}>
+                <Card style={styles.cardContent}>
+                  <Card.Content
+                    style={{ flexDirection: "row", alignItems: "center" }}
+                  >
+                    <View
+                      style={{ flexDirection: "row", alignItems: "center" }}
+                    >
+                      <Text style={styles.title}>Terms and conditions</Text>
+                    </View>
+                    <View style={{ marginLeft: 155 }}>
+                      <Button icon="chevron-right" title="Register"></Button>
+                    </View>
+                  </Card.Content>
+                </Card>
+                <Card style={styles.cardContent}>
+                  <Card.Content
+                    style={{ flexDirection: "row", alignItems: "center" }}
+                  >
+                    <View>
+                      <Text style={styles.title}>Privacy Policy</Text>
+                    </View>
+                    <View style={{ marginLeft: 205 }}>
+                      <Button icon="chevron-right" title="Register"></Button>
+                    </View>
+                  </Card.Content>
+                </Card>
+              </View>
+              <View>
+                <Text style={styles.header}>Support</Text>
+              </View>
+              <View style={styles.item}>
+                <Card style={styles.cardContent}>
+                  <Card.Content
+                    style={{ flexDirection: "row", alignItems: "center" }}
+                  >
+                    <View
+                      style={{ flexDirection: "row", alignItems: "center" }}
+                    >
+                      <Text style={styles.title}>Contact us</Text>
+                    </View>
+                    <View style={{ marginLeft: 225 }}>
+                      <Button icon="chevron-right" title="Register"></Button>
+                    </View>
+                  </Card.Content>
+                </Card>
+                <Card style={styles.cardContent}>
+                  <Card.Content
+                    style={{ flexDirection: "row", alignItems: "center" }}
+                  >
+                    <View>
+                      <Text style={styles.title}>Suggest your ideas</Text>
+                    </View>
+                    <View style={{ marginLeft: 170 }}>
+                      <Button icon="chevron-right" title="Register"></Button>
+                    </View>
+                  </Card.Content>
+                </Card>
+              </View>
+            </View>
           </View>
-          <Text>Hi</Text>
-        </View>
+          <Portal>
+            <Modal
+              animationType="slide"
+              transparent={true}
+              visible={visible}
+              onDismiss={hideModal}
+              contentContainerStyle={containerStyle}
+            >
+              <View
+                style={[styles.bottomSheet, { height: windowHeight * 0.3 }]}
+              >
+                <View
+                  style={{
+                    flex: 0,
+                    width: "100%",
+                    justifyContent: "space-between",
+                    flexDirection: "row",
+                  }}
+                >
+                  <Text style={styles.modalText}>
+                    Are you sure! Do you want to Logout?
+                  </Text>
+                </View>
+                <View style={{ margin: 20 }}>
+                  <Button
+                    icon="check"
+                    mode="contained"
+                    buttonColor="red"
+                    onPress={logout}
+                  >
+                    Yes, I am
+                  </Button>
+                </View>
+                <View style={{ margin: 20 }}>
+                  <Button
+                    icon="cancel"
+                    mode="elevated"
+                    buttonColor="#e8dfdf"
+                    textColor="#0f1012"
+                  >
+                    Cancel
+                  </Button>
+                </View>
+              </View>
+            </Modal>
+          </Portal>
+        </ScrollView>
       </PaperProvider>
     );
   }
@@ -519,6 +675,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#fff",
+    paddingTop: StatusBar.currentHeight,
+    marginHorizontal: 16,
   },
   successMessage: {
     color: "green",
@@ -542,6 +700,69 @@ const styles = StyleSheet.create({
     color: "#141414", // Blue color
     textAlign: "center",
     marginTop: 20,
+  },
+  item: {
+    marginVertical: 8,
+  },
+  header: {
+    margin: 10,
+    fontSize: 15,
+    fontWeight: "bold",
+  },
+  card: {
+    marginTop: 30,
+    marginBottom: 30,
+    margin: 10,
+    backgroundColor: "#f0f0f0",
+    borderRadius: 0,
+    borderBlockColor: "#010205",
+    borderStyle: "dashed",
+    borderWidth: 1,
+    shadowColor: "#010205", //"#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  cardContent: {
+    marginTop: 1,
+    borderRadius: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    shadowColor: "#010205", //"#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+
+  title: {
+    fontSize: 15,
+  },
+  modalText: {
+    fontSize: 20,
+    fontWeight: "bold",
+  },
+  bottomSheet: {
+    position: "relative",
+    left: 0,
+    right: 0,
+    justifyContent: "flex-start",
+    alignItems: "center",
+    backgroundColor: "white",
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
+    paddingVertical: 23,
+    paddingHorizontal: 25,
+    bottom: 0,
+    borderWidth: 1,
+    borderColor: "red",
   },
 });
 

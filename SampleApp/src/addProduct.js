@@ -15,10 +15,43 @@ const AddProductScreen = () => {
 
   const { userId } = route.params;
 
+  async function refreshAccessToken(userId) {
+    try {
+      const requestData = JSON.stringify({
+        userId: userId,
+      });
+      const response = await axios.post(
+        `http://${Constants.localhost}:${Constants.port}/api/refresh`,
+        requestData,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          withCredentials: true,
+        }
+      );
+      if (response.status === 200) {
+        const responseData = response.data;
+        await AsyncStorage.setItem("accessToken", responseData.accessToken);
+        return responseData.accessToken;
+      } else {
+        navigation.navigate("Login");
+      }
+    } catch (error) {
+      throw error;
+    }
+  }
+
   const handleAddProduct = async () => {
     const accessToken = await AsyncStorage.getItem("accessToken");
     try {
-      console.log("user....Id", userId);
+      let addProductAccessToken = await AsyncStorage.getItem("accessToken");
+      const decodedToken = jwtDecode(addProductAccessToken);
+      const currentTime = Date.now() / 1000;
+      if (decodedToken.exp < currentTime) {
+        const newToken = await refreshAccessToken(decodedToken.userId);
+        addProductAccessToken = newToken;
+      }
       const requestData = JSON.stringify({
         userId: userId,
         productCode: productCode,
@@ -28,7 +61,7 @@ const AddProductScreen = () => {
         requestData,
         {
           headers: {
-            Authorization: `Bearer ${accessToken}`,
+            Authorization: `Bearer ${addProductAccessToken}`,
             "Content-Type": "application/json",
           },
           withCredentials: true,
@@ -36,7 +69,6 @@ const AddProductScreen = () => {
       );
       if (response.status === 200) {
         setRegistrationStatus("Success");
-        console.log("hiiii");
         navigation.navigate("Home", {
           userId: userId,
         });
@@ -59,7 +91,6 @@ const AddProductScreen = () => {
           mode="outlined"
           onChangeText={setProductCode}
           placeholder="Product Code..."
-          right={<TextInput.Affix />}
         />
       </View>
       <View style={styles.button}>

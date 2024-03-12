@@ -14,7 +14,6 @@ const { defaultStorageDir } = require("../config/storagePath");
 const {
   JOB_STATUS,
 } = require("../../../Iot_server/src/constants/jobConstants");
-const { Console } = require("console");
 
 async function registerProduct(userId, productCode) {
   try {
@@ -63,7 +62,6 @@ async function listProducts(userId) {
         user_id: userId,
       },
     });
-    console.log("products", products);
     if (!products || products.length === 0) {
       return products;
     }
@@ -74,7 +72,6 @@ async function listProducts(userId) {
 }
 
 async function initiateJob(userId) {
-  const dummyResult = null;
   const requestId = ulid();
   try {
     const product = await productTable.findOne({
@@ -83,7 +80,7 @@ async function initiateJob(userId) {
       },
     });
     if (!product || product.length === 0) {
-      return dummyResult;
+      throw new Error(400, "no products found");
     }
     const newRequest = await requestLogTable.create({
       user_id: userId,
@@ -109,9 +106,7 @@ async function initiateJob(userId) {
           request_code: requestId,
         },
       });
-      request.job_status = JOB_STATUS.FAILED;
-      request.save();
-      return dummyResult;
+      throw new Error(400, "error in start job");
     }
     const data = await response.json();
     return {
@@ -120,6 +115,7 @@ async function initiateJob(userId) {
       requestId: requestId,
     };
   } catch (error) {
+    console.log(error);
     const request = await requestLogTable.findOne({
       where: {
         request_code: requestId,
@@ -224,6 +220,7 @@ async function checkJobStatus(jobId, requestId) {
         request_code: requestId,
       },
     });
+    console.log("Job status", jobStatus);
     return jobStatus;
   } catch (error) {
     throw error;
@@ -232,7 +229,6 @@ async function checkJobStatus(jobId, requestId) {
 
 async function listRecentReadings(userId, currentPage, itemsPerPage) {
   try {
-    console.log("request is here", currentPage, itemsPerPage);
     let status = RECENT_DATA_CONSTANTS.success;
     const recentReadings = await resultDataTable.findAll({
       where: {
@@ -244,11 +240,8 @@ async function listRecentReadings(userId, currentPage, itemsPerPage) {
       return status;
     }
     totalRecords = recentReadings.length;
-    console.log(totalRecords);
     const totalPages = Math.ceil(totalRecords / itemsPerPage);
     const offset = (currentPage - 1) * itemsPerPage;
-    console.log("offset ", offset);
-    console.log(totalPages);
     const paginatedReadings = recentReadings.slice(
       offset,
       offset + itemsPerPage

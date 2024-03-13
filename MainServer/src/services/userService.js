@@ -4,6 +4,10 @@ require("dotenv").config();
 const { authConfig } = require("../config/authConfig");
 const { userTable } = require("../model/userModel");
 const { tokenTable } = require("../model/refreshTokenModel");
+const {
+  RESPONSE_STATUS_CONSTANTS,
+  ARRAY_CONSTANTS,
+} = require("../constants/appConstants");
 
 async function createUser(userName, mailId, password) {
   try {
@@ -14,7 +18,7 @@ async function createUser(userName, mailId, password) {
         user_mail: mailId,
       },
     });
-    if (!users || users.length === 0) {
+    if (!users || users.length === ARRAY_CONSTANTS.LENGTH_ZERO) {
       await userTable.create({
         user_name: userName,
         user_mail: mailId,
@@ -34,12 +38,18 @@ async function loginUser(mailId, password) {
         user_mail: mailId,
       },
     });
-    if (!users || users.length === 0) {
-      throw new Error(400, "sorry user does not exist!!");
+    if (!users || users.length === ARRAY_CONSTANTS.LENGTH_ZERO) {
+      throw new Error(
+        RESPONSE_STATUS_CONSTANTS.FAILED,
+        "sorry user does not exist!!"
+      );
     }
     const isVerified = await bcrypt.compare(password, users.user_password);
     if (!isVerified) {
-      throw new Error("Incorrect Password!!!");
+      throw new Error(
+        RESPONSE_STATUS_CONSTANTS.FAILED,
+        "Incorrect Password!!!"
+      );
     }
     return users;
   } catch (err) {
@@ -64,7 +74,7 @@ async function generateTokens(userId) {
 async function saveToken(userId, refreshToken) {
   try {
     const users = await tokenTable.findOne({ where: { user_id: userId } });
-    if (!users || users.length === 0) {
+    if (!users || users.length === ARRAY_CONSTANTS.LENGTH_ZERO) {
       const newUser = await tokenTable.create({
         user_id: userId,
         refresh_token: refreshToken,
@@ -85,7 +95,7 @@ async function logoutUser(userId) {
         user_id: userId,
       },
     });
-    if (!users || users.length === 0) {
+    if (!users || users.length === ARRAY_CONSTANTS.LENGTH_ZERO) {
       return;
     }
     return users;

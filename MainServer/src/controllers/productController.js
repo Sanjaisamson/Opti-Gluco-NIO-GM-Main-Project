@@ -1,16 +1,19 @@
 const httpErrors = require("http-errors");
 const productServices = require("../services/productServices");
-const { RECENT_DATA_CONSTANTS } = require("../constants/requestConstants");
+const {
+  RECENT_DATA_CONSTANTS,
+  RESPONSE_STATUS_CONSTANTS,
+} = require("../constants/appConstants");
 
 async function registerProduct(req, res) {
   try {
     const userId = req.user.user_id;
     const productId = req.body.productCode;
     await productServices.registerProduct(userId, productId);
-    return res.sendStatus(200);
+    return res.sendStatus(RESPONSE_STATUS_CONSTANTS.SUCCESS);
   } catch (error) {
     const productRegistrationError = httpErrors(
-      400,
+      RESPONSE_STATUS_CONSTANTS.FAILED,
       "This user cant register a product!!"
     );
     return res.send(productRegistrationError);
@@ -20,10 +23,10 @@ async function registerProduct(req, res) {
 async function removeProduct(req, res) {
   try {
     await productServices.removeProduct(req.user.user_id);
-    return res.sendStatus(200);
+    return res.sendStatus(RESPONSE_STATUS_CONSTANTS.SUCCESS);
   } catch (error) {
     const productRemoveError = httpErrors(
-      400,
+      RESPONSE_STATUS_CONSTANTS.FAILED,
       "This user cant remove product!!"
     );
     return res.send(productRemoveError);
@@ -37,7 +40,10 @@ async function listProducts(req, res) {
     );
     return res.send(listProductResponse);
   } catch (error) {
-    const listProductError = httpErrors(400, "product Listing error");
+    const listProductError = httpErrors(
+      RESPONSE_STATUS_CONSTANTS.FAILED,
+      "product Listing error"
+    );
     return res.send(listProductError);
   }
 }
@@ -54,7 +60,10 @@ async function initiateJob(req, res) {
     );
     return res.send(initiateJobResponse);
   } catch (error) {
-    const initiateJobError = httpErrors(400, "This user cant initiate job!!");
+    const initiateJobError = httpErrors(
+      RESPONSE_STATUS_CONSTANTS.FAILED,
+      "This user cant initiate job!!"
+    );
     return res.send(initiateJobError);
   }
 }
@@ -70,7 +79,7 @@ async function updateStatus(req, res) {
     return updateStatusResponse;
   } catch (error) {
     const updateStatusError = httpErrors(
-      400,
+      RESPONSE_STATUS_CONSTANTS.FAILED,
       "This user cant remove product!!"
     );
     return res.send(updateStatusError);
@@ -88,7 +97,7 @@ async function processingResult(req, res) {
     return res.send(processingResultResponse);
   } catch (error) {
     const processingResultError = httpErrors(
-      400,
+      RESPONSE_STATUS_CONSTANTS.FAILED,
       "This user cant remove product!!"
     );
     return res.send(processingResultError);
@@ -105,7 +114,10 @@ async function checkJobStatus(req, res) {
 
     return res.send(statusResponse);
   } catch (error) {
-    const checkStatusError = httpErrors(400, "This user cant remove product!!");
+    const checkStatusError = httpErrors(
+      RESPONSE_STATUS_CONSTANTS.FAILED,
+      "This user cant remove product!!"
+    );
     return res.send(checkStatusError);
   }
 }
@@ -122,7 +134,7 @@ async function listRecentReadings(req, res) {
     }
   } catch (error) {
     const recentreadingsError = httpErrors(
-      400,
+      RESPONSE_STATUS_CONSTANTS.FAILED,
       "This user cant List recent data"
     );
     return res.send(recentreadingsError);

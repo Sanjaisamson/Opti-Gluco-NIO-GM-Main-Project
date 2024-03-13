@@ -1,15 +1,16 @@
 const httpErrors = require("http-errors");
 const userServices = require("../services/userService");
 const { authConfig } = require("../config/authConfig");
+const { RESPONSE_STATUS_CONSTANTS } = require("../constants/appConstants");
 
 async function createUser(req, res) {
   try {
     const { userName, mailId, password } = req.body;
     await userServices.createUser(userName, mailId, password);
-    return res.sendStatus(200);
+    return res.sendStatus();
   } catch (err) {
     const signupError = httpErrors(
-      401,
+      RESPONSE_STATUS_CONSTANTS.FAILED,
       "Unauthorized : User Registration failed!"
     );
     return res.send(signupError);
@@ -30,7 +31,10 @@ async function loginUser(req, res) {
     });
     res.send({ accessToken, loginResponse });
   } catch (error) {
-    const loginError = httpErrors(401, "Unauthorized : User Login failed!");
+    const loginError = httpErrors(
+      RESPONSE_STATUS_CONSTANTS.FAILED,
+      "Unauthorized : User Login failed!"
+    );
     return res.send(loginError);
   }
 }
@@ -39,9 +43,12 @@ async function logoutUser(req, res) {
   try {
     await userServices.logoutUser(req.user.user_id);
     res.clearCookie("jwt");
-    return res.sendStatus(200);
+    return res.sendStatus(RESPONSE_STATUS_CONSTANTS.SUCCESS);
   } catch (err) {
-    const logoutError = httpErrors(401, "Unauthorized : logout failed!");
+    const logoutError = httpErrors(
+      RESPONSE_STATUS_CONSTANTS.FAILED,
+      "Unauthorized : logout failed!"
+    );
     return res.send(logoutError);
   }
 }

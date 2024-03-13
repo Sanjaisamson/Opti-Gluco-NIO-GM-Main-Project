@@ -4,6 +4,7 @@ const userServices = require("../services/userService");
 const { authConfig } = require("../config/authConfig");
 const { userTable } = require("../model/userModel");
 const { tokenTable } = require("../model/refreshTokenModel");
+const { RESPONSE_STATUS_CONSTANTS } = require("../constants/appConstants");
 
 async function accessTokenVerification(req, res, next) {
   try {
@@ -24,7 +25,7 @@ async function accessTokenVerification(req, res, next) {
     req.user = authenticatedUser;
     next();
   } catch (error) {
-    return res.sendStatus(404);
+    return res.sendStatus(RESPONSE_STATUS_CONSTANTS.FAILED);
   }
 }
 
@@ -48,7 +49,7 @@ async function refreshTokenVerification(req, res) {
       accessToken: newToken.accessToken,
     });
   } catch (error) {
-    return res.sendStatus(500);
+    return res.sendStatus(RESPONSE_STATUS_CONSTANTS.SERVER_ERROR);
   }
 }
 

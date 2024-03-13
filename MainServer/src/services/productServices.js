@@ -5,7 +5,11 @@ const { cloudinary } = require("../databases/cloudinary");
 const { productTable } = require("../model/productModel");
 const { requestLogTable } = require("../model/requestLogModel");
 const { resultDataTable } = require("../model/resultDataModel");
-const { RECENT_DATA_CONSTANTS } = require("../constants/requestConstants");
+const {
+  RECENT_DATA_CONSTANTS,
+  ARRAY_CONSTANTS,
+  RESPONSE_STATUS_CONSTANTS,
+} = require("../constants/appConstants");
 const { defaultStorageDir } = require("../config/storagePath");
 const {
   JOB_STATUS,
@@ -18,7 +22,7 @@ async function registerProduct(userId, productId) {
         user_id: userId,
       },
     });
-    if (!product || product.length === 0) {
+    if (!product || product.length === ARRAY_CONSTANTS.LENGTH_ZERO) {
       await productTable.create({
         user_id: userId,
         product_code: productId,
@@ -37,8 +41,11 @@ async function removeProduct(userId) {
         user_id: userId,
       },
     });
-    if (!product || product.length === 0) {
-      throw new Error("this user has no registered product");
+    if (!product || product.length === ARRAY_CONSTANTS.LENGTH_ZERO) {
+      throw new Error(
+        RESPONSE_STATUS_CONSTANTS.FAILED,
+        "this user has no registered product"
+      );
     }
     await productTable.destroy({
       where: {
@@ -58,7 +65,7 @@ async function listProducts(userId) {
         user_id: userId,
       },
     });
-    if (!products || products.length === 0) {
+    if (!products || products.length === ARRAY_CONSTANTS.LENGTH_ZERO) {
       return products;
     }
     return products;
@@ -75,8 +82,8 @@ async function initiateJob(userId) {
         user_id: userId,
       },
     });
-    if (!product || product.length === 0) {
-      throw new Error(400, "no products found");
+    if (!product || product.length === ARRAY_CONSTANTS.LENGTH_ZERO) {
+      throw new Error(RESPONSE_STATUS_CONSTANTS.FAILED, "no products found");
     }
     await requestLogTable.create({
       user_id: userId,
@@ -97,7 +104,7 @@ async function initiateJob(userId) {
       body: requestData,
     });
     if (!response.ok) {
-      throw new Error(400, "error in start job");
+      throw new Error(RESPONSE_STATUS_CONSTANTS.FAILED, "error in start job");
     }
     const data = await response.json();
     return {
@@ -226,8 +233,8 @@ async function listRecentReadings(userId, currentPage, itemsPerPage) {
         user_id: userId,
       },
     });
-    if (!products || products.length === 0) {
-      throw new Error(400);
+    if (!products || products.length === ARRAY_CONSTANTS.LENGTH_ZERO) {
+      throw new Error(RESPONSE_STATUS_CONSTANTS.FAILED);
     }
     const recentReadings = await resultDataTable.findAll({
       where: {
@@ -235,7 +242,10 @@ async function listRecentReadings(userId, currentPage, itemsPerPage) {
         product_code: products.product_code,
       },
     });
-    if (!recentReadings || recentReadings.length === 0) {
+    if (
+      !recentReadings ||
+      recentReadings.length === ARRAY_CONSTANTS.LENGTH_ZERO
+    ) {
       status = RECENT_DATA_CONSTANTS.failure;
       return status;
     }

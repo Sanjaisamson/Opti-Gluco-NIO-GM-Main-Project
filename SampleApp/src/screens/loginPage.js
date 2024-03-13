@@ -1,11 +1,11 @@
 import React, { useState } from "react";
+import "core-js/stable/atob";
+import axios from "axios";
 import { View, TextInput, StyleSheet, Vibration } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import { Text, Button } from "react-native-paper";
-import constants from "./constants/appConstants";
-import axios from "axios";
-import "core-js/stable/atob";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import CONSTANTS from "../constants/appConstants";
 
 const LoginScreen = () => {
   const [email, setEmail] = useState("");
@@ -14,7 +14,7 @@ const LoginScreen = () => {
   const navigation = useNavigation();
 
   const handleRegister = () => {
-    navigation.navigate(constants.PATH_CONSTANTS.REGISTER);
+    navigation.navigate(CONSTANTS.PATH_CONSTANTS.REGISTER);
   };
 
   const handleLogin = async () => {
@@ -24,7 +24,7 @@ const LoginScreen = () => {
         password: password,
       });
       const response = await axios.post(
-        `http://${constants.SERVER_CONSTANTS.localhost}:${constants.SERVER_CONSTANTS.port}/api/login`,
+        `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/api/login`,
         requestData,
         {
           headers: {
@@ -33,22 +33,22 @@ const LoginScreen = () => {
           withCredentials: true,
         }
       );
-      if (response.status === constants.RESPONSE_STATUS.SUCCESS) {
-        setLoginStatus(constants.STATUS_CONSTANTS.COMPLETED);
+      if (response.status === CONSTANTS.RESPONSE_STATUS.SUCCESS) {
+        setLoginStatus(CONSTANTS.STATUS_CONSTANTS.COMPLETED);
         const responseData = response.data;
         await AsyncStorage.setItem(
-          constants.STORAGE_CONSTANTS.ACCESS_TOKEN,
+          CONSTANTS.STORAGE_CONSTANTS.ACCESS_TOKEN,
           responseData.accessToken
         );
-        navigation.navigate(constants.PATH_CONSTANTS.HOME, {
+        navigation.navigate(CONSTANTS.PATH_CONSTANTS.HOME, {
           userId: responseData.loginResponse.user_id,
           userName: responseData.loginResponse.user_name,
         });
       } else {
-        throw new Error(constants.RESPONSE_STATUS.FAILED);
+        throw new Error(CONSTANTS.RESPONSE_STATUS.FAILED);
       }
     } catch (error) {
-      setLoginStatus(constants.STATUS_CONSTANTS.FAILED);
+      setLoginStatus(CONSTANTS.STATUS_CONSTANTS.FAILED);
       Vibration.vibrate(1000);
     }
   };
@@ -88,10 +88,10 @@ const LoginScreen = () => {
         </Button>
       </View>
       <View>
-        {loginStatus === constants.STATUS_CONSTANTS.COMPLETED && (
+        {loginStatus === CONSTANTS.STATUS_CONSTANTS.COMPLETED && (
           <Text style={styles.successMessage}>Login Successful!</Text>
         )}
-        {loginStatus === constants.STATUS_CONSTANTS.FAILED && (
+        {loginStatus === CONSTANTS.STATUS_CONSTANTS.FAILED && (
           <Text style={styles.errorMessage}>
             Login Failed. Please try again.
           </Text>

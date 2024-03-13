@@ -4,7 +4,7 @@ import { Text, Button, Avatar, TextInput } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
 import { useRoute } from "@react-navigation/native";
 import axios from "axios";
-import constants from "./constants/appConstants";
+import CONSTANTS from "../constants/appConstants";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const AddProductScreen = () => {
@@ -21,7 +21,7 @@ const AddProductScreen = () => {
         userId: userId,
       });
       const response = await axios.post(
-        `http://${constants.SERVER_CONSTANTS.localhost}:${constants.SERVER_CONSTANTS.port}/api/refresh`,
+        `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/api/refresh`,
         requestData,
         {
           headers: {
@@ -30,12 +30,15 @@ const AddProductScreen = () => {
           withCredentials: true,
         }
       );
-      if (response.status === 200) {
+      if (response.status === CONSTANTS.RESPONSE_STATUS.SUCCESS) {
         const responseData = response.data;
-        await AsyncStorage.setItem("accessToken", responseData.accessToken);
+        await AsyncStorage.setItem(
+          CONSTANTS.STORAGE_CONSTANTS.ACCESS_TOKEN,
+          responseData.accessToken
+        );
         return responseData.accessToken;
       } else {
-        navigation.navigate(constants.PATH_CONSTANTS.LOGIN);
+        navigation.navigate(CONSTANTS.PATH_CONSTANTS.LOGIN);
       }
     } catch (error) {
       throw error;
@@ -44,7 +47,9 @@ const AddProductScreen = () => {
 
   const handleAddProduct = async () => {
     try {
-      let addProductAccessToken = await AsyncStorage.getItem("accessToken");
+      let addProductAccessToken = await AsyncStorage.getItem(
+        CONSTANTS.STORAGE_CONSTANTS.ACCESS_TOKEN
+      );
       const decodedToken = jwtDecode(addProductAccessToken);
       const currentTime = Date.now() / 1000;
       if (decodedToken.exp < currentTime) {
@@ -56,7 +61,7 @@ const AddProductScreen = () => {
         productCode: productCode,
       });
       const response = await axios.post(
-        `http://${constants.SERVER_CONSTANTS.localhost}:${constants.SERVER_CONSTANTS.port}/product/register`,
+        `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/product/register`,
         requestData,
         {
           headers: {
@@ -66,14 +71,14 @@ const AddProductScreen = () => {
           withCredentials: true,
         }
       );
-      if (response.status === 200) {
-        setRegistrationStatus(constants.STATUS_CONSTANTS.COMPLETED);
-        navigation.navigate(constants.PATH_CONSTANTS.HOME);
+      if (response.status === CONSTANTS.RESPONSE_STATUS.SUCCESS) {
+        setRegistrationStatus(CONSTANTS.STATUS_CONSTANTS.COMPLETED);
+        navigation.navigate(CONSTANTS.PATH_CONSTANTS.HOME);
       } else {
-        throw new Error(404);
+        throw new Error(CONSTANTS.RESPONSE_STATUS.FAILED);
       }
     } catch (error) {
-      setRegistrationStatus(constants.STATUS_CONSTANTS.FAILED);
+      setRegistrationStatus(CONSTANTS.STATUS_CONSTANTS.FAILED);
     }
   };
   return (
@@ -96,10 +101,10 @@ const AddProductScreen = () => {
           title="Register"
           onPress={handleAddProduct}
         ></Button>
-        {registrationStatus === constants.STATUS_CONSTANTS.COMPLETED && (
+        {registrationStatus === CONSTANTS.STATUS_CONSTANTS.COMPLETED && (
           <Text style={styles.successMessage}>Registration Successful!</Text>
         )}
-        {registrationStatus === constants.STATUS_CONSTANTS.FAILED && (
+        {registrationStatus === CONSTANTS.STATUS_CONSTANTS.FAILED && (
           <Text style={styles.errorMessage}>
             Registration Failed. Please try again.
           </Text>

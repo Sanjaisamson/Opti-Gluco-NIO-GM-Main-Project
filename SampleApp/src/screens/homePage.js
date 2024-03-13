@@ -24,9 +24,10 @@ import {
   Modal,
   Portal,
 } from "react-native-paper";
-import constants from "./constants/appConstants";
+import CONSTANTS from "../constants/appConstants";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import axios from "axios";
+const avatarIcon = require("../assets/avatar icon .jpg");
 
 const Tab = createBottomTabNavigator();
 
@@ -41,7 +42,7 @@ const HomeScreen = () => {
         userId: userId,
       });
       const response = await axios.post(
-        `http://${constants.SERVER_CONSTANTS.localhost}:${constants.SERVER_CONSTANTS.port}/api/refresh`,
+        `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/api/refresh`,
         requestData,
         {
           headers: {
@@ -50,19 +51,19 @@ const HomeScreen = () => {
           withCredentials: true,
         }
       );
-      if (response.status === constants.RESPONSE_STATUS.SUCCESS) {
+      if (response.status === CONSTANTS.RESPONSE_STATUS.SUCCESS) {
         const responseData = response.data;
         await AsyncStorage.setItem(
-          constants.STORAGE_CONSTANTS.ACCESS_TOKEN,
+          CONSTANTS.STORAGE_CONSTANTS.ACCESS_TOKEN,
           responseData.accessToken
         );
         return responseData.accessToken;
       } else {
-        setStatus(constants.STATUS_CONSTANTS.FAILED);
-        navigation.navigate(constants.PATH_CONSTANTS.LOGIN);
+        setStatus(CONSTANTS.STATUS_CONSTANTS.FAILED);
+        navigation.navigate(CONSTANTS.PATH_CONSTANTS.LOGIN);
       }
     } catch (error) {
-      setStatus(constants.STATUS_CONSTANTS.FAILED);
+      setStatus(CONSTANTS.STATUS_CONSTANTS.FAILED);
     }
   }
 
@@ -70,10 +71,7 @@ const HomeScreen = () => {
     return (
       <View style={styles.container}>
         <View>
-          <Avatar.Image
-            size={100}
-            source={require("../assets/avatar icon .jpg")} // C:\Users\SANJAI\OneDrive\Documents\Main_Project\SampleApp\assets\avatar icon .jpg
-          />
+          <Avatar.Image size={100} source={avatarIcon} />
         </View>
         <Text style={styles.loadingText}>Hi {userName}</Text>
       </View>
@@ -86,11 +84,12 @@ const HomeScreen = () => {
     const [productList, setProductList] = useState([]);
     const navigation = useNavigation();
     const [loading, setLoading] = useState(false);
+    const [refreshing, setRefreshing] = useState(false);
 
     useEffect(() => {
       const fetchData = async () => {
         let accessToken = await AsyncStorage.getItem(
-          constants.STORAGE_CONSTANTS.ACCESS_TOKEN
+          CONSTANTS.STORAGE_CONSTANTS.ACCESS_TOKEN
         );
         const decodedToken = jwtDecode(accessToken);
         try {
@@ -103,7 +102,7 @@ const HomeScreen = () => {
             userId: userId,
           });
           const listProductResponse = await axios.post(
-            `http://${constants.SERVER_CONSTANTS.localhost}:${constants.SERVER_CONSTANTS.port}/product/list-products`,
+            `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/product/list-products`,
             listProductRequestData,
             {
               headers: {
@@ -114,12 +113,12 @@ const HomeScreen = () => {
             }
           );
           if (
-            listProductResponse.status === constants.RESPONSE_STATUS.SUCCESS
+            listProductResponse.status === CONSTANTS.RESPONSE_STATUS.SUCCESS
           ) {
             setProductList(listProductResponse.data);
           }
         } catch (error) {
-          setStatus(constants.STATUS_CONSTANTS.FAILED);
+          setStatus(CONSTANTS.STATUS_CONSTANTS.FAILED);
         }
       };
       fetchData();
@@ -128,13 +127,13 @@ const HomeScreen = () => {
     const removeProduct = async () => {
       try {
         const removeProductAccessToken = await AsyncStorage.getItem(
-          constants.STORAGE_CONSTANTS.ACCESS_TOKEN
+          CONSTANTS.STORAGE_CONSTANTS.ACCESS_TOKEN
         );
         const requestData = JSON.stringify({
           userId: userId,
         });
         const response = await axios.post(
-          `http://${constants.SERVER_CONSTANTS.localhost}:${constants.SERVER_CONSTANTS.port}/product/remove`,
+          `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/product/remove`,
           requestData,
           {
             headers: {
@@ -144,27 +143,27 @@ const HomeScreen = () => {
             withCredentials: true,
           }
         );
-        if (response.status === constants.RESPONSE_STATUS.SUCCESS) {
-          setStatus(constants.STATUS_CONSTANTS.COMPLETED);
+        if (response.status === CONSTANTS.RESPONSE_STATUS.SUCCESS) {
+          setStatus(CONSTANTS.STATUS_CONSTANTS.COMPLETED);
         } else {
-          setStatus(constants.STATUS_CONSTANTS.FAILED);
+          setStatus(CONSTANTS.STATUS_CONSTANTS.FAILED);
         }
       } catch (error) {
-        setStatus(constants.STATUS_CONSTANTS.FAILED);
+        setStatus(CONSTANTS.STATUS_CONSTANTS.FAILED);
       }
     };
 
     const checkStatus = async (jobId, requestId) => {
       try {
         const checkStatusAccessToken = await AsyncStorage.getItem(
-          constants.STORAGE_CONSTANTS.ACCESS_TOKEN
+          CONSTANTS.STORAGE_CONSTANTS.ACCESS_TOKEN
         );
         const requestData = JSON.stringify({
           jobId: jobId,
           requestId: requestId,
         });
         const response = await axios.post(
-          `http://${constants.SERVER_CONSTANTS.localhost}:${constants.SERVER_CONSTANTS.port}/product/check-job-status`,
+          `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/product/check-job-status`,
           requestData,
           {
             headers: {
@@ -174,18 +173,18 @@ const HomeScreen = () => {
             withCredentials: true,
           }
         );
-        if (response.status === constants.RESPONSE_STATUS.SUCCESS) {
+        if (response.status === CONSTANTS.RESPONSE_STATUS.SUCCESS) {
           const responseData = response.data;
           return responseData;
         }
       } catch (error) {
-        setStatus(constants.STATUS_CONSTANTS.FAILED);
+        setStatus(CONSTANTS.STATUS_CONSTANTS.FAILED);
       }
     };
 
     const readData = async () => {
       let readDataAccessToken = await AsyncStorage.getItem(
-        constants.RESPONSE_STATUS.SUCCESS
+        CONSTANTS.RESPONSE_STATUS.SUCCESS
       );
       const decodedToken = jwtDecode(readDataAccessToken);
       const currentTime = Date.now() / 1000;
@@ -198,7 +197,7 @@ const HomeScreen = () => {
           userId: userId,
         });
         const response = await axios.post(
-          `http://${constants.SERVER_CONSTANTS.localhost}:${constants.SERVER_CONSTANTS.port}/product/start-job`,
+          `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/product/start-job`,
           requestData,
           {
             headers: {
@@ -208,9 +207,9 @@ const HomeScreen = () => {
             withCredentials: true,
           }
         );
-        if (response.status === constants.RESPONSE_STATUS.SUCCESS) {
+        if (response.status === CONSTANTS.RESPONSE_STATUS.SUCCESS) {
           const responseData = response.data;
-          setStatus(constants.STATUS_CONSTANTS.PROGRESS);
+          setStatus(CONSTANTS.STATUS_CONSTANTS.PROGRESS);
           setLoading(true);
           const intervalId = setInterval(async () => {
             const currentStatus = await checkStatus(
@@ -218,16 +217,16 @@ const HomeScreen = () => {
               responseData.requestId
             );
             if (
-              currentStatus.job_status === constants.STATUS_CONSTANTS.COMPLETED
+              currentStatus.job_status === CONSTANTS.STATUS_CONSTANTS.COMPLETED
             ) {
-              setStatus(constants.STATUS_CONSTANTS.COMPLETED);
+              setStatus(CONSTANTS.STATUS_CONSTANTS.COMPLETED);
               clearInterval(intervalId);
               setLoading(false);
             }
           }, 1000);
         }
       } catch (error) {
-        setStatus(constants.STATUS_CONSTANTS.FAILED);
+        setStatus(CONSTANTS.STATUS_CONSTANTS.FAILED);
       }
     };
 
@@ -237,7 +236,7 @@ const HomeScreen = () => {
         msg,
         [
           {
-            text: constants.STATUS_CONSTANTS.COMPLETED,
+            text: CONSTANTS.STATUS_CONSTANTS.COMPLETED,
             onPress: () => {},
           },
         ],
@@ -246,20 +245,24 @@ const HomeScreen = () => {
     };
     const handleRecentData = async () => {
       try {
-        navigation.navigate(constants.PATH_CONSTANTS.RECENT_DATA);
+        navigation.navigate(CONSTANTS.PATH_CONSTANTS.RECENT_DATA);
       } catch (error) {
-        setStatus(constants.STATUS_CONSTANTS.FAILED);
-        navigation.navigate(constants.PATH_CONSTANTS.LOGIN);
+        setStatus(CONSTANTS.STATUS_CONSTANTS.FAILED);
+        navigation.navigate(CONSTANTS.PATH_CONSTANTS.LOGIN);
       }
     };
     const addProduct = () => {
       try {
-        navigation.navigate(constants.PATH_CONSTANTS.ADD_PRODUCT, {
+        navigation.navigate(CONSTANTS.PATH_CONSTANTS.ADD_PRODUCT, {
           userId: userId,
         });
       } catch (error) {
-        setStatus(constants.STATUS_CONSTANTS.FAILED);
+        setStatus(CONSTANTS.STATUS_CONSTANTS.FAILED);
       }
+    };
+    const handleRefresh = () => {
+      setRefreshing(true);
+      setTimeout(() => setRefreshing(false), 1000); // Simulated refresh
     };
     return (
       <View>
@@ -272,7 +275,7 @@ const HomeScreen = () => {
         <View>
           <Avatar.Image
             size={100}
-            source={require("../assets/avatar icon .jpg")} // C:\Users\SANJAI\OneDrive\Documents\Main_Project\SampleApp\assets\avatar icon .jpg
+            source={avatarIcon} // C:\Users\SANJAI\OneDrive\Documents\Main_Project\SampleApp\assets\avatar icon .jpg
           />
         </View>
         <Text>Welcome {userName}</Text>
@@ -309,30 +312,31 @@ const HomeScreen = () => {
               <Text></Text>
             )}
           </View>
-          {status === constants.STATUS_CONSTANTS.COMPLETED && (
+          {status === CONSTANTS.STATUS_CONSTANTS.COMPLETED && (
             <>
               <Text style={styles.successMessage}>
                 Action Successfully completed........
               </Text>
-              {showAlert({ msg: constants.STATUS_CONSTANTS.SUCCESS })}
+              {showAlert({ msg: CONSTANTS.STATUS_CONSTANTS.SUCCESS })}
             </>
           )}
-          {status === constants.STATUS_CONSTANTS.PROGRESS && (
+          {status === CONSTANTS.STATUS_CONSTANTS.PROGRESS && (
             <>
               <Text style={styles.successMessage}>
                 Action on progress....Please wait
               </Text>
             </>
           )}
-          {status === constants.STATUS_CONSTANTS.FAILED && (
+          {status === CONSTANTS.STATUS_CONSTANTS.FAILED && (
             <>
               <Text style={styles.errorMessage}>
                 Sorry!! Action Failed. Please try again.
               </Text>
-              {showAlert({ msg: constants.STATUS_CONSTANTS.ERROR })}
+              {showAlert({ msg: CONSTANTS.STATUS_CONSTANTS.ERROR })}
             </>
           )}
         </View>
+        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
         <View>
           <Button onPress={handleRecentData}>Recent Readings </Button>
         </View>
@@ -357,7 +361,7 @@ const HomeScreen = () => {
     const logout = async () => {
       try {
         let logoutAccessToken = await AsyncStorage.getItem(
-          constants.STORAGE_CONSTANTS.ACCESS_TOKEN
+          CONSTANTS.STORAGE_CONSTANTS.ACCESS_TOKEN
         );
         const decodedToken = jwtDecode(logoutAccessToken);
         const currentTime = Date.now() / 1000;
@@ -369,7 +373,7 @@ const HomeScreen = () => {
           userId: userId,
         });
         const response = await axios.post(
-          `http://${constants.SERVER_CONSTANTS.localhost}:${constants.SERVER_CONSTANTS.port}/api/logout`,
+          `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/api/logout`,
           requestData,
           {
             headers: {
@@ -379,10 +383,10 @@ const HomeScreen = () => {
             withCredentials: true,
           }
         );
-        if (response.status === constants.RESPONSE_STATUS.SUCCESS) {
-          navigation.navigate(constants.PATH_CONSTANTS.LOGIN);
+        if (response.status === CONSTANTS.RESPONSE_STATUS.SUCCESS) {
+          navigation.navigate(CONSTANTS.PATH_CONSTANTS.LOGIN);
           await AsyncStorage.removeItem(
-            constants.STORAGE_CONSTANTS.ACCESS_TOKEN
+            CONSTANTS.STORAGE_CONSTANTS.ACCESS_TOKEN
           );
           setLogout(true);
         } else {
@@ -418,10 +422,7 @@ const HomeScreen = () => {
               <Card style={styles.card}>
                 <Card.Content>
                   <View style={{ flexDirection: "row", alignItems: "center" }}>
-                    <Avatar.Image
-                      size={50}
-                      source={require("../assets/avatar icon .jpg")}
-                    />
+                    <Avatar.Image size={50} source={avatarIcon} />
                     <View style={{ marginLeft: 10 }}>
                       <Text
                         style={{

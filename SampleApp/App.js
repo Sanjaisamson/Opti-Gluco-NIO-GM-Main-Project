@@ -1,12 +1,12 @@
 import React from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import SplashScreen from "./src/splashScreen";
-import LoginPage from "./src/loginPage";
-import RegistrationPage from "./src/registerPage";
-import HomePage from "./src/homePage";
-import AddProduct from "./src/addProduct";
-import RecentData from "./src/recentDataPage";
+import SplashScreen from "./src/screens/splashScreen";
+import LoginPage from "./src/screens/loginPage";
+import RegistrationPage from "./src/screens/registerPage";
+import HomePage from "./src/screens/homePage";
+import AddProduct from "./src/screens/addProduct";
+import RecentData from "./src/screens/recentDataPage";
 
 const Stack = createNativeStackNavigator();
 

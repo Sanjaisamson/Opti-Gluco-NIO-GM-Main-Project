@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
-import constants from "./constants/appConstants";
+import CONSTANTS from "../constants/appConstants";
 import {
   View,
   TouchableOpacity,
@@ -28,7 +28,7 @@ const RecentData = () => {
         userId: userId,
       });
       const response = await axios.post(
-        `http://${constants.SERVER_CONSTANTS.localhost}:${constants.SERVER_CONSTANTS.port}/api/refresh`,
+        `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/api/refresh`,
         requestData,
         {
           headers: {
@@ -39,10 +39,13 @@ const RecentData = () => {
       );
       if (response.status === 200) {
         const responseData = response.data;
-        await AsyncStorage.setItem("accessToken", responseData.accessToken);
+        await AsyncStorage.setItem(
+          CONSTANTS.STORAGE_CONSTANTS.ACCESS_TOKEN,
+          responseData.accessToken
+        );
         return responseData.accessToken;
       } else {
-        navigation.navigate(constants.PATH_CONSTANTS.LOGIN);
+        navigation.navigate(CONSTANTS.PATH_CONSTANTS.LOGIN);
       }
     } catch (error) {
       throw error;
@@ -51,7 +54,9 @@ const RecentData = () => {
 
   const fetchData = async (currentPage) => {
     try {
-      let listRecentDataAccessToken = await AsyncStorage.getItem("accessToken");
+      let listRecentDataAccessToken = await AsyncStorage.getItem(
+        CONSTANTS.STORAGE_CONSTANTS.ACCESS_TOKEN
+      );
       const decodedToken = jwtDecode(listRecentDataAccessToken);
       const currentTime = Date.now() / 1000;
       if (decodedToken.exp < currentTime) {
@@ -68,7 +73,7 @@ const RecentData = () => {
       });
 
       const response = await axios.post(
-        `http://${constants.SERVER_CONSTANTS.localhost}:${constants.SERVER_CONSTANTS.port}/product/recent-readings`,
+        `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/product/recent-readings`,
         requestData,
         {
           headers: {
@@ -79,7 +84,7 @@ const RecentData = () => {
         }
       );
 
-      if (response.status === 200) {
+      if (response.status === CONSTANTS.RESPONSE_STATUS.SUCCESS) {
         const data = response.data;
         setTotalPages(data.totalPages);
         setItems(data.data);
@@ -96,19 +101,19 @@ const RecentData = () => {
   const renderPaginationButtons = (currentPage) => {
     const buttons = [];
 
-    for (let i = 1; i <= totalPages; i++) {
+    for (let page = 1; page <= totalPages; page++) {
       buttons.push(
         <TouchableOpacity
-          key={i}
-          onPress={() => handlePageClick(i)}
+          key={page}
+          onPress={() => handlePageClick(page)}
           style={{
             padding: 10,
             margin: 5,
-            backgroundColor: i === currentPage ? "blue" : "gray",
+            backgroundColor: page === currentPage ? "blue" : "gray",
             borderRadius: 5,
           }}
         >
-          <Text style={{ color: "white" }}>{i}</Text>
+          <Text style={{ color: "white" }}>{page}</Text>
         </TouchableOpacity>
       );
     }

@@ -5,7 +5,12 @@ async function initiateJob(req, res, next) {
     const { userId, productCode, requestId, captureDelay, totalTime } =
       req.body;
     const initiateJobResponse = await clientServices.createJob(requestId);
-    clientServices.executeCronjob(initiateJobResponse.jobId, requestId, userId);
+    clientServices.executeCronjob(
+      initiateJobResponse.jobId,
+      requestId,
+      userId,
+      productCode
+    );
     return res.send({
       jobId: initiateJobResponse.jobId,
       jobStatus: initiateJobResponse.jobStatus,

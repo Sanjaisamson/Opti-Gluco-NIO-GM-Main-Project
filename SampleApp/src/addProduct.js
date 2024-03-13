@@ -4,7 +4,7 @@ import { Text, Button, Avatar, TextInput } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
 import { useRoute } from "@react-navigation/native";
 import axios from "axios";
-import { Constants } from "../src/constants/env";
+import constants from "./constants/appConstants";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const AddProductScreen = () => {
@@ -21,7 +21,7 @@ const AddProductScreen = () => {
         userId: userId,
       });
       const response = await axios.post(
-        `http://${Constants.localhost}:${Constants.port}/api/refresh`,
+        `http://${constants.SERVER_CONSTANTS.localhost}:${constants.SERVER_CONSTANTS.port}/api/refresh`,
         requestData,
         {
           headers: {
@@ -35,7 +35,7 @@ const AddProductScreen = () => {
         await AsyncStorage.setItem("accessToken", responseData.accessToken);
         return responseData.accessToken;
       } else {
-        navigation.navigate("Login");
+        navigation.navigate(constants.PATH_CONSTANTS.LOGIN);
       }
     } catch (error) {
       throw error;
@@ -43,7 +43,6 @@ const AddProductScreen = () => {
   }
 
   const handleAddProduct = async () => {
-    const accessToken = await AsyncStorage.getItem("accessToken");
     try {
       let addProductAccessToken = await AsyncStorage.getItem("accessToken");
       const decodedToken = jwtDecode(addProductAccessToken);
@@ -57,7 +56,7 @@ const AddProductScreen = () => {
         productCode: productCode,
       });
       const response = await axios.post(
-        `http://${Constants.localhost}:${Constants.port}/product/register`,
+        `http://${constants.SERVER_CONSTANTS.localhost}:${constants.SERVER_CONSTANTS.port}/product/register`,
         requestData,
         {
           headers: {
@@ -68,16 +67,13 @@ const AddProductScreen = () => {
         }
       );
       if (response.status === 200) {
-        setRegistrationStatus("Success");
-        navigation.navigate("Home", {
-          userId: userId,
-        });
+        setRegistrationStatus(constants.STATUS_CONSTANTS.COMPLETED);
+        navigation.navigate(constants.PATH_CONSTANTS.HOME);
       } else {
-        setRegistrationStatus("failed");
-        throw new Error("Network response was not ok");
+        throw new Error(404);
       }
     } catch (error) {
-      setRegistrationStatus("failed");
+      setRegistrationStatus(constants.STATUS_CONSTANTS.FAILED);
     }
   };
   return (
@@ -100,10 +96,10 @@ const AddProductScreen = () => {
           title="Register"
           onPress={handleAddProduct}
         ></Button>
-        {registrationStatus === "Success" && (
+        {registrationStatus === constants.STATUS_CONSTANTS.COMPLETED && (
           <Text style={styles.successMessage}>Registration Successful!</Text>
         )}
-        {registrationStatus === "Error" && (
+        {registrationStatus === constants.STATUS_CONSTANTS.FAILED && (
           <Text style={styles.errorMessage}>
             Registration Failed. Please try again.
           </Text>

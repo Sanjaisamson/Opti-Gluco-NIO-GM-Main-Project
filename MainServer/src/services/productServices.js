@@ -30,11 +30,11 @@ async function registerProduct(userId, productId) {
   }
 }
 
-async function removeProduct(userID) {
+async function removeProduct(userId) {
   try {
     const product = await productTable.findOne({
       where: {
-        user_id: userID,
+        user_id: userId,
       },
     });
     if (!product || product.length === 0) {
@@ -42,7 +42,7 @@ async function removeProduct(userID) {
     }
     await productTable.destroy({
       where: {
-        user_id: userID,
+        user_id: userId,
       },
     });
     return;
@@ -154,7 +154,7 @@ async function updateStatus(requestId, jobStatus, jobId) {
   }
 }
 
-async function processingResult(images, requestId, userId) {
+async function processingResult(images, requestId, userId, productCode) {
   try {
     const folderPath = path.join(defaultStorageDir, requestId);
     fs.mkdirSync(folderPath, { recursive: true });
@@ -174,6 +174,7 @@ async function processingResult(images, requestId, userId) {
     await resultDataTable.create({
       request_id: requestId,
       user_id: userId,
+      product_code: productCode,
       folder_path: folderPath,
     });
     const requestLogResult = await requestLogTable.update(
@@ -220,16 +221,25 @@ async function checkJobStatus(jobId, requestId) {
 async function listRecentReadings(userId, currentPage, itemsPerPage) {
   try {
     let status = RECENT_DATA_CONSTANTS.success;
+    const products = await productTable.findOne({
+      where: {
+        user_id: userId,
+      },
+    });
+    if (!products || products.length === 0) {
+      throw new Error(400);
+    }
     const recentReadings = await resultDataTable.findAll({
       where: {
         user_id: userId.toString(),
+        product_code: products.product_code,
       },
     });
     if (!recentReadings || recentReadings.length === 0) {
       status = RECENT_DATA_CONSTANTS.failure;
       return status;
     }
-    totalRecords = recentReadings.length;
+    const totalRecords = recentReadings.length;
     const totalPages = Math.ceil(totalRecords / itemsPerPage);
     const offset = (currentPage - 1) * itemsPerPage;
     const paginatedReadings = recentReadings.slice(

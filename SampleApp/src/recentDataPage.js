@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
-import { Constants } from "../src/constants/env";
+import constants from "./constants/appConstants";
 import {
   View,
-  FlatList,
   TouchableOpacity,
   RefreshControl,
   StyleSheet,
@@ -29,7 +28,7 @@ const RecentData = () => {
         userId: userId,
       });
       const response = await axios.post(
-        `http://${Constants.localhost}:${Constants.port}/api/refresh`,
+        `http://${constants.SERVER_CONSTANTS.localhost}:${constants.SERVER_CONSTANTS.port}/api/refresh`,
         requestData,
         {
           headers: {
@@ -43,7 +42,7 @@ const RecentData = () => {
         await AsyncStorage.setItem("accessToken", responseData.accessToken);
         return responseData.accessToken;
       } else {
-        navigation.navigate("Login");
+        navigation.navigate(constants.PATH_CONSTANTS.LOGIN);
       }
     } catch (error) {
       throw error;
@@ -69,7 +68,7 @@ const RecentData = () => {
       });
 
       const response = await axios.post(
-        `http://${Constants.localhost}:${Constants.port}/product/recent-readings`,
+        `http://${constants.SERVER_CONSTANTS.localhost}:${constants.SERVER_CONSTANTS.port}/product/recent-readings`,
         requestData,
         {
           headers: {
@@ -82,8 +81,8 @@ const RecentData = () => {
 
       if (response.status === 200) {
         const data = response.data;
-        setTotalPages(data.data.totalPages); // Update total pages
-        setItems(data.data.data);
+        setTotalPages(data.totalPages);
+        setItems(data.data);
       }
     } catch (error) {
       throw error;
@@ -94,10 +93,10 @@ const RecentData = () => {
     setCurrentPage(p);
   };
 
-  const renderPaginationButtons = (currentPage, offset, totalPages) => {
+  const renderPaginationButtons = (currentPage) => {
     const buttons = [];
 
-    for (let i = 1; i < totalPages; i++) {
+    for (let i = 1; i <= totalPages; i++) {
       buttons.push(
         <TouchableOpacity
           key={i}
@@ -165,7 +164,7 @@ const RecentData = () => {
           marginVertical: 10,
         }}
       >
-        {renderPaginationButtons(currentPage, itemsPerPage, totalPages)}
+        {renderPaginationButtons(currentPage, itemsPerPage)}
       </View>
     </View>
   );

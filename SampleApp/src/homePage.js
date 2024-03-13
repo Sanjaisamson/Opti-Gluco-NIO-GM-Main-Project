@@ -24,7 +24,7 @@ import {
   Modal,
   Portal,
 } from "react-native-paper";
-import { Constants } from "../src/constants/env";
+import constants from "./constants/appConstants";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import axios from "axios";
 
@@ -41,7 +41,7 @@ const HomeScreen = () => {
         userId: userId,
       });
       const response = await axios.post(
-        `http://${Constants.localhost}:${Constants.port}/api/refresh`,
+        `http://${constants.SERVER_CONSTANTS.localhost}:${constants.SERVER_CONSTANTS.port}/api/refresh`,
         requestData,
         {
           headers: {
@@ -50,16 +50,19 @@ const HomeScreen = () => {
           withCredentials: true,
         }
       );
-      if (response.status === 200) {
+      if (response.status === constants.RESPONSE_STATUS.SUCCESS) {
         const responseData = response.data;
-        await AsyncStorage.setItem("accessToken", responseData.accessToken);
+        await AsyncStorage.setItem(
+          constants.STORAGE_CONSTANTS.ACCESS_TOKEN,
+          responseData.accessToken
+        );
         return responseData.accessToken;
       } else {
-        setStatus("refreshing token failed ");
-        navigation.navigate("Login");
+        setStatus(constants.STATUS_CONSTANTS.FAILED);
+        navigation.navigate(constants.PATH_CONSTANTS.LOGIN);
       }
     } catch (error) {
-      setStatus("failed");
+      setStatus(constants.STATUS_CONSTANTS.FAILED);
     }
   }
 
@@ -86,7 +89,9 @@ const HomeScreen = () => {
 
     useEffect(() => {
       const fetchData = async () => {
-        let accessToken = await AsyncStorage.getItem("accessToken");
+        let accessToken = await AsyncStorage.getItem(
+          constants.STORAGE_CONSTANTS.ACCESS_TOKEN
+        );
         const decodedToken = jwtDecode(accessToken);
         try {
           const currentTime = Date.now() / 1000;
@@ -98,7 +103,7 @@ const HomeScreen = () => {
             userId: userId,
           });
           const listProductResponse = await axios.post(
-            `http://${Constants.localhost}:${Constants.port}/product/list-products`,
+            `http://${constants.SERVER_CONSTANTS.localhost}:${constants.SERVER_CONSTANTS.port}/product/list-products`,
             listProductRequestData,
             {
               headers: {
@@ -108,12 +113,13 @@ const HomeScreen = () => {
               withCredentials: true,
             }
           );
-          if (listProductResponse.status === 200) {
-            setStatus("listing devices success");
+          if (
+            listProductResponse.status === constants.RESPONSE_STATUS.SUCCESS
+          ) {
             setProductList(listProductResponse.data);
           }
         } catch (error) {
-          setStatus("failed");
+          setStatus(constants.STATUS_CONSTANTS.FAILED);
         }
       };
       fetchData();
@@ -122,13 +128,13 @@ const HomeScreen = () => {
     const removeProduct = async () => {
       try {
         const removeProductAccessToken = await AsyncStorage.getItem(
-          "accessToken"
+          constants.STORAGE_CONSTANTS.ACCESS_TOKEN
         );
         const requestData = JSON.stringify({
           userId: userId,
         });
         const response = await axios.post(
-          `http://${Constants.localhost}:${Constants.port}/product/remove`,
+          `http://${constants.SERVER_CONSTANTS.localhost}:${constants.SERVER_CONSTANTS.port}/product/remove`,
           requestData,
           {
             headers: {
@@ -138,27 +144,27 @@ const HomeScreen = () => {
             withCredentials: true,
           }
         );
-        if (response.status === 200) {
-          setStatus("product removed successfully");
+        if (response.status === constants.RESPONSE_STATUS.SUCCESS) {
+          setStatus(constants.STATUS_CONSTANTS.COMPLETED);
         } else {
-          setStatus("product removing failed");
+          setStatus(constants.STATUS_CONSTANTS.FAILED);
         }
       } catch (error) {
-        setStatus("failed");
+        setStatus(constants.STATUS_CONSTANTS.FAILED);
       }
     };
 
     const checkStatus = async (jobId, requestId) => {
       try {
         const checkStatusAccessToken = await AsyncStorage.getItem(
-          "accessToken"
+          constants.STORAGE_CONSTANTS.ACCESS_TOKEN
         );
         const requestData = JSON.stringify({
           jobId: jobId,
           requestId: requestId,
         });
         const response = await axios.post(
-          `http://${Constants.localhost}:${Constants.port}/product/check-job-status`,
+          `http://${constants.SERVER_CONSTANTS.localhost}:${constants.SERVER_CONSTANTS.port}/product/check-job-status`,
           requestData,
           {
             headers: {
@@ -168,20 +174,19 @@ const HomeScreen = () => {
             withCredentials: true,
           }
         );
-        if (response.status === 200) {
-          setStatus("status checking successfull");
-          const count = 0;
+        if (response.status === constants.RESPONSE_STATUS.SUCCESS) {
           const responseData = response.data;
-          console.log("checker !!!");
           return responseData;
         }
       } catch (error) {
-        setStatus("failed");
+        setStatus(constants.STATUS_CONSTANTS.FAILED);
       }
     };
 
     const readData = async () => {
-      let readDataAccessToken = await AsyncStorage.getItem("accessToken");
+      let readDataAccessToken = await AsyncStorage.getItem(
+        constants.RESPONSE_STATUS.SUCCESS
+      );
       const decodedToken = jwtDecode(readDataAccessToken);
       const currentTime = Date.now() / 1000;
       if (decodedToken.exp < currentTime) {
@@ -193,7 +198,7 @@ const HomeScreen = () => {
           userId: userId,
         });
         const response = await axios.post(
-          `http://${Constants.localhost}:${Constants.port}/product/start-job`,
+          `http://${constants.SERVER_CONSTANTS.localhost}:${constants.SERVER_CONSTANTS.port}/product/start-job`,
           requestData,
           {
             headers: {
@@ -203,65 +208,58 @@ const HomeScreen = () => {
             withCredentials: true,
           }
         );
-        if (response.status === 200) {
+        if (response.status === constants.RESPONSE_STATUS.SUCCESS) {
           const responseData = response.data;
-          setStatus("Processing");
+          setStatus(constants.STATUS_CONSTANTS.PROGRESS);
           setLoading(true);
           const intervalId = setInterval(async () => {
             const currentStatus = await checkStatus(
               responseData.jobId,
               responseData.requestId
             );
-            if (currentStatus.job_status === "Completed") {
-              setStatus("Completed");
+            if (
+              currentStatus.job_status === constants.STATUS_CONSTANTS.COMPLETED
+            ) {
+              setStatus(constants.STATUS_CONSTANTS.COMPLETED);
               clearInterval(intervalId);
               setLoading(false);
             }
           }, 1000);
         }
       } catch (error) {
-        setStatus("failed");
+        setStatus(constants.STATUS_CONSTANTS.FAILED);
       }
     };
 
-    const showAlert = ({ id, msg }) => {
-      if (id === 1) {
-        Alert.alert(
-          "Opti-Gluco",
-          msg,
-          [
-            {
-              text: "OK",
-              onPress: () => navigation.navigate("Home"),
-            },
-          ],
-          { cancelable: false }
-        );
-      } else {
-        Alert.alert(
-          "Opti-Gluco",
-          msg,
-          [
-            {
-              text: "OK",
-              onPress: () => {},
-            },
-          ],
-          { cancelable: false }
-        );
-      }
+    const showAlert = ({ msg }) => {
+      Alert.alert(
+        "Opti-Gluco",
+        msg,
+        [
+          {
+            text: constants.STATUS_CONSTANTS.COMPLETED,
+            onPress: () => {},
+          },
+        ],
+        { cancelable: false }
+      );
     };
     const handleRecentData = async () => {
       try {
-        navigation.navigate("RecentData");
+        navigation.navigate(constants.PATH_CONSTANTS.RECENT_DATA);
       } catch (error) {
-        setStatus("failed");
+        setStatus(constants.STATUS_CONSTANTS.FAILED);
+        navigation.navigate(constants.PATH_CONSTANTS.LOGIN);
       }
     };
     const addProduct = () => {
-      navigation.navigate("AddProduct", {
-        userId: userId,
-      });
+      try {
+        navigation.navigate(constants.PATH_CONSTANTS.ADD_PRODUCT, {
+          userId: userId,
+        });
+      } catch (error) {
+        setStatus(constants.STATUS_CONSTANTS.FAILED);
+      }
     };
     return (
       <View>
@@ -281,11 +279,14 @@ const HomeScreen = () => {
         <View>
           {productList && productList.length > 0 ? (
             productList.map((product) => (
-              <Card key={product.product_id}>
-                <Card.Title title="My Products" subtitle={product.product_id} />
+              <Card key={product.product_id} style={styles.card}>
                 <Card.Content>
-                  <Text>Product Id : {product.product_id}</Text>
-                  <Text>Product Code : {product.product_code}</Text>
+                  <Text style={styles.text}>
+                    Device Id : {product.product_id}
+                  </Text>
+                  <Text style={styles.text}>
+                    Device Code : {product.product_code}
+                  </Text>
                 </Card.Content>
                 <Card.Actions>
                   <Button onPress={readData}>Start</Button>
@@ -294,10 +295,9 @@ const HomeScreen = () => {
               </Card>
             ))
           ) : (
-            <Card>
-              <Card.Title title="My Products" subtitle="0" />
+            <Card style={styles.card}>
               <Card.Content>
-                <Text>No Products available .....</Text>
+                <Text style={styles.text}>No Products available .....</Text>
               </Card.Content>
             </Card>
           )}
@@ -309,28 +309,27 @@ const HomeScreen = () => {
               <Text></Text>
             )}
           </View>
-          {status === "Completed" && (
+          {status === constants.STATUS_CONSTANTS.COMPLETED && (
             <>
               <Text style={styles.successMessage}>
-                Reading completed........
+                Action Successfully completed........
               </Text>
-              {showAlert({ id: 2, msg: "reading successfull" })}
+              {showAlert({ msg: constants.STATUS_CONSTANTS.SUCCESS })}
             </>
           )}
-          {status === "product removed successfully" && (
+          {status === constants.STATUS_CONSTANTS.PROGRESS && (
             <>
               <Text style={styles.successMessage}>
-                product removed successfully........
+                Action on progress....Please wait
               </Text>
-              {showAlert({ id: 2, msg: "product removed successfully" })}
             </>
           )}
-          {status === "failed" && (
+          {status === constants.STATUS_CONSTANTS.FAILED && (
             <>
               <Text style={styles.errorMessage}>
-                Sorry!! Failed. Please try again.
+                Sorry!! Action Failed. Please try again.
               </Text>
-              {showAlert({ id: 1, msg: "Sorry, reading failed...." })}
+              {showAlert({ msg: constants.STATUS_CONSTANTS.ERROR })}
             </>
           )}
         </View>
@@ -344,7 +343,6 @@ const HomeScreen = () => {
   function ProfileTab() {
     const route = useRoute();
     const { userId, userName } = route.params;
-    const windowWidth = Dimensions.get("window").width;
     const windowHeight = Dimensions.get("window").height;
     const [visible, setVisible] = React.useState(false);
     const [isLoggedOut, setLogout] = useState(false);
@@ -358,7 +356,9 @@ const HomeScreen = () => {
     };
     const logout = async () => {
       try {
-        let logoutAccessToken = await AsyncStorage.getItem("accessToken");
+        let logoutAccessToken = await AsyncStorage.getItem(
+          constants.STORAGE_CONSTANTS.ACCESS_TOKEN
+        );
         const decodedToken = jwtDecode(logoutAccessToken);
         const currentTime = Date.now() / 1000;
         if (decodedToken.exp < currentTime) {
@@ -369,7 +369,7 @@ const HomeScreen = () => {
           userId: userId,
         });
         const response = await axios.post(
-          `http://${Constants.localhost}:${Constants.port}/api/logout`,
+          `http://${constants.SERVER_CONSTANTS.localhost}:${constants.SERVER_CONSTANTS.port}/api/logout`,
           requestData,
           {
             headers: {
@@ -379,13 +379,14 @@ const HomeScreen = () => {
             withCredentials: true,
           }
         );
-        if (response.status === 200) {
-          navigation.navigate("Login");
-          const responseData = response.data;
-          await AsyncStorage.removeItem("accessToken");
+        if (response.status === constants.RESPONSE_STATUS.SUCCESS) {
+          navigation.navigate(constants.PATH_CONSTANTS.LOGIN);
+          await AsyncStorage.removeItem(
+            constants.STORAGE_CONSTANTS.ACCESS_TOKEN
+          );
           setLogout(true);
         } else {
-          throw new Error("Network response was not ok");
+          throw new Error(404);
         }
       } catch (error) {
         setLogout(false);
@@ -452,11 +453,7 @@ const HomeScreen = () => {
                       <Text style={styles.title}>Logout</Text>
                     </View>
                     <View style={{ marginLeft: 255 }}>
-                      <Button
-                        icon="chevron-right"
-                        title="Register"
-                        onPress={showModal}
-                      ></Button>
+                      <Button icon="chevron-right" onPress={showModal}></Button>
                     </View>
                   </Card.Content>
                 </Card>
@@ -475,7 +472,7 @@ const HomeScreen = () => {
                       <Text style={styles.title}>Terms and conditions</Text>
                     </View>
                     <View style={{ marginLeft: 155 }}>
-                      <Button icon="chevron-right" title="Register"></Button>
+                      <Button icon="chevron-right"></Button>
                     </View>
                   </Card.Content>
                 </Card>
@@ -487,7 +484,7 @@ const HomeScreen = () => {
                       <Text style={styles.title}>Privacy Policy</Text>
                     </View>
                     <View style={{ marginLeft: 205 }}>
-                      <Button icon="chevron-right" title="Register"></Button>
+                      <Button icon="chevron-right"></Button>
                     </View>
                   </Card.Content>
                 </Card>
@@ -506,7 +503,7 @@ const HomeScreen = () => {
                       <Text style={styles.title}>Contact us</Text>
                     </View>
                     <View style={{ marginLeft: 225 }}>
-                      <Button icon="chevron-right" title="Register"></Button>
+                      <Button icon="chevron-right"></Button>
                     </View>
                   </Card.Content>
                 </Card>
@@ -518,7 +515,7 @@ const HomeScreen = () => {
                       <Text style={styles.title}>Suggest your ideas</Text>
                     </View>
                     <View style={{ marginLeft: 170 }}>
-                      <Button icon="chevron-right" title="Register"></Button>
+                      <Button icon="chevron-right"></Button>
                     </View>
                   </Card.Content>
                 </Card>
@@ -627,7 +624,7 @@ const HomeScreen = () => {
           userName: userName,
         }}
         options={{
-          tabBarLabel: "Products",
+          tabBarLabel: "Devices",
           tabBarIcon: ({ color, size }) => {
             return <Icon name="devices" size={size} color={color} />;
           },
@@ -641,9 +638,9 @@ const HomeScreen = () => {
           userName: userName,
         }}
         options={{
-          tabBarLabel: "Profile",
+          tabBarLabel: "Settings",
           tabBarIcon: ({ color, size }) => {
-            return <Icon name="account" size={size} color={color} />;
+            return <Icon name="account-settings" size={size} color={color} />;
           },
         }}
       />
@@ -689,6 +686,11 @@ const styles = StyleSheet.create({
     margin: 10,
     fontSize: 15,
     fontWeight: "bold",
+  },
+  text: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#333",
   },
   card: {
     marginTop: 30,

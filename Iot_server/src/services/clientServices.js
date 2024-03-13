@@ -64,7 +64,7 @@ async function readData(jobId, requestId) {
     }
   });
 }
-async function executeCronjob(jobId, requestId, userId) {
+async function executeCronjob(jobId, requestId, userId, productCode) {
   return new Promise(async (resolve, rejects) => {
     try {
       let count = 0;
@@ -95,7 +95,7 @@ async function executeCronjob(jobId, requestId, userId) {
         console.log(count);
         if (count >= CRON_CONSTANTS.JOB_COUNT) {
           cronJob && cronJob.stop();
-          await sendResult(images, requestId, jobId, userId);
+          await sendResult(images, requestId, jobId, userId, productCode);
           resolve({ images: images, jobStatus: data.jobStatus });
         }
       });
@@ -137,7 +137,7 @@ async function updateStatusOnServer(jobId, jobStatus, requestId) {
   }
 }
 
-async function sendResult(images, requestId, jobId, userId) {
+async function sendResult(images, requestId, jobId, userId, productCode) {
   try {
     const job = await jobStatusTable.findOne({
       where: { job_id: jobId },
@@ -149,6 +149,7 @@ async function sendResult(images, requestId, jobId, userId) {
       jobStatus: JOB_STATUS.SUCCESS,
       requestId: requestId,
       images: images,
+      productCode: productCode,
     });
     const response = await fetch("http:localhost:3000/product/results", {
       method: "POST",

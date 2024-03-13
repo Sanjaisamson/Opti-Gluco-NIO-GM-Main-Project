@@ -48,9 +48,9 @@ async function initiateJob(req, res) {
       req.user.user_id
     );
     await productServices.updateJobData(
-      newJob.jobId,
-      newJob.jobStatus,
-      newJob.requestId
+      initiateJobResponse.jobId,
+      initiateJobResponse.jobStatus,
+      initiateJobResponse.requestId
     );
     return res.send(initiateJobResponse);
   } catch (error) {
@@ -78,11 +78,12 @@ async function updateStatus(req, res) {
 }
 async function processingResult(req, res) {
   try {
-    const { images, requestId, userId } = req.body;
+    const { images, requestId, userId, productCode } = req.body;
     const processingResultResponse = await productServices.processingResult(
       images,
       requestId,
-      userId
+      userId,
+      productCode
     );
     return res.send(processingResultResponse);
   } catch (error) {
@@ -101,6 +102,7 @@ async function checkJobStatus(req, res) {
       jobId,
       requestId
     );
+
     return res.send(statusResponse);
   } catch (error) {
     const checkStatusError = httpErrors(400, "This user cant remove product!!");
@@ -116,7 +118,7 @@ async function listRecentReadings(req, res) {
       req.body.itemsPerPage
     );
     if (recentReadingsResponse.status === RECENT_DATA_CONSTANTS.success) {
-      return res.send({ data: recentReadingsResponse });
+      return res.send(recentReadingsResponse);
     }
   } catch (error) {
     const recentreadingsError = httpErrors(

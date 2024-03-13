@@ -10,6 +10,9 @@ const resultDataTable = sequelize.define("resultDataTable", {
   },
   request_id: DataTypes.STRING,
   user_id: DataTypes.STRING,
+  product_code: DataTypes.STRING,
   folder_path: DataTypes.STRING,
 });
+// sequelize.sync({ alter: true });
+// console.log("table sync succefully completed");
 module.exports = { resultDataTable };

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { View, TextInput, StyleSheet } from "react-native";
 import { Text, Button } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
-import { Constants } from "../src/constants/env";
+import constants from "./constants/appConstants";
 import axios from "axios";
 
 const RegisterScreen = () => {
@@ -21,7 +21,7 @@ const RegisterScreen = () => {
       });
 
       const response = await axios.post(
-        `http://${Constants.localhost}:${Constants.port}/api/signup`,
+        `http://${constants.SERVER_CONSTANTS.localhost}:${constants.SERVER_CONSTANTS.port}/api/signup`,
         requestData,
         {
           headers: {
@@ -32,13 +32,13 @@ const RegisterScreen = () => {
       );
 
       if (response.status === 200) {
-        setRegistrationStatus("Success");
-        navigation.navigate("Login");
+        setRegistrationStatus(constants.STATUS_CONSTANTS.COMPLETED);
+        navigation.navigate(constants.PATH_CONSTANTS.LOGIN);
       } else {
-        throw new Error("Network response was not ok");
+        throw new Error(404);
       }
     } catch (error) {
-      setRegistrationStatus("Error");
+      setRegistrationStatus(constants.STATUS_CONSTANTS.FAILED);
     }
   };
 
@@ -76,10 +76,10 @@ const RegisterScreen = () => {
         >
           Register
         </Button>
-        {registrationStatus === "Success" && (
+        {registrationStatus === constants.STATUS_CONSTANTS.COMPLETED && (
           <Text style={styles.successMessage}>Registration Successful!</Text>
         )}
-        {registrationStatus === "Error" && (
+        {registrationStatus === constants.STATUS_CONSTANTS.FAILED && (
           <Text style={styles.errorMessage}>
             Registration Failed. Please try again.
           </Text>

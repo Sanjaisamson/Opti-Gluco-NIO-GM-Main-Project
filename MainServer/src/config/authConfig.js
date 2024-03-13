@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 const tokenExpiry = {
   refreshTokenExp: "7d",
   accessTokenExp: "20m",

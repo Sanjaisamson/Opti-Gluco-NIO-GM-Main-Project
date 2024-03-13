@@ -1,26 +1,26 @@
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
+require("dotenv").config();
+const { authConfig } = require("../config/authConfig");
 const { userTable } = require("../model/userModel");
 const { tokenTable } = require("../model/refreshTokenModel");
-const bcrypt = require("bcrypt");
-const { authConfig } = require("../config/authConfig");
-const jwt = require("jsonwebtoken");
-require("dotenv").config();
 
 async function createUser(userName, mailId, password) {
   try {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
-    const findUser = await userTable.findOne({
+    const users = await userTable.findOne({
       where: {
         user_mail: mailId,
       },
     });
-    if (!findUser || findUser.length === 0) {
-      const addUser = await userTable.create({
+    if (!users || users.length === 0) {
+      await userTable.create({
         user_name: userName,
         user_mail: mailId,
         user_password: hashedPassword,
       });
-      return { userId: addUser.user_id };
+      return;
     }
   } catch (err) {
     throw err;
@@ -29,19 +29,19 @@ async function createUser(userName, mailId, password) {
 
 async function loginUser(mailId, password) {
   try {
-    const findUser = await userTable.findOne({
+    const users = await userTable.findOne({
       where: {
         user_mail: mailId,
       },
     });
-    if (!findUser || findUser.length === 0) {
+    if (!users || users.length === 0) {
       throw new Error(400, "sorry user does not exist!!");
     }
-    const isVerified = await bcrypt.compare(password, findUser.user_password);
+    const isVerified = await bcrypt.compare(password, users.user_password);
     if (!isVerified) {
       throw new Error("Incorrect Password!!!");
     }
-    return findUser;
+    return users;
   } catch (err) {
     throw err;
   }
@@ -49,17 +49,12 @@ async function loginUser(mailId, password) {
 
 async function generateTokens(userId) {
   try {
-    const accessToken = jwt.sign(
-      { userId },
-      process.env.ACCESS_TOKEN_SECRET,
-      // authConfig.secrets.accessToken,
-      { expiresIn: authConfig.tokenExpiry.accessTokenExp }
-    );
-    const refreshToken = jwt.sign(
-      { userId },
-      process.env.REFRESH_TOKEN_SECRET,
-      { expiresIn: authConfig.tokenExpiry.refreshTokenExp }
-    );
+    const accessToken = jwt.sign({ userId }, authConfig.secrets.accessToken, {
+      expiresIn: authConfig.tokenExpiry.accessTokenExp,
+    });
+    const refreshToken = jwt.sign({ userId }, authConfig.secrets.refreshToken, {
+      expiresIn: authConfig.tokenExpiry.refreshTokenExp,
+    });
     return { accessToken: accessToken, refreshToken: refreshToken };
   } catch (err) {
     throw err;
@@ -68,15 +63,16 @@ async function generateTokens(userId) {
 
 async function saveToken(userId, refreshToken) {
   try {
-    const user = await tokenTable.findOne({ where: { user_id: userId } });
-    if (!user || user.length === 0) {
+    const users = await tokenTable.findOne({ where: { user_id: userId } });
+    if (!users || users.length === 0) {
       const newUser = await tokenTable.create({
         user_id: userId,
         refresh_token: refreshToken,
       });
     }
-    user.refresh_token = refreshToken;
-    await user.save();
+    users.refresh_token = refreshToken;
+    await users.save();
+    return;
   } catch (error) {
     throw err;
   }
@@ -84,15 +80,15 @@ async function saveToken(userId, refreshToken) {
 
 async function logoutUser(userId) {
   try {
-    const user = await tokenTable.destroy({
+    const users = await tokenTable.destroy({
       where: {
         user_id: userId,
       },
     });
-    if (!user || user.length === 0) {
+    if (!users || users.length === 0) {
       return;
     }
-    return user;
+    return users;
   } catch (err) {
     throw err;
   }

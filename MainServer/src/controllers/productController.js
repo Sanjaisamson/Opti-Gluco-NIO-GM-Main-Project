@@ -1,76 +1,73 @@
 const httpErrors = require("http-errors");
 const productServices = require("../services/productServices");
-const {
-  READ_DATA_CONSTANTS,
-  RECENT_DATA_CONSTANTS,
-} = require("../constants/requestConstants");
+const { RECENT_DATA_CONSTANTS } = require("../constants/requestConstants");
 
-async function registerProduct(req, res, next) {
+async function registerProduct(req, res) {
   try {
     const userId = req.user.user_id;
-    const productCode = req.body.productCode;
-    const registeredProduct = await productServices.registerProduct(
-      userId,
-      productCode
-    );
-    return res.send(registeredProduct);
+    const productId = req.body.productCode;
+    await productServices.registerProduct(userId, productId);
+    return res.sendStatus(200);
   } catch (error) {
     const productRegistrationError = httpErrors(
       400,
       "This user cant register a product!!"
     );
-    return res.sendStatus(400);
+    return res.send(productRegistrationError);
   }
 }
 
-async function removeProduct(req, res, next) {
+async function removeProduct(req, res) {
   try {
-    const userId = req.user.user_id;
-    const removedProduct = await productServices.removeProduct(userId);
-    return res.send({ removedProduct });
+    await productServices.removeProduct(req.user.user_id);
+    return res.sendStatus(200);
   } catch (error) {
-    const productremoveError = httpErrors(
+    const productRemoveError = httpErrors(
       400,
       "This user cant remove product!!"
     );
-    return res.send(productremoveError);
+    return res.send(productRemoveError);
   }
 }
 
-async function listProducts(req, res, next) {
+async function listProducts(req, res) {
   try {
-    const products = await productServices.listProducts(req.user.user_id);
-    return res.send(products);
+    const listProductResponse = await productServices.listProducts(
+      req.user.user_id
+    );
+    return res.send(listProductResponse);
   } catch (error) {
-    const listingProductError = httpErrors(400, "product Listingerror");
-    return res.send(listingProductError);
+    const listProductError = httpErrors(400, "product Listing error");
+    return res.send(listProductError);
   }
 }
 
-async function initiateJob(req, res, next) {
+async function initiateJob(req, res) {
   try {
-    const newJob = await productServices.initiateJob(req.user.user_id);
-    const updateJobData = await productServices.updateJobData(
+    const initiateJobResponse = await productServices.initiateJob(
+      req.user.user_id
+    );
+    await productServices.updateJobData(
       newJob.jobId,
       newJob.jobStatus,
       newJob.requestId
     );
-    return res.send(newJob);
+    return res.send(initiateJobResponse);
   } catch (error) {
     const initiateJobError = httpErrors(400, "This user cant initiate job!!");
-    return res.sendStatus(404);
+    return res.send(initiateJobError);
   }
 }
 
-async function updatestatus(req, res, next) {
+async function updateStatus(req, res) {
   try {
     const { requestId, jobStatus, jobId } = req.body;
-    const updatedStatus = await productServices.updateStatus(
+    const updateStatusResponse = await productServices.updateStatus(
       requestId,
       jobStatus,
       jobId
     );
-    return updatedStatus;
+    return updateStatusResponse;
   } catch (error) {
     const updateStatusError = httpErrors(
       400,
@@ -79,25 +76,25 @@ async function updatestatus(req, res, next) {
     return res.send(updateStatusError);
   }
 }
-async function processingResult(req, res, next) {
+async function processingResult(req, res) {
   try {
     const { images, requestId, userId } = req.body;
-    const result = await productServices.processingResult(
+    const processingResultResponse = await productServices.processingResult(
       images,
       requestId,
       userId
     );
-    return res.send(result);
+    return res.send(processingResultResponse);
   } catch (error) {
-    const resultProcessingError = httpErrors(
+    const processingResultError = httpErrors(
       400,
       "This user cant remove product!!"
     );
-    return res.send(resultProcessingError);
+    return res.send(processingResultError);
   }
 }
 
-async function checkJobStatus(req, res, next) {
+async function checkJobStatus(req, res) {
   try {
     const { jobId, requestId } = req.body;
     const statusResponse = await productServices.checkJobStatus(
@@ -113,17 +110,20 @@ async function checkJobStatus(req, res, next) {
 
 async function listRecentReadings(req, res) {
   try {
-    const recentReadings = await productServices.listRecentReadings(
+    const recentReadingsResponse = await productServices.listRecentReadings(
       req.user.user_id,
       req.body.currentPage,
       req.body.itemsPerPage
     );
-    if (recentReadings.status === RECENT_DATA_CONSTANTS.success) {
-      return res.send({ data: recentReadings });
+    if (recentReadingsResponse.status === RECENT_DATA_CONSTANTS.success) {
+      return res.send({ data: recentReadingsResponse });
     }
   } catch (error) {
-    const dataListingError = httpErrors(400, "This user cant List recent data");
-    return res.send(dataListingError);
+    const recentreadingsError = httpErrors(
+      400,
+      "This user cant List recent data"
+    );
+    return res.send(recentreadingsError);
   }
 }
 
@@ -131,7 +131,7 @@ module.exports = {
   registerProduct,
   removeProduct,
   initiateJob,
-  updatestatus,
+  updateStatus,
   processingResult,
   listProducts,
   checkJobStatus,

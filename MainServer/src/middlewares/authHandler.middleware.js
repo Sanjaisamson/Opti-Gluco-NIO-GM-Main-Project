@@ -1,6 +1,5 @@
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
-const httpErrors = require("http-errors");
 const userServices = require("../services/userService");
 const { authConfig } = require("../config/authConfig");
 const { userTable } = require("../model/userModel");
@@ -12,7 +11,7 @@ async function accessTokenVerification(req, res, next) {
     const bearerLessToken = header.split(" ")[1];
     const verifiedTokenData = jwt.verify(
       bearerLessToken,
-      process.env.ACCESS_TOKEN_SECRET
+      authConfig.secrets.accessToken
     );
     const authenticatedUser = await userTable.findOne({
       where: {
@@ -25,17 +24,16 @@ async function accessTokenVerification(req, res, next) {
     req.user = authenticatedUser;
     next();
   } catch (error) {
-    console.log(error);
     return res.sendStatus(404);
   }
 }
 
-async function refreshTokenVerification(req, res, next) {
+async function refreshTokenVerification(req, res) {
   try {
     const refreshToken = req.cookies.rtoken;
     const decodedToken = jwt.verify(
       refreshToken,
-      process.env.REFRESH_TOKEN_SECRET
+      authConfig.secrets.refreshToken
     );
     const user = await tokenTable.findOne({
       where: {
@@ -45,11 +43,10 @@ async function refreshTokenVerification(req, res, next) {
     if (!user || user.length) {
       throw new Error("Invalid user");
     }
-    const newTokens = await userServices.generateTokens(user.user_id);
+    const newToken = await userServices.generateTokens(user.user_id);
     return res.send({
-      accessToken: newTokens.accessToken,
+      accessToken: newToken.accessToken,
     });
-    next();
   } catch (error) {
     return res.sendStatus(500);
   }

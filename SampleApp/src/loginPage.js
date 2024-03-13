@@ -38,9 +38,8 @@ const LoginScreen = () => {
         const responseData = response.data;
         await AsyncStorage.setItem("accessToken", responseData.accessToken);
         navigation.navigate("Home", {
-          userId: responseData.userServicesRes.user_id,
-          accessToken: responseData.accessToken,
-          userName: responseData.userServicesRes.user_name,
+          userId: responseData.loginResponse.user_id,
+          userName: responseData.loginResponse.user_name,
         });
       } else {
         setLoginStatus("failed");

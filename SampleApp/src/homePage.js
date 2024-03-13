@@ -33,13 +33,10 @@ const Tab = createBottomTabNavigator();
 const HomeScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const [progress, setProgress] = useState(0.2);
-  const [progressColor, setProgressColor] = useState("#ff0000");
-  const { userId, userName, accessToken } = route.params;
+  const { userId, userName } = route.params;
 
   async function refreshAccessToken() {
     try {
-      const accessToken = await AsyncStorage.getItem("accessToken");
       const requestData = JSON.stringify({
         userId: userId,
       });
@@ -627,7 +624,6 @@ const HomeScreen = () => {
         component={ProductTab}
         initialParams={{
           userId: userId,
-          accessToken: accessToken,
           userName: userName,
         }}
         options={{
@@ -642,7 +638,6 @@ const HomeScreen = () => {
         component={ProfileTab}
         initialParams={{
           userId: userId,
-          accessToken: accessToken,
           userName: userName,
         }}
         options={{

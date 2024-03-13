@@ -1,9 +1,8 @@
-const { ulid } = require("ulid");
-const http = require("http");
 const fs = require("fs");
 require("dotenv").config();
+const { ulid } = require("ulid");
+const cron = require("node-cron");
 const { exec } = require("child_process");
-const errorConstants = require("../constants/errorConstants");
 const {
   JOB_STATUS,
   CRON_CONSTANTS,
@@ -11,8 +10,6 @@ const {
 } = require("../constants/jobConstants");
 const { jobStatusTable } = require("../models/jobStatusModel");
 const { jobDataTable } = require("../models/jobDataModel");
-const { AppError, InternalError } = require("../ERROR/appError");
-const cron = require("node-cron");
 
 async function createJob(requestId) {
   try {
@@ -27,15 +24,16 @@ async function createJob(requestId) {
     return { jobId: newJob.job_id, jobStatus: newJob.job_status };
     // }
   } catch (error) {
-    const newJob = await jobStatusTable.create({
+    await jobStatusTable.create({
       job_id: DUMMY_DATA.job_id,
       job_status: JOB_STATUS.FAILED,
       request_id: requestId,
     });
+    await updateStatusOnServer(DUMMY_DATA.job_id, JOB_STATUS.FAILED, requestId);
     throw error;
   }
 }
-async function readData(jobId, jobStatus, requestId, count) {
+async function readData(jobId, requestId) {
   return new Promise(async (resolve, rejects) => {
     try {
       const filename =
@@ -66,7 +64,7 @@ async function readData(jobId, jobStatus, requestId, count) {
     }
   });
 }
-async function executeCronjob(jobId, jobStatus, requestId, userId) {
+async function executeCronjob(jobId, requestId, userId) {
   return new Promise(async (resolve, rejects) => {
     try {
       let count = 0;
@@ -75,7 +73,7 @@ async function executeCronjob(jobId, jobStatus, requestId, userId) {
       let data;
       cronJob = cron.schedule(CRON_CONSTANTS.CRONE_JOB_INTERVAL, async () => {
         try {
-          data = await readData(jobId, jobStatus, requestId, count);
+          data = await readData(jobId, requestId);
         } catch (error) {
           cronJob.stop();
           const newjobStatus = JOB_STATUS.FAILED;
@@ -88,7 +86,7 @@ async function executeCronjob(jobId, jobStatus, requestId, userId) {
         }
         count++;
         images.push({ name: data.filename, data: data.fileData });
-        const jobLog = await jobDataTable.create({
+        await jobDataTable.create({
           job_id: data.jobId,
           job_status: JOB_STATUS.SUCCESS,
           request_id: data.requestId,
@@ -97,7 +95,7 @@ async function executeCronjob(jobId, jobStatus, requestId, userId) {
         console.log(count);
         if (count >= CRON_CONSTANTS.JOB_COUNT) {
           cronJob && cronJob.stop();
-          const result = await sendResult(images, requestId, jobId, userId);
+          await sendResult(images, requestId, jobId, userId);
           resolve({ images: images, jobStatus: data.jobStatus });
         }
       });
@@ -176,6 +174,7 @@ async function sendResult(images, requestId, jobId, userId) {
     job.job_status = JOB_STATUS.FAILED;
     await job.save();
     await updateStatusOnServer(jobId, job.jobStatus, requestId);
+    throw error;
   }
 }
 module.exports = {

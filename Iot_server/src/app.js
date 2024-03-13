@@ -1,6 +1,5 @@
 const express = require("express");
 const app = express();
-const bodyParser = require("body-parser");
 const PORT = process.env.PORT || 3500;
 const cookieParser = require("cookie-parser");
 app.use(express.json());

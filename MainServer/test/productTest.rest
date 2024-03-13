@@ -36,5 +36,5 @@ Content-Type: application/json
 ###
 ###
 POST  http://localhost:3000/product/recent-readings
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjE0LCJpYXQiOjE3MDk4ODMzNDMsImV4cCI6MTcwOTg4NDU0M30.-Qz9Pz_i4Vcz-xNBVD7ZhNIuFL9zkm_E8qUzExT7_PE
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjE0LCJpYXQiOjE3MTAzMDk0NTYsImV4cCI6MTcxMDMxMDY1Nn0.lnsKVk88raHWYieeAJZx-h-JvwdARE67QB4FbvlDKFI
 ###

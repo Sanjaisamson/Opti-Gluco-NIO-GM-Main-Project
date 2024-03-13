@@ -29,7 +29,7 @@ productRouter.post(
   productController.listRecentReadings
 );
 
-productRouter.post("/update-status", productController.updatestatus);
+productRouter.post("/update-status", productController.updateStatus);
 productRouter.post("/results", productController.processingResult);
 productRouter.post("/check-job-status", productController.checkJobStatus);
 

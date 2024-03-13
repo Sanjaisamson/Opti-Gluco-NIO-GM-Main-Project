@@ -1,21 +1,17 @@
-const http = require("http");
 const fs = require("fs");
 const path = require("path");
 const { ulid } = require("ulid");
+const { cloudinary } = require("../databases/cloudinary");
 const { productTable } = require("../model/productModel");
 const { requestLogTable } = require("../model/requestLogModel");
 const { resultDataTable } = require("../model/resultDataModel");
-const {
-  READ_DATA_CONSTANTS,
-  RECENT_DATA_CONSTANTS,
-} = require("../constants/requestConstants");
-const { cloudinary } = require("../databases/cloudinary");
+const { RECENT_DATA_CONSTANTS } = require("../constants/requestConstants");
 const { defaultStorageDir } = require("../config/storagePath");
 const {
   JOB_STATUS,
 } = require("../../../Iot_server/src/constants/jobConstants");
 
-async function registerProduct(userId, productCode) {
+async function registerProduct(userId, productId) {
   try {
     const product = await productTable.findOne({
       where: {
@@ -23,11 +19,11 @@ async function registerProduct(userId, productCode) {
       },
     });
     if (!product || product.length === 0) {
-      const newProduct = await productTable.create({
+      await productTable.create({
         user_id: userId,
-        product_code: productCode,
+        product_code: productId,
       });
-      return newProduct;
+      return;
     }
   } catch (error) {
     throw error;
@@ -44,12 +40,12 @@ async function removeProduct(userID) {
     if (!product || product.length === 0) {
       throw new Error("this user has no registered product");
     }
-    const user = await productTable.destroy({
+    await productTable.destroy({
       where: {
         user_id: userID,
       },
     });
-    return product.user_name;
+    return;
   } catch (error) {
     throw error;
   }
@@ -82,7 +78,7 @@ async function initiateJob(userId) {
     if (!product || product.length === 0) {
       throw new Error(400, "no products found");
     }
-    const newRequest = await requestLogTable.create({
+    await requestLogTable.create({
       user_id: userId,
       product_code: product.product_code,
       request_code: requestId,
@@ -101,11 +97,6 @@ async function initiateJob(userId) {
       body: requestData,
     });
     if (!response.ok) {
-      const request = await requestLogTable.findOne({
-        where: {
-          request_code: requestId,
-        },
-      });
       throw new Error(400, "error in start job");
     }
     const data = await response.json();
@@ -127,38 +118,38 @@ async function initiateJob(userId) {
 }
 async function updateJobData(jobId, jobStatus, requestId) {
   try {
-    const updatedJobData = await requestLogTable.findOne({
+    const requestLog = await requestLogTable.findOne({
       where: {
         request_code: requestId,
       },
     });
-    updatedJobData.job_id = jobId;
-    updatedJobData.job_status = jobStatus;
-    await updatedJobData.save();
-    return updatedJobData;
+    requestLog.job_id = jobId;
+    requestLog.job_status = jobStatus;
+    await requestLog.save();
+    return requestLog;
   } catch (error) {
     throw error;
   }
 }
 async function updateStatus(requestId, jobStatus, jobId) {
   try {
-    const updatedJobData = await requestLogTable.findOne({
+    const requestLog = await requestLogTable.findOne({
       where: {
         request_code: requestId,
       },
     });
-    updatedJobData.job_id = jobId;
-    updatedJobData.job_status = jobStatus;
-    await updatedJobData.save();
-    return updatedJobData;
+    requestLog.job_id = jobId;
+    requestLog.job_status = jobStatus;
+    await requestLog.save();
+    return requestLog;
   } catch (error) {
-    const request = await requestLogTable.findOne({
+    const requestLog = await requestLogTable.findOne({
       where: {
         request_code: requestId,
       },
     });
-    request.job_status = JOB_STATUS.FAILED;
-    request.save();
+    requestLog.job_status = JOB_STATUS.FAILED;
+    requestLog.save();
     throw error;
   }
 }
@@ -166,7 +157,7 @@ async function updateStatus(requestId, jobStatus, jobId) {
 async function processingResult(images, requestId, userId) {
   try {
     const folderPath = path.join(defaultStorageDir, requestId);
-    const newFolder = fs.mkdirSync(folderPath, { recursive: true });
+    fs.mkdirSync(folderPath, { recursive: true });
     for (let i = 0; i < images.length; i++) {
       const imageData = images[i].data.data;
       const imageBuffer = Buffer.from(imageData);
@@ -174,13 +165,13 @@ async function processingResult(images, requestId, userId) {
       const imageName = images[i].name;
       const filename = `${i}`;
       const filePath = path.join(defaultStorageDir, requestId, filename);
-      const writedFile = fs.writeFile(filePath, imageBuffer, (err) => {
+      fs.writeFile(filePath, imageBuffer, (err) => {
         if (err) {
           throw err;
         }
       });
     }
-    const result = await resultDataTable.create({
+    await resultDataTable.create({
       request_id: requestId,
       user_id: userId,
       folder_path: folderPath,
@@ -198,7 +189,7 @@ async function processingResult(images, requestId, userId) {
     console.log("file saved successfully.......");
     return requestLogResult;
   } catch (error) {
-    const result = await requestLogTable.update(
+    await requestLogTable.update(
       {
         job_status: JOB_STATUS.FAILED,
       },
@@ -217,6 +208,7 @@ async function checkJobStatus(jobId, requestId) {
     const jobStatus = await requestLogTable.findOne({
       where: {
         request_code: requestId,
+        job_id: jobId,
       },
     });
     return jobStatus;

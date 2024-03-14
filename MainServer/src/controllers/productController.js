@@ -12,11 +12,7 @@ async function registerProduct(req, res) {
     await productServices.registerProduct(userId, productId);
     return res.sendStatus(RESPONSE_STATUS_CONSTANTS.SUCCESS);
   } catch (error) {
-    const productRegistrationError = httpErrors(
-      RESPONSE_STATUS_CONSTANTS.FAILED,
-      "This user cant register a product!!"
-    );
-    return res.send(productRegistrationError);
+    return res.sendStatus(RESPONSE_STATUS_CONSTANTS.FAILED);
   }
 }
 
@@ -25,11 +21,7 @@ async function removeProduct(req, res) {
     await productServices.removeProduct(req.user.user_id);
     return res.sendStatus(RESPONSE_STATUS_CONSTANTS.SUCCESS);
   } catch (error) {
-    const productRemoveError = httpErrors(
-      RESPONSE_STATUS_CONSTANTS.FAILED,
-      "This user cant remove product!!"
-    );
-    return res.send(productRemoveError);
+    return res.sendStatus(RESPONSE_STATUS_CONSTANTS.FAILED);
   }
 }
 
@@ -40,11 +32,7 @@ async function listProducts(req, res) {
     );
     return res.send(listProductResponse);
   } catch (error) {
-    const listProductError = httpErrors(
-      RESPONSE_STATUS_CONSTANTS.FAILED,
-      "product Listing error"
-    );
-    return res.send(listProductError);
+    return res.sendStatus(RESPONSE_STATUS_CONSTANTS.FAILED);
   }
 }
 
@@ -60,11 +48,7 @@ async function initiateJob(req, res) {
     );
     return res.send(initiateJobResponse);
   } catch (error) {
-    const initiateJobError = httpErrors(
-      RESPONSE_STATUS_CONSTANTS.FAILED,
-      "This user cant initiate job!!"
-    );
-    return res.send(initiateJobError);
+    return res.sendStatus(RESPONSE_STATUS_CONSTANTS.FAILED);
   }
 }
 
@@ -78,11 +62,7 @@ async function updateStatus(req, res) {
     );
     return updateStatusResponse;
   } catch (error) {
-    const updateStatusError = httpErrors(
-      RESPONSE_STATUS_CONSTANTS.FAILED,
-      "This user cant remove product!!"
-    );
-    return res.send(updateStatusError);
+    return res.sendStatus(RESPONSE_STATUS_CONSTANTS.FAILED);
   }
 }
 async function processingResult(req, res) {
@@ -96,11 +76,7 @@ async function processingResult(req, res) {
     );
     return res.send(processingResultResponse);
   } catch (error) {
-    const processingResultError = httpErrors(
-      RESPONSE_STATUS_CONSTANTS.FAILED,
-      "This user cant remove product!!"
-    );
-    return res.send(processingResultError);
+    return res.sendStatus(RESPONSE_STATUS_CONSTANTS.FAILED);
   }
 }
 
@@ -114,11 +90,7 @@ async function checkJobStatus(req, res) {
 
     return res.send(statusResponse);
   } catch (error) {
-    const checkStatusError = httpErrors(
-      RESPONSE_STATUS_CONSTANTS.FAILED,
-      "This user cant remove product!!"
-    );
-    return res.send(checkStatusError);
+    return res.sendStatus(RESPONSE_STATUS_CONSTANTS.FAILED);
   }
 }
 
@@ -129,15 +101,24 @@ async function listRecentReadings(req, res) {
       req.body.currentPage,
       req.body.itemsPerPage
     );
-    if (recentReadingsResponse.status === RECENT_DATA_CONSTANTS.success) {
+    if (recentReadingsResponse.status === RECENT_DATA_CONSTANTS.SUCCESS) {
       return res.send(recentReadingsResponse);
     }
   } catch (error) {
-    const recentreadingsError = httpErrors(
-      RESPONSE_STATUS_CONSTANTS.FAILED,
-      "This user cant List recent data"
+    return res.sendStatus(RESPONSE_STATUS_CONSTANTS.FAILED);
+  }
+}
+
+async function addReferenceValue(req, res) {
+  try {
+    const addRefernceResponse = await productServices.addReferenceValue(
+      req.user.user_id,
+      req.body.referenceValue,
+      req.body.readingId
     );
-    return res.send(recentreadingsError);
+    return res.sendStatus(RESPONSE_STATUS_CONSTANTS.SUCCESS);
+  } catch (error) {
+    return res.sendStatus(RESPONSE_STATUS_CONSTANTS.FAILED);
   }
 }
 
@@ -150,4 +131,5 @@ module.exports = {
   listProducts,
   checkJobStatus,
   listRecentReadings,
+  addReferenceValue,
 };

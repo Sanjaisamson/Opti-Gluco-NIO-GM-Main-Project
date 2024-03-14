@@ -25,6 +25,7 @@ async function accessTokenVerification(req, res, next) {
     req.user = authenticatedUser;
     next();
   } catch (error) {
+    console.log(error);
     return res.sendStatus(RESPONSE_STATUS_CONSTANTS.FAILED);
   }
 }
@@ -49,6 +50,7 @@ async function refreshTokenVerification(req, res) {
       accessToken: newToken.accessToken,
     });
   } catch (error) {
+    console.log(error);
     return res.sendStatus(RESPONSE_STATUS_CONSTANTS.SERVER_ERROR);
   }
 }

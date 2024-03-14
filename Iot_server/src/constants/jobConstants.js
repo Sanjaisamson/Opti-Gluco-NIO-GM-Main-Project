@@ -14,8 +14,15 @@ const DUMMY_DATA = {
   job_id: "dummy_Job_id",
 };
 
+const RESPONSE_STATUS_CONSTANTS = {
+  SUCCESS: 200 || 201,
+  FAILED: 400 || 404,
+  SERVER_ERROR: 500,
+};
+
 module.exports = {
   JOB_STATUS,
   CRON_CONSTANTS,
   DUMMY_DATA,
+  RESPONSE_STATUS_CONSTANTS,
 };

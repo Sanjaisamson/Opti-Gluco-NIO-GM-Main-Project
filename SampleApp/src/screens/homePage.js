@@ -7,6 +7,7 @@ import {
   ScrollView,
   StatusBar,
   Dimensions,
+  RefreshControl,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import "core-js/stable/atob";
@@ -27,7 +28,7 @@ import {
 import CONSTANTS from "../constants/appConstants";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import axios from "axios";
-const avatarIcon = require("../assets/avatar icon .jpg");
+const avatarIcon = require("../../assets/avatar icon .jpg");
 
 const Tab = createBottomTabNavigator();
 
@@ -35,6 +36,7 @@ const HomeScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { userId, userName } = route.params;
+  const windowHeight = Dimensions.get("window").height;
 
   async function refreshAccessToken() {
     try {
@@ -184,7 +186,7 @@ const HomeScreen = () => {
 
     const readData = async () => {
       let readDataAccessToken = await AsyncStorage.getItem(
-        CONSTANTS.RESPONSE_STATUS.SUCCESS
+        CONSTANTS.STORAGE_CONSTANTS.ACCESS_TOKEN
       );
       const decodedToken = jwtDecode(readDataAccessToken);
       const currentTime = Date.now() / 1000;
@@ -222,6 +224,7 @@ const HomeScreen = () => {
               setStatus(CONSTANTS.STATUS_CONSTANTS.COMPLETED);
               clearInterval(intervalId);
               setLoading(false);
+              handleRecentData();
             }
           }, 1000);
         }
@@ -265,89 +268,90 @@ const HomeScreen = () => {
       setTimeout(() => setRefreshing(false), 1000); // Simulated refresh
     };
     return (
-      <View>
-        <Appbar.Header>
-          <Appbar.BackAction />
-          <Appbar.Content title="Product" />
-          <Appbar.Action icon="magnify" />
-          <Appbar.Action icon="plus" onPress={addProduct} />
-        </Appbar.Header>
+      <PaperProvider>
         <View>
-          <Avatar.Image
-            size={100}
-            source={avatarIcon} // C:\Users\SANJAI\OneDrive\Documents\Main_Project\SampleApp\assets\avatar icon .jpg
-          />
-        </View>
-        <Text>Welcome {userName}</Text>
-        <View>
-          {productList && productList.length > 0 ? (
-            productList.map((product) => (
-              <Card key={product.product_id} style={styles.card}>
-                <Card.Content>
-                  <Text style={styles.text}>
-                    Device Id : {product.product_id}
-                  </Text>
-                  <Text style={styles.text}>
-                    Device Code : {product.product_code}
-                  </Text>
-                </Card.Content>
-                <Card.Actions>
-                  <Button onPress={readData}>Start</Button>
-                  <Button onPress={removeProduct}>Remove</Button>
-                </Card.Actions>
-              </Card>
-            ))
-          ) : (
-            <Card style={styles.card}>
-              <Card.Content>
-                <Text style={styles.text}>No Products available .....</Text>
-              </Card.Content>
-            </Card>
-          )}
-          <View />
+          <Appbar.Header>
+            <Appbar.BackAction />
+            <Appbar.Content title="Product" />
+            <Appbar.Action icon="magnify" />
+            <Appbar.Action icon="plus" onPress={addProduct} />
+          </Appbar.Header>
           <View>
-            {loading ? (
-              <Text style={styles.loadingText}>Loading...</Text>
+            <Avatar.Image
+              size={100}
+              source={avatarIcon} // C:\Users\SANJAI\OneDrive\Documents\Main_Project\SampleApp\assets\avatar icon .jpg
+            />
+          </View>
+          <Text>Welcome {userName}</Text>
+          <View>
+            {productList && productList.length > 0 ? (
+              productList.map((product) => (
+                <Card key={product.product_id} style={styles.card}>
+                  <Card.Content>
+                    <Text style={styles.text}>
+                      Device Id : {product.product_id}
+                    </Text>
+                    <Text style={styles.text}>
+                      Device Code : {product.product_code}
+                    </Text>
+                  </Card.Content>
+                  <Card.Actions>
+                    <Button onPress={readData}>Start</Button>
+                    <Button onPress={removeProduct}>Remove</Button>
+                  </Card.Actions>
+                </Card>
+              ))
             ) : (
-              <Text></Text>
+              <Card style={styles.card}>
+                <Card.Content>
+                  <Text style={styles.text}>No Products available .....</Text>
+                </Card.Content>
+              </Card>
+            )}
+            <View />
+            <View>
+              {loading ? (
+                <Text style={styles.loadingText}>Loading...</Text>
+              ) : (
+                <Text></Text>
+              )}
+            </View>
+            {status === CONSTANTS.STATUS_CONSTANTS.COMPLETED && (
+              <>
+                <Text style={styles.successMessage}>
+                  Action Successfully completed........
+                </Text>
+                {showAlert({ msg: CONSTANTS.STATUS_CONSTANTS.SUCCESS })}
+              </>
+            )}
+            {status === CONSTANTS.STATUS_CONSTANTS.PROGRESS && (
+              <>
+                <Text style={styles.successMessage}>
+                  Action on progress....Please wait
+                </Text>
+              </>
+            )}
+            {status === CONSTANTS.STATUS_CONSTANTS.FAILED && (
+              <>
+                <Text style={styles.errorMessage}>
+                  Sorry!! Action Failed. Please try again.
+                </Text>
+                {showAlert({ msg: CONSTANTS.STATUS_CONSTANTS.ERROR })}
+              </>
             )}
           </View>
-          {status === CONSTANTS.STATUS_CONSTANTS.COMPLETED && (
-            <>
-              <Text style={styles.successMessage}>
-                Action Successfully completed........
-              </Text>
-              {showAlert({ msg: CONSTANTS.STATUS_CONSTANTS.SUCCESS })}
-            </>
-          )}
-          {status === CONSTANTS.STATUS_CONSTANTS.PROGRESS && (
-            <>
-              <Text style={styles.successMessage}>
-                Action on progress....Please wait
-              </Text>
-            </>
-          )}
-          {status === CONSTANTS.STATUS_CONSTANTS.FAILED && (
-            <>
-              <Text style={styles.errorMessage}>
-                Sorry!! Action Failed. Please try again.
-              </Text>
-              {showAlert({ msg: CONSTANTS.STATUS_CONSTANTS.ERROR })}
-            </>
-          )}
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+          <View>
+            <Button onPress={handleRecentData}>Recent Readings </Button>
+          </View>
+          <Appbar.Header />
         </View>
-        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
-        <View>
-          <Button onPress={handleRecentData}>Recent Readings </Button>
-        </View>
-        <Appbar.Header />
-      </View>
+      </PaperProvider>
     );
   }
   function ProfileTab() {
     const route = useRoute();
     const { userId, userName } = route.params;
-    const windowHeight = Dimensions.get("window").height;
     const [visible, setVisible] = React.useState(false);
     const [isLoggedOut, setLogout] = useState(false);
 

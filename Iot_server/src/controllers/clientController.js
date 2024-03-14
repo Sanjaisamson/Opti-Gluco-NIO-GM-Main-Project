@@ -1,6 +1,6 @@
 const clientServices = require("../services/clientServices");
-
-async function initiateJob(req, res, next) {
+const { RESPONSE_STATUS_CONSTANTS } = require("../constants/jobConstants");
+async function initiateJob(req, res) {
   try {
     const { userId, productCode, requestId, captureDelay, totalTime } =
       req.body;
@@ -16,7 +16,7 @@ async function initiateJob(req, res, next) {
       jobStatus: initiateJobResponse.jobStatus,
     });
   } catch (error) {
-    return res.sendStatus(500);
+    return res.sendStatus(RESPONSE_STATUS_CONSTANTS.SERVER_ERROR);
   }
 }
 module.exports = { initiateJob };

@@ -7,6 +7,7 @@ const {
   JOB_STATUS,
   CRON_CONSTANTS,
   DUMMY_DATA,
+  RESPONSE_STATUS_CONSTANTS,
 } = require("../constants/jobConstants");
 const { jobStatusTable } = require("../models/jobStatusModel");
 const { jobDataTable } = require("../models/jobDataModel");
@@ -130,8 +131,9 @@ async function updateStatusOnServer(jobId, jobStatus, requestId) {
       });
       job.job_status = JOB_STATUS.FAILED;
       await job.save();
-      throw new Error("status updation Network response was not ok");
+      throw new Error(RESPONSE_STATUS_CONSTANTS.FAILED);
     }
+    return response;
   } catch (error) {
     throw error;
   }
@@ -165,7 +167,7 @@ async function sendResult(images, requestId, jobId, userId, productCode) {
       });
       job.job_status = JOB_STATUS.FAILED;
       await job.save();
-      throw new Error("result sending  Network response was not ok");
+      throw new Error(RESPONSE_STATUS_CONSTANTS.FAILED);
     }
     return response;
   } catch (error) {

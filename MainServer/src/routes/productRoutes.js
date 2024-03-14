@@ -28,7 +28,11 @@ productRouter.post(
   authHandler.accessTokenVerification,
   productController.listRecentReadings
 );
-
+productRouter.post(
+  "/Add-reference-value",
+  authHandler.accessTokenVerification,
+  productController.addReferenceValue
+);
 productRouter.post("/update-status", productController.updateStatus);
 productRouter.post("/results", productController.processingResult);
 productRouter.post("/check-job-status", productController.checkJobStatus);

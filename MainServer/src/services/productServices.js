@@ -9,6 +9,7 @@ const {
   RECENT_DATA_CONSTANTS,
   ARRAY_CONSTANTS,
   RESPONSE_STATUS_CONSTANTS,
+  DUMMYDATA_CONSTANTS,
 } = require("../constants/appConstants");
 const { defaultStorageDir } = require("../config/storagePath");
 const {
@@ -227,7 +228,7 @@ async function checkJobStatus(jobId, requestId) {
 
 async function listRecentReadings(userId, currentPage, itemsPerPage) {
   try {
-    let status = RECENT_DATA_CONSTANTS.success;
+    let status = RECENT_DATA_CONSTANTS.SUCCESS;
     const products = await productTable.findOne({
       where: {
         user_id: userId,
@@ -246,7 +247,7 @@ async function listRecentReadings(userId, currentPage, itemsPerPage) {
       !recentReadings ||
       recentReadings.length === ARRAY_CONSTANTS.LENGTH_ZERO
     ) {
-      status = RECENT_DATA_CONSTANTS.failure;
+      status = RECENT_DATA_CONSTANTS.FAILED;
       return status;
     }
     const totalRecords = recentReadings.length;
@@ -267,6 +268,26 @@ async function listRecentReadings(userId, currentPage, itemsPerPage) {
     throw error;
   }
 }
+async function addReferenceValue(userId, referenceValue, readingId) {
+  try {
+    const correspondReading = await resultDataTable.findOne({
+      where: {
+        result_id: readingId,
+      },
+    });
+    if (
+      !correspondReading ||
+      correspondReading.length === ARRAY_CONSTANTS.LENGTH_ZERO
+    ) {
+      throw new Error(RESPONSE_STATUS_CONSTANTS.FAILED);
+    }
+    correspondReading.refrence_value = referenceValue;
+    await correspondReading.save();
+    return;
+  } catch (error) {
+    throw error;
+  }
+}
 
 module.exports = {
   registerProduct,
@@ -278,4 +299,5 @@ module.exports = {
   listProducts,
   checkJobStatus,
   listRecentReadings,
+  addReferenceValue,
 };

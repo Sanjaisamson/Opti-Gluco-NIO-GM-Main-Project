@@ -5,8 +5,8 @@ const READ_DATA_CONSTANTS = {
 };
 
 const RECENT_DATA_CONSTANTS = {
-  success: "ok",
-  failure: "Empty",
+  SUCCESS: "ok",
+  FAILED: "Empty",
 };
 
 const RESPONSE_STATUS_CONSTANTS = {
@@ -17,9 +17,13 @@ const RESPONSE_STATUS_CONSTANTS = {
 const ARRAY_CONSTANTS = {
   LENGTH_ZERO: 0,
 };
+const DUMMYDATA_CONSTANTS = {
+  DATA: "DUMMY DATA",
+};
 module.exports = {
   READ_DATA_CONSTANTS,
   RECENT_DATA_CONSTANTS,
   RESPONSE_STATUS_CONSTANTS,
   ARRAY_CONSTANTS,
+  DUMMYDATA_CONSTANTS,
 };

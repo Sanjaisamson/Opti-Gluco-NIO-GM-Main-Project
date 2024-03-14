@@ -7,8 +7,17 @@ import {
   TouchableOpacity,
   RefreshControl,
   StyleSheet,
+  Dimensions,
 } from "react-native";
-import { Text, Card } from "react-native-paper";
+import {
+  Text,
+  Card,
+  PaperProvider,
+  Modal,
+  Portal,
+  Button,
+  TextInput,
+} from "react-native-paper";
 import { jwtDecode } from "jwt-decode";
 
 const RecentData = () => {
@@ -17,6 +26,19 @@ const RecentData = () => {
   const [items, setItems] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
   const itemsPerPage = 3;
+  const [manualReferenceData, setManualSugarData] = useState("");
+  const windowHeight = Dimensions.get("window").height;
+  const [visible, setVisible] = React.useState(false);
+  const [selectedReadingId, setSelectedReadingId] = useState("");
+  const [status, setStatus] = useState("");
+  const showModal = (readingId) => {
+    setSelectedReadingId(readingId);
+    setVisible(true);
+  };
+  const hideModal = () => {
+    setVisible(false);
+  };
+  const containerStyle = { backgroundColor: "white", padding: 20 };
 
   useEffect(() => {
     fetchData(currentPage);
@@ -126,60 +148,169 @@ const RecentData = () => {
     setTimeout(() => setRefreshing(false), 1000); // Simulated refresh
   };
 
-  return (
-    <View style={{ flex: 1 }}>
-      <View>
-        <Text style={styles.title}>Your Recent Readings....</Text>
-      </View>
+  const handleReferenceValue = async () => {
+    try {
+      hideModal();
+      let handleReferenceValueAccessToken = await AsyncStorage.getItem(
+        CONSTANTS.STORAGE_CONSTANTS.ACCESS_TOKEN
+      );
+      const decodedToken = jwtDecode(handleReferenceValueAccessToken);
+      const currentTime = Date.now() / 1000;
+      if (decodedToken.exp < currentTime) {
+        const newToken = await refreshAccessToken(decodedToken.userId);
+        handleReferenceValueAccessToken = newToken;
+      }
+      const requestData = JSON.stringify({
+        referenceValue: manualReferenceData,
+        readingId: selectedReadingId,
+      });
 
-      <View
-        style={{
-          flex: 1,
-          flexDirection: "row",
-          flexWrap: "wrap",
-          justifyContent: "center",
-        }}
-      >
-        {items && items.length > 0 ? (
-          items.map((item, index) => (
-            <Card key={index} style={styles.card}>
+      const response = await axios.post(
+        `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/product/Add-reference-value`,
+        requestData,
+        {
+          headers: {
+            Authorization: `Bearer ${handleReferenceValueAccessToken}`,
+            "Content-Type": "application/json",
+          },
+          withCredentials: true,
+        }
+      );
+
+      if (response.status === CONSTANTS.RESPONSE_STATUS.SUCCESS) {
+        const data = response.data;
+        setStatus(CONSTANTS.STATUS_CONSTANTS.SUCCESS);
+      }
+    } catch (error) {
+      throw error;
+    }
+  };
+  return (
+    <PaperProvider>
+      <View style={{ flex: 1 }}>
+        <View>
+          <Text style={styles.title}>Your Recent Readings....</Text>
+        </View>
+        <View
+          style={{
+            flex: 1,
+            flexDirection: "row",
+            flexWrap: "wrap",
+            justifyContent: "center",
+          }}
+        >
+          {items && items.length > 0 ? (
+            items.map((item, index) => (
+              <Card key={index} style={styles.card}>
+                <Card.Content
+                  style={{ flexDirection: "row", alignItems: "center" }}
+                >
+                  <View>
+                    <Text style={styles.text}>
+                      Reading - ID: {item.result_id}
+                    </Text>
+                    <Text style={styles.text}>
+                      Reading - Time: {item.createdAt}
+                    </Text>
+                    <Text style={styles.text}>Blood-Glucose Level :</Text>
+                  </View>
+                  <View style={{ marginLeft: 30 }}>
+                    <Button
+                      onPress={() => {
+                        showModal(item.result_id);
+                      }}
+                    >
+                      Add
+                    </Button>
+                  </View>
+                </Card.Content>
+              </Card>
+            ))
+          ) : (
+            <Card style={styles.card}>
               <Card.Content>
-                <Text style={styles.text}>Reading - ID: {item.result_id}</Text>
-                <Text style={styles.text}>
-                  Reading - Time: {item.createdAt}
-                </Text>
-                <Text style={styles.text}>Blood-Glucose Level :</Text>
-                {/* Add additional fields as needed */}
+                <Text>No Products available...</Text>
               </Card.Content>
             </Card>
-          ))
-        ) : (
-          <Card style={styles.card}>
-            <Card.Content>
-              <Text>No Products available...</Text>
-            </Card.Content>
-          </Card>
-        )}
+          )}
+        </View>
+        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "center",
+            marginVertical: 10,
+          }}
+        >
+          {renderPaginationButtons(currentPage, itemsPerPage)}
+        </View>
       </View>
-      <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "center",
-          marginVertical: 10,
-        }}
-      >
-        {renderPaginationButtons(currentPage, itemsPerPage)}
+      <View>
+        <Portal>
+          <Modal
+            animationType="slide"
+            transparent={true}
+            visible={visible}
+            onDismiss={hideModal}
+            contentContainerStyle={containerStyle}
+          >
+            <View style={[styles.bottomSheet, { height: windowHeight * 0.3 }]}>
+              <View
+                style={{
+                  flex: 0,
+                  width: "100%",
+                  justifyContent: "space-between",
+                  flexDirection: "row",
+                }}
+              >
+                <Text style={styles.modalText}>
+                  Add your manual sugar level....
+                </Text>
+              </View>
+              <View>
+                <TextInput
+                  style={styles.input}
+                  mode="outlined"
+                  placeholder="Sugar level"
+                  onChangeText={setManualSugarData}
+                  value={manualReferenceData}
+                />
+              </View>
+              <View style={{ margin: 20 }}>
+                <Button
+                  icon="check"
+                  mode="contained"
+                  buttonColor="red"
+                  onPress={handleReferenceValue}
+                >
+                  ADD
+                </Button>
+              </View>
+              <View style={{ margin: 20 }}>
+                <Button
+                  icon="cancel"
+                  mode="elevated"
+                  buttonColor="#e8dfdf"
+                  textColor="#0f1012"
+                  onPress={hideModal}
+                >
+                  Cancel
+                </Button>
+              </View>
+            </View>
+          </Modal>
+        </Portal>
       </View>
-    </View>
+    </PaperProvider>
   );
 };
 const styles = StyleSheet.create({
   card: {
+    flexDirection: "row",
     margin: 10,
     padding: 6,
     backgroundColor: "#f0f0f0",
-    borderRadius: 25,
+    borderRadius: 0,
     shadowColor: "#010205", //"#000",
     shadowOffset: {
       width: 0,

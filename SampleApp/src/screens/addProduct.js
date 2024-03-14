@@ -3,6 +3,7 @@ import { View, StyleSheet } from "react-native";
 import { Text, Button, Avatar, TextInput } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
 import { useRoute } from "@react-navigation/native";
+import { jwtDecode } from "jwt-decode";
 import axios from "axios";
 import CONSTANTS from "../constants/appConstants";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -73,7 +74,9 @@ const AddProductScreen = () => {
       );
       if (response.status === CONSTANTS.RESPONSE_STATUS.SUCCESS) {
         setRegistrationStatus(CONSTANTS.STATUS_CONSTANTS.COMPLETED);
-        navigation.navigate(CONSTANTS.PATH_CONSTANTS.HOME);
+        navigation.navigate(CONSTANTS.PATH_CONSTANTS.HOME, {
+          userId: userId,
+        });
       } else {
         throw new Error(CONSTANTS.RESPONSE_STATUS.FAILED);
       }

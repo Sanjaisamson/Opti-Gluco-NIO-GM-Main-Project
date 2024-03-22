@@ -8,6 +8,7 @@ import {
   RefreshControl,
   StyleSheet,
   Dimensions,
+  Image,
 } from "react-native";
 import {
   Text,
@@ -19,18 +20,20 @@ import {
   TextInput,
 } from "react-native-paper";
 import { jwtDecode } from "jwt-decode";
+const logo = require("../../assets/opti-gluco-favicon-black.png"); //C:\Users\SANJAI\OneDrive\Documents\Main_Project\SampleApp\assets\opti-gluco-favicon-black.png
 
 const RecentData = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [currentPage, setCurrentPage] = useState(0);
   const [items, setItems] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
-  const itemsPerPage = 3;
+  const itemsPerPage = 4;
   const [manualReferenceData, setManualSugarData] = useState("");
   const windowHeight = Dimensions.get("window").height;
   const [visible, setVisible] = React.useState(false);
   const [selectedReadingId, setSelectedReadingId] = useState("");
   const [status, setStatus] = useState("");
+  const [formattedTime, setFormattedTime] = useState("");
   const showModal = (readingId) => {
     setSelectedReadingId(readingId);
     setVisible(true);
@@ -148,6 +151,23 @@ const RecentData = () => {
     setTimeout(() => setRefreshing(false), 1000); // Simulated refresh
   };
 
+  const processReadingtime = (createdAt) => {
+    try {
+      console.log(createdAt);
+      const [datePart, timePart] = createdAt.split(" ");
+      const timeOnly = timePart.split(".")[0];
+      console.log("timeonly", timeOnly);
+      const [hours, minutes, seconds] = timeOnly.split(":");
+      let hoursIn12Format = parseInt(hours, 10);
+      const ampm = hoursIn12Format >= 12 ? "PM" : "AM";
+      hoursIn12Format %= 12;
+      hoursIn12Format = hoursIn12Format || 12;
+      const time12HourFormat = `${hoursIn12Format}:${minutes}:${seconds} ${ampm}`;
+      console.log("time at function", time12HourFormat);
+      return time12HourFormat;
+    } catch (error) {}
+  };
+
   const handleReferenceValue = async () => {
     try {
       hideModal();
@@ -194,27 +214,55 @@ const RecentData = () => {
         <View
           style={{
             flex: 1,
-            flexDirection: "row",
-            flexWrap: "wrap",
-            justifyContent: "center",
+            flexDirection: "column",
           }}
         >
           {items && items.length > 0 ? (
             items.map((item, index) => (
               <Card key={index} style={styles.card}>
+                {}
                 <Card.Content
-                  style={{ flexDirection: "row", alignItems: "center" }}
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
                 >
-                  <View>
-                    <Text style={styles.text}>
-                      Reading - ID: {item.result_id}
-                    </Text>
-                    <Text style={styles.text}>
-                      Reading - Time: {item.createdAt}
-                    </Text>
-                    <Text style={styles.text}>Blood-Glucose Level :</Text>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      width: "80%",
+                    }}
+                  >
+                    <Image
+                      source={logo} // Replace with the path to your exciting image
+                      style={styles.image}
+                    />
+                    <View style={{ marginLeft: 5 }}>
+                      <Text style={{ fontWeight: "bold" }}>
+                        {new Date(item.createdAt).toLocaleDateString([], {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                          weekday: "long",
+                        })}
+                      </Text>
+                      <Text style={styles.text}>
+                        {new Date(item.createdAt).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </Text>
+                      <Text style={styles.text}>
+                        Blood-Glucose Level:{} mg/dl
+                      </Text>
+                      <Text style={styles.text}>
+                        Reference value :{item.refrence_value} mg/dl
+                      </Text>
+                    </View>
                   </View>
-                  <View style={{ marginLeft: 30 }}>
+                  <View style={{}}>
                     <Button
                       onPress={() => {
                         showModal(item.result_id);
@@ -229,7 +277,7 @@ const RecentData = () => {
           ) : (
             <Card style={styles.card}>
               <Card.Content>
-                <Text>No Products available...</Text>
+                <Text>No Readings available...</Text>
               </Card.Content>
             </Card>
           )}
@@ -306,23 +354,19 @@ const RecentData = () => {
 };
 const styles = StyleSheet.create({
   card: {
-    flexDirection: "row",
-    margin: 10,
-    padding: 6,
+    width: "95%",
+    marginLeft: "auto",
+    marginRight: "auto",
     backgroundColor: "#f0f0f0",
     borderRadius: 0,
     shadowColor: "#010205", //"#000",
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 0,
     },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
   },
   text: {
-    fontSize: 16,
-    fontWeight: "bold",
+    fontSize: 12,
     color: "#333",
   },
   title: {
@@ -330,6 +374,11 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     justifyContent: "center",
     margin: 50,
+  },
+  image: {
+    width: 50,
+    height: 50, // Adjust according to your image size
+    resizeMode: "contain",
   },
 });
 

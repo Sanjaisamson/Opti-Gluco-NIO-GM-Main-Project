@@ -38,8 +38,8 @@ async function readData(jobId, requestId) {
   return new Promise(async (resolve, rejects) => {
     try {
       const filename =
-        "C:\\Users\\SANJAI\\OneDrive\\Documents\\Main_Project\\dummy_data\\bg picture - Copy - Copy.jpg"; // `image${count}.jpg`"C:\Users\SANJAI\OneDrive\Documents\Main_Project\dummy_data\bg picture - Copy - Copy.jpg"
-      // const command = `raspistill -o ${filename} -tl 8000 -t 128000`;
+        "C:\\Users\\SANJAI\\OneDrive\\Documents\\Main_Project\\orginal_images\\85-95_original_image.jpg"; // `image${count}.jpg`"C:\Users\SANJAI\OneDrive\Documents\Main_Project\dummy_data\bg picture - Copy - Copy.jpg"
+      // const command = `raspistill -o ${filename}%04d.jpg -tl 8000 -t 128000`;
       // exec(command, (error, stdout, stderr) => {
       //   if (error) {
       //     console.error(`Error capturing images: ${error.message}`);

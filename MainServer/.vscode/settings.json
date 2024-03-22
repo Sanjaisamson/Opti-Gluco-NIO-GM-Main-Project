@@ -1,8 +1,9 @@
 {
-  "workbench.colorTheme": "Kimbie Dark",
+  "workbench.colorTheme": "Default Dark+",
   "rest-client.environmentVariables": {
     "local": {
       "baseUrl": "https://localhost:3000"
     }
-  }
+  },
+  "git.ignoreLimitWarning": true
 }

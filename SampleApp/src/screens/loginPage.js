@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 import "core-js/stable/atob";
 import axios from "axios";
-import { View, TextInput, StyleSheet, Vibration } from "react-native";
+import { View, StyleSheet, Vibration, StatusBar, Image } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { Text, Button } from "react-native-paper";
+import { Text, Button, TextInput } from "react-native-paper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import CONSTANTS from "../constants/appConstants";
+
+const logo = require("../../assets/opti-gluco-high-resolution-logo-white-transparent.png"); // C:\Users\SANJAI\OneDrive\Documents\Main_Project\SampleApp\assets\opti-gluco-high-resolution-logo-white-transparent.png
 
 const LoginScreen = () => {
   const [email, setEmail] = useState("");
@@ -56,13 +58,22 @@ const LoginScreen = () => {
   return (
     <View style={styles.container}>
       <View>
+        <Image
+          source={logo} // Replace with the path to your exciting image
+          style={styles.image}
+        />
+      </View>
+      <View>
         <Text style={styles.title} variant="displayMedium">
-          Login
+          Are you ready to Check?
         </Text>
       </View>
       <TextInput
         style={styles.input}
+        placeholderTextColor={"#8c8c8c"}
         placeholder="Email"
+        textColor="white"
+        cursorColor="white"
         onChangeText={setEmail}
         clearTextOnFocus={true}
         value={email}
@@ -70,21 +81,29 @@ const LoginScreen = () => {
       />
       <TextInput
         style={styles.input}
+        placeholderTextColor={"#8c8c8c"}
         placeholder="Password"
+        cursorColor="white"
+        textColor="white"
         onChangeText={setPassword}
         clearTextOnFocus={true}
         value={password}
         secureTextEntry
       />
+      <Text style={{ fontSize: 10, color: "#f2f4f7" }} variant="displayMedium">
+        By continuing, you agree to the T&C and Privacy policy
+      </Text>
       <View style={styles.fixToText}>
-        <Button
-          style={styles.button}
-          icon="login"
-          mode="elevated"
-          title="Login"
-          onPress={handleLogin}
-        >
-          Login
+        <Button style={styles.button} title="Login" onPress={handleLogin}>
+          <Text
+            style={{
+              fontSize: 20,
+              color: "#f2f4f7",
+              fontWeight: "bold",
+            }}
+          >
+            Login
+          </Text>
         </Button>
       </View>
       <View>
@@ -97,16 +116,39 @@ const LoginScreen = () => {
           </Text>
         )}
       </View>
-
-      <View style={styles.footer}>
-        <Text>Create an account</Text>
-        <Button
-          icon="login"
-          mode="text"
-          title="Register"
-          onPress={handleRegister}
+      <View>
+        <Text
+          style={{
+            margin: 20,
+            fontSize: 10,
+            color: "#e6e6e6",
+          }}
         >
-          sign up
+          ------------------------------------------------------
+          <Text
+            style={{
+              fontSize: 20,
+              color: "#f2f4f7",
+              fontWeight: "bold",
+            }}
+          >
+            OR
+          </Text>
+          ------------------------------------------------------
+        </Text>
+      </View>
+      <View>
+        <Button mode="text" title="Register" onPress={handleRegister}>
+          <Text
+            style={{
+              fontSize: 20,
+              color: "#a6a6a6",
+              fontWeight: "bold",
+              marginBottom: 50,
+            }}
+          >
+            Create a new account
+          </Text>
         </Button>
       </View>
     </View>
@@ -116,23 +158,31 @@ const LoginScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
+    paddingTop: StatusBar.currentHeight,
+    justifyContent: "space-between",
     alignItems: "center",
+    backgroundColor: "#000103",
   },
   input: {
     height: 40,
-    width: 200,
-    margin: 12,
+    width: 300,
+    borderColor: "#f2f4f7",
     borderWidth: 1,
-    padding: 10,
+    backgroundColor: "#000103",
+    borderBlockColor: "#f2f4f7",
   },
   fixToText: {
     flexDirection: "row",
     justifyContent: "space-between",
   },
   button: {
-    alignItems: "center",
-    borderBlockColor: "blue",
+    padding: 0,
+    width: "80%",
+    height: 50,
+    color: "#841584",
+    borderRadius: 10,
+    backgroundColor: "#ff0000",
+    justifyContent: "center",
   },
   successMessage: {
     color: "green",
@@ -142,10 +192,19 @@ const styles = StyleSheet.create({
     color: "red",
     marginTop: 10,
   },
-  footer: {
-    margin: 12,
-    padding: 60,
+  title: {
+    fontSize: 30,
+    marginTop: 0,
+    margin: 30,
+    padding: "auto",
+    fontWeight: "bold",
+    justifyContent: "center",
+    color: "#f2f4f7",
+  },
+  image: {
+    width: 200,
+    height: 100, // Adjust according to your image size
+    resizeMode: "contain",
   },
 });
-
 export default LoginScreen;

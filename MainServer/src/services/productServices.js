@@ -162,14 +162,14 @@ async function updateStatus(requestId, jobStatus, jobId) {
   }
 }
 
-async function processingResult(images, requestId, userId, productCode) {
+async function saveFileOnStorage(images, requestId, userId, productCode) {
   try {
+    const resultArray = [];
     const folderPath = path.join(defaultStorageDir, requestId);
     fs.mkdirSync(folderPath, { recursive: true });
     for (let i = 0; i < images.length; i++) {
       const imageData = images[i].data.data;
       const imageBuffer = Buffer.from(imageData);
-      // *******the name of image must be change after integrating the processor
       const imageName = images[i].name;
       const filename = `${i}`;
       const filePath = path.join(defaultStorageDir, requestId, filename);
@@ -178,13 +178,69 @@ async function processingResult(images, requestId, userId, productCode) {
           throw err;
         }
       });
+      const inference = await takeMlInfernce(
+        imageBuffer,
+        requestId,
+        userId,
+        productCode,
+        folderPath
+      );
+      resultArray.push(inference);
     }
+    return resultArray;
+  } catch (error) {
+    throw error;
+  }
+}
+
+async function takeMlInfernce(
+  imageBuffer,
+  requestId,
+  userId,
+  productCode,
+  folderPath
+) {
+  try {
+    const requestData = JSON.stringify({
+      bufferdata: imageBuffer,
+    });
+    const response = await fetch("http://127.0.0.1:5000/predict", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Content-Length": Buffer.byteLength(requestData),
+      },
+      body: requestData,
+    });
+    if (!response.ok) {
+      throw new Error(
+        RESPONSE_STATUS_CONSTANTS.FAILED,
+        "error in sending image for ml inference"
+      );
+    }
+    const resultCategory = await response.json();
     await resultDataTable.create({
       request_id: requestId,
       user_id: userId,
       product_code: productCode,
       folder_path: folderPath,
+      result_value: resultCategory,
     });
+    return resultCategory;
+  } catch (error) {
+    throw error;
+  }
+}
+
+async function processingResult(images, requestId, userId, productCode) {
+  try {
+    const processedImage = await saveFileOnStorage(
+      images,
+      requestId,
+      userId,
+      productCode
+    );
+    console.log("results after all process", processedImage);
     const requestLogResult = await requestLogTable.update(
       {
         job_status: JOB_STATUS.SUCCESS,
@@ -243,6 +299,7 @@ async function listRecentReadings(userId, currentPage, itemsPerPage) {
         product_code: products.product_code,
       },
     });
+
     if (
       !recentReadings ||
       recentReadings.length === ARRAY_CONSTANTS.LENGTH_ZERO

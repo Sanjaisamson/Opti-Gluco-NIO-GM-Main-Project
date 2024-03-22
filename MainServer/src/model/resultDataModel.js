@@ -13,6 +13,7 @@ const resultDataTable = sequelize.define("resultDataTable", {
   product_code: DataTypes.STRING,
   folder_path: DataTypes.STRING,
   refrence_value: DataTypes.STRING,
+  result_value: DataTypes.STRING,
 });
 // sequelize.sync({ alter: true });
 // console.log("table sync succefully completed");

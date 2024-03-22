@@ -1,5 +1,11 @@
 import React, { useState } from "react";
-import { View, StyleSheet } from "react-native";
+import {
+  View,
+  StyleSheet,
+  StatusBar,
+  Image,
+  TouchableOpacity,
+} from "react-native";
 import { Text, Button, Avatar, TextInput } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
 import { useRoute } from "@react-navigation/native";
@@ -7,6 +13,10 @@ import { jwtDecode } from "jwt-decode";
 import axios from "axios";
 import CONSTANTS from "../constants/appConstants";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+
+const logo = require("../../assets/opti-gluco-high-resolution-logo-white-transparent.png");
+const logoIcon = require("../../assets/opti-gluco-favicon-white.png");
+const avatarIcon = require("../../assets/avatar icon .jpg");
 
 const AddProductScreen = () => {
   const [registrationStatus, setRegistrationStatus] = useState("");
@@ -86,32 +96,80 @@ const AddProductScreen = () => {
   };
   return (
     <View style={styles.container}>
-      <View>
-        <Text style={styles.title}>Add new Product</Text>
+      <View
+        style={{
+          margin: 10,
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          backgroundColor: "#000103",
+        }}
+      >
+        <View>
+          <Image
+            source={logo} // Replace with the path to your exciting image
+            style={{
+              width: 200,
+              height: 50,
+              resizeMode: "contain",
+            }}
+          />
+        </View>
+        <View>
+          <Avatar.Image size={30} source={avatarIcon} />
+        </View>
       </View>
-      <View>
-        <TextInput
-          style={styles.input}
-          mode="outlined"
-          onChangeText={setProductCode}
-          placeholder="Product Code..."
-        />
-      </View>
-      <View style={styles.button}>
-        <Button
-          icon="login"
-          mode="elevated"
-          title="Register"
-          onPress={handleAddProduct}
-        ></Button>
-        {registrationStatus === CONSTANTS.STATUS_CONSTANTS.COMPLETED && (
-          <Text style={styles.successMessage}>Registration Successful!</Text>
-        )}
-        {registrationStatus === CONSTANTS.STATUS_CONSTANTS.FAILED && (
-          <Text style={styles.errorMessage}>
-            Registration Failed. Please try again.
-          </Text>
-        )}
+      <View
+        style={{
+          marginTop: 200,
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <View>
+          <Text style={styles.title}>Add new device...</Text>
+        </View>
+        <View>
+          <TextInput
+            style={styles.input}
+            mode="outlined"
+            placeholderTextColor={"#8c8c8c"}
+            textColor="white"
+            cursorColor="white"
+            onChangeText={setProductCode}
+            placeholder="Product Code..."
+          />
+        </View>
+        <View>
+          <TouchableOpacity
+            style={{
+              borderRadius: 5,
+              width: 200,
+              height: 40,
+              backgroundColor: "red", // grey shade
+              justifyContent: "center",
+            }}
+            onPress={handleAddProduct}
+          >
+            <Text
+              style={{
+                textAlign: "center",
+                color: "white",
+                fontWeight: "bold",
+              }}
+            >
+              Pair your device
+            </Text>
+          </TouchableOpacity>
+          {registrationStatus === CONSTANTS.STATUS_CONSTANTS.COMPLETED && (
+            <Text style={styles.successMessage}>Registration Successful!</Text>
+          )}
+          {registrationStatus === CONSTANTS.STATUS_CONSTANTS.FAILED && (
+            <Text style={styles.errorMessage}>
+              Registration Failed. Please try again.
+            </Text>
+          )}
+        </View>
       </View>
     </View>
   );
@@ -119,21 +177,23 @@ const AddProductScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    backgroundColor: "#000103",
+    paddingTop: StatusBar.currentHeight,
   },
   title: {
     fontSize: 24,
     fontWeight: "bold",
     alignContent: "center",
+    color: "white",
     marginBottom: 30,
   },
   input: {
     width: 300,
     marginBottom: 30,
+    borderColor: "#f2f4f7",
     borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 5,
+    backgroundColor: "#000103",
+    borderBlockColor: "#f2f4f7",
   },
   fixToText: {
     flexDirection: "row",

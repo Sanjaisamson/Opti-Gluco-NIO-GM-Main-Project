@@ -8,6 +8,8 @@ import {
   StatusBar,
   Dimensions,
   RefreshControl,
+  Image,
+  TouchableOpacity,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import "core-js/stable/atob";
@@ -28,10 +30,13 @@ import {
 import CONSTANTS from "../constants/appConstants";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import axios from "axios";
-const avatarIcon = require("../../assets/avatar icon .jpg");
 
 const Tab = createBottomTabNavigator();
 
+const avatarIcon = require("../../assets/avatar icon .jpg");
+const logo = require("../../assets/opti-gluco-high-resolution-logo-white-transparent.png");
+const logoIcon = require("../../assets/opti-gluco-favicon-white.png"); //"C:\Users\SANJAI\OneDrive\Documents\Main_Project\SampleApp\assets\opti-gluco-favicon-white.png"
+const glucometerIcon = require("../../assets/alt_icon_red.png"); //alt_icon_red.png // optiGluco_alt_favicon.png
 const HomeScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
@@ -70,12 +75,121 @@ const HomeScreen = () => {
   }
 
   function HomeTab() {
+    const addProduct = () => {
+      try {
+        navigation.navigate(CONSTANTS.PATH_CONSTANTS.ADD_PRODUCT, {
+          userId: userId,
+        });
+      } catch (error) {
+        setStatus(CONSTANTS.STATUS_CONSTANTS.FAILED);
+      }
+    };
     return (
       <View style={styles.container}>
-        <View>
-          <Avatar.Image size={100} source={avatarIcon} />
+        <View
+          style={{
+            margin: 10,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            backgroundColor: "#000103",
+          }}
+        >
+          <View>
+            <Image
+              source={logo} // Replace with the path to your exciting image
+              style={styles.image}
+            />
+          </View>
+          <View>
+            <Avatar.Image size={30} source={avatarIcon} />
+          </View>
         </View>
-        <Text style={styles.loadingText}>Hi {userName}</Text>
+        <View>
+          <View
+            style={{
+              margin: 20,
+              justifyContent: "space-between",
+            }}
+          >
+            <Card style={styles.homeCard}>
+              <View
+                style={{
+                  margin: 10,
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                }}
+              >
+                <View style={{ width: "50%" }}>
+                  <Text style={{ color: "red" }}>Hello,</Text>
+                  <Text style={{ color: "white", fontSize: 20 }}>
+                    {userName}
+                  </Text>
+                </View>
+                <View style={{ width: "50%", marginLeft: 20 }}>
+                  <Image
+                    source={logoIcon} // Replace with the path to your exciting image
+                    style={styles.image}
+                  />
+                </View>
+              </View>
+            </Card>
+          </View>
+          <View style={{ margin: 20 }}>
+            <Card style={styles.homeCard}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  margin: 10,
+                  justifyContent: "space-between",
+                }}
+              >
+                <View>
+                  <Text
+                    style={{ color: "white", fontSize: 20, fontWeight: "bold" }}
+                  >
+                    Connect Your Device
+                  </Text>
+                  <Text
+                    style={{ color: "#999999", fontSize: 15, marginTop: 10 }}
+                  >
+                    Pair your device and check your
+                  </Text>
+                  <Text style={{ color: "#999999", fontSize: 15 }}>
+                    Glucose Level
+                  </Text>
+                </View>
+                <View>
+                  <Image
+                    source={glucometerIcon} // Replace with the path to your exciting image
+                    style={{ height: 80, width: 70 }}
+                  />
+                </View>
+              </View>
+              <View>
+                <TouchableOpacity
+                  style={{
+                    borderRadius: 5,
+                    height: 40,
+                    backgroundColor: "#333333", // grey shade
+                    justifyContent: "center",
+                  }}
+                  onPress={addProduct}
+                >
+                  <Text
+                    style={{
+                      textAlign: "center",
+                      color: "white",
+                      fontWeight: "bold",
+                    }}
+                  >
+                    Connect
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </Card>
+          </View>
+        </View>
       </View>
     );
   }
@@ -239,7 +353,7 @@ const HomeScreen = () => {
         msg,
         [
           {
-            text: CONSTANTS.STATUS_CONSTANTS.COMPLETED,
+            text: "OK",
             onPress: () => {},
           },
         ],
@@ -254,60 +368,91 @@ const HomeScreen = () => {
         navigation.navigate(CONSTANTS.PATH_CONSTANTS.LOGIN);
       }
     };
-    const addProduct = () => {
-      try {
-        navigation.navigate(CONSTANTS.PATH_CONSTANTS.ADD_PRODUCT, {
-          userId: userId,
-        });
-      } catch (error) {
-        setStatus(CONSTANTS.STATUS_CONSTANTS.FAILED);
-      }
-    };
     const handleRefresh = () => {
       setRefreshing(true);
       setTimeout(() => setRefreshing(false), 1000); // Simulated refresh
     };
     return (
       <PaperProvider>
-        <View>
-          <Appbar.Header>
-            <Appbar.BackAction />
-            <Appbar.Content title="Product" />
-            <Appbar.Action icon="magnify" />
-            <Appbar.Action icon="plus" onPress={addProduct} />
-          </Appbar.Header>
-          <View>
-            <Avatar.Image
-              size={100}
-              source={avatarIcon} // C:\Users\SANJAI\OneDrive\Documents\Main_Project\SampleApp\assets\avatar icon .jpg
-            />
+        <View style={styles.container}>
+          <View
+            style={{
+              margin: 10,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <View>
+              <Image
+                source={logo} // Replace with the path to your exciting image
+                style={styles.image}
+              />
+            </View>
+            <View>
+              <Avatar.Image size={30} source={avatarIcon} />
+            </View>
           </View>
-          <Text>Welcome {userName}</Text>
           <View>
-            {productList && productList.length > 0 ? (
-              productList.map((product) => (
-                <Card key={product.product_id} style={styles.card}>
+            <View style={{ margin: 10 }}>
+              {productList && productList.length > 0 ? (
+                productList.map((product) => (
+                  <Card key={product.product_id} style={styles.card}>
+                    <View
+                      style={{
+                        margin: 20,
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                      }}
+                    >
+                      <View>
+                        <Text style={styles.text}>
+                          Device Id : {product.product_id}
+                        </Text>
+                        <Text style={styles.text}>
+                          Device Code : {product.product_code}
+                        </Text>
+                      </View>
+                      <View>
+                        <Image
+                          source={glucometerIcon} // Replace with the path to your exciting image
+                          style={{ height: 80, width: 70 }}
+                        />
+                      </View>
+                    </View>
+                    <View>
+                      <TouchableOpacity
+                        style={{
+                          borderRadius: 5,
+                          width: "100%",
+                          height: 40,
+                          backgroundColor: "#333333", // grey shade
+                          justifyContent: "center",
+                        }}
+                        onPress={readData}
+                      >
+                        <Text
+                          style={{
+                            textAlign: "center",
+                            color: "white",
+                            fontWeight: "bold",
+                          }}
+                        >
+                          Take Reading
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </Card>
+                ))
+              ) : (
+                <Card style={styles.card}>
                   <Card.Content>
-                    <Text style={styles.text}>
-                      Device Id : {product.product_id}
-                    </Text>
-                    <Text style={styles.text}>
-                      Device Code : {product.product_code}
-                    </Text>
+                    <Text style={styles.text}>No Products available .....</Text>
                   </Card.Content>
-                  <Card.Actions>
-                    <Button onPress={readData}>Start</Button>
-                    <Button onPress={removeProduct}>Remove</Button>
-                  </Card.Actions>
                 </Card>
-              ))
-            ) : (
-              <Card style={styles.card}>
-                <Card.Content>
-                  <Text style={styles.text}>No Products available .....</Text>
-                </Card.Content>
-              </Card>
-            )}
+              )}
+            </View>
             <View />
             <View>
               {loading ? (
@@ -340,11 +485,10 @@ const HomeScreen = () => {
               </>
             )}
           </View>
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+
           <View>
             <Button onPress={handleRecentData}>Recent Readings </Button>
           </View>
-          <Appbar.Header />
         </View>
       </PaperProvider>
     );
@@ -357,7 +501,7 @@ const HomeScreen = () => {
 
     const showModal = () => setVisible(true);
     const hideModal = () => setVisible(false);
-    const containerStyle = { backgroundColor: "white", padding: 20 };
+    const containerStyle = { backgroundColor: "red" };
 
     const editProfile = () => {
       console.log("edit profile menu clicked !!!");
@@ -403,24 +547,24 @@ const HomeScreen = () => {
     return (
       <PaperProvider>
         <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-          <View>
+          <View style={styles.container}>
             <View
               style={{
-                alignContent: "center",
-                fontWeight: "bold",
-                paddingTop: StatusBar.currentHeight,
-                marginTop: 30,
+                margin: 10,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
               }}
             >
-              <Text
-                style={{
-                  textAlign: "center",
-                  fontWeight: "bold",
-                  fontSize: 20,
-                }}
-              >
-                Profile
-              </Text>
+              <View>
+                <Image
+                  source={logo} // Replace with the path to your exciting image
+                  style={styles.image}
+                />
+              </View>
+              <View>
+                <Avatar.Image size={30} source={avatarIcon} />
+              </View>
             </View>
             <View>
               <Card style={styles.card}>
@@ -432,6 +576,7 @@ const HomeScreen = () => {
                         style={{
                           textAlign: "center",
                           fontWeight: "bold",
+                          color: "white",
                           fontSize: 20,
                         }}
                       >
@@ -584,6 +729,16 @@ const HomeScreen = () => {
       }}
       tabBar={({ navigation, state, descriptors, insets }) => (
         <BottomNavigation.Bar
+          activeColor="yellow"
+          activeIndicatorStyle={{
+            backgroundColor: "red",
+          }}
+          inactiveColor="white"
+          style={{
+            backgroundColor: "#000000",
+            borderTopColor: "white",
+            borderTopWidth: 1,
+          }}
           navigationState={state}
           safeAreaInsets={insets}
           onTabPress={({ route }) => {
@@ -592,9 +747,23 @@ const HomeScreen = () => {
           renderIcon={({ route, focused, color }) => {
             const { options } = descriptors[route.key];
             if (options.tabBarIcon) {
-              return options.tabBarIcon({ focused, color, size: 24 });
+              return options.tabBarIcon({
+                focused,
+                color: "#ffffff",
+                size: 24,
+              });
             }
 
+            return null;
+          }}
+          renderLabel={({ route, focused, color }) => {
+            const { options } = descriptors[route.key];
+            if (options.tabBarLabel) {
+              return options.tabBarLabel({
+                focused,
+                color: "#ffffff",
+              });
+            }
             return null;
           }}
           getLabelText={({ route }) => {
@@ -615,10 +784,18 @@ const HomeScreen = () => {
         name="Home"
         component={HomeTab}
         options={{
-          tabBarLabel: "Home",
+          tabBarLabel: () => {
+            return (
+              <Text style={{ color: "#ffffff", textAlign: "center" }}>
+                Home
+              </Text>
+            );
+          },
           tabBarIcon: ({ color, size }) => {
             return <Icon name="home" size={size} color={color} />;
           },
+          tabBarActiveBackgroundColor: "red",
+          tabBarInactiveBackgroundColor: "red",
         }}
       />
       <Tab.Screen
@@ -629,10 +806,18 @@ const HomeScreen = () => {
           userName: userName,
         }}
         options={{
-          tabBarLabel: "Devices",
+          tabBarLabel: () => {
+            return (
+              <Text style={{ color: "#ffffff", textAlign: "center" }}>
+                Devices
+              </Text>
+            );
+          },
           tabBarIcon: ({ color, size }) => {
             return <Icon name="devices" size={size} color={color} />;
           },
+          tabBarActiveBackgroundColor: "red",
+          tabBarInactiveBackgroundColor: "red",
         }}
       />
       <Tab.Screen
@@ -643,10 +828,18 @@ const HomeScreen = () => {
           userName: userName,
         }}
         options={{
-          tabBarLabel: "Settings",
+          tabBarLabel: () => {
+            return (
+              <Text style={{ color: "#ffffff", textAlign: "center" }}>
+                Settings
+              </Text>
+            );
+          },
           tabBarIcon: ({ color, size }) => {
             return <Icon name="account-settings" size={size} color={color} />;
           },
+          tabBarActiveBackgroundColor: "red",
+          tabBarInactiveBackgroundColor: "red",
         }}
       />
     </Tab.Navigator>
@@ -655,11 +848,8 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#fff",
+    backgroundColor: "#000103",
     paddingTop: StatusBar.currentHeight,
-    marginHorizontal: 16,
   },
   successMessage: {
     color: "green",
@@ -673,16 +863,11 @@ const styles = StyleSheet.create({
     color: "blue",
     marginTop: 10,
   },
-  menu: {
-    color: "grey",
-    marginLeft: 100,
-  },
   loadingText: {
     fontSize: 30,
     fontWeight: "bold",
-    color: "#141414", // Blue color
+    color: "white", // Blue color
     textAlign: "center",
-    marginTop: 20,
   },
   item: {
     marginVertical: 8,
@@ -691,33 +876,43 @@ const styles = StyleSheet.create({
     margin: 10,
     fontSize: 15,
     fontWeight: "bold",
+    color: "white",
   },
   text: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#333",
+    color: "white",
   },
-  card: {
-    marginTop: 30,
-    marginBottom: 30,
-    margin: 10,
-    backgroundColor: "#f0f0f0",
-    borderRadius: 0,
-    borderBlockColor: "#010205",
-    borderStyle: "dashed",
-    borderWidth: 1,
-    shadowColor: "#010205", //"#000",
+  homeCard: {
+    backgroundColor: "#1a1a1a",
+    height: "auto",
+    borderRadius: 20,
+    shadowColor: "white",
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 0,
     },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    shadowOpacity: 1,
+    shadowRadius: 5,
+    elevation: 5,
+  },
+  card: {
+    backgroundColor: "#1a1a1a",
+    height: "auto",
+    borderRadius: 20,
+    shadowColor: "white",
+    shadowOffset: {
+      width: 0,
+      height: 0,
+    },
+    shadowOpacity: 1,
+    shadowRadius: 5,
     elevation: 5,
   },
   cardContent: {
     marginTop: 1,
     borderRadius: 0,
+    backgroundColor: "#1a1a1a",
     flexDirection: "row",
     alignItems: "center",
     shadowColor: "#010205", //"#000",
@@ -732,13 +927,19 @@ const styles = StyleSheet.create({
 
   title: {
     fontSize: 15,
+    color: "white",
   },
   modalText: {
     fontSize: 20,
     fontWeight: "bold",
   },
+  image: {
+    width: 200,
+    height: 50, // Adjust according to your image size
+    resizeMode: "contain",
+  },
   bottomSheet: {
-    position: "relative",
+    position: "absolute",
     left: 0,
     right: 0,
     justifyContent: "flex-start",

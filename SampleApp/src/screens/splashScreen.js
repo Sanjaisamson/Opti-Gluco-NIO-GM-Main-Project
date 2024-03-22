@@ -2,22 +2,22 @@ import React, { useEffect } from "react";
 import { View, Text, Image, StyleSheet } from "react-native";
 
 const splashImg = require("../../assets/blood drop.png");
+const logo = require("../../assets/logo_black.png");
 
 const SplashScreen = ({ navigation }) => {
   useEffect(() => {
     setTimeout(() => {
       // Navigate to the login screen
       navigation.navigate("Login");
-    }, 2000); // 2000 milliseconds delay
+    }, 3000); // 2000 milliseconds delay
   }, [navigation]);
 
   return (
     <View style={styles.container}>
       <Image
-        source={splashImg} // Replace with the path to your exciting image
+        source={logo} // Replace with the path to your exciting image
         style={styles.image}
       />
-      <Text style={styles.Text}>Opti-Gluco</Text>
     </View>
   );
 };

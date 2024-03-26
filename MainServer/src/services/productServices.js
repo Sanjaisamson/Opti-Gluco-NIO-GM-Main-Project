@@ -15,7 +15,7 @@ const { defaultStorageDir } = require("../config/storagePath");
 const {
   JOB_STATUS,
 } = require("../../../Iot_server/src/constants/jobConstants");
-
+const { sysConfig } = require("../config/sysConfig");
 async function registerProduct(userId, productId) {
   try {
     const product = await productTable.findOne({
@@ -28,8 +28,31 @@ async function registerProduct(userId, productId) {
         user_id: userId,
         product_code: productId,
       });
+      const requestData = JSON.stringify({
+        productCode: productId,
+        url: sysConfig.system_url,
+      });
+      const response = await fetch(
+        "http://192.168.1.14:3500/client/register-client",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Content-Length": Buffer.byteLength(requestData),
+          },
+          body: requestData,
+        }
+      );
+      if (!response.ok) {
+        throw new Error(RESPONSE_STATUS_CONSTANTS.FAILED, "error in start job");
+      }
+      const data = await response.json();
       return;
     }
+    throw new Error(
+      RESPONSE_STATUS_CONSTANTS.FAILED,
+      "this user has already a registered product"
+    );
   } catch (error) {
     throw error;
   }
@@ -96,7 +119,8 @@ async function initiateJob(userId) {
       requestId: requestId,
       userId: userId,
     });
-    const response = await fetch("http://localhost:3500/client/start-job", {
+    const response = await fetch("http://192.168.1.14:3500/client/start-job", {
+      //http://192.168.1.14:3500/client/start-job
       method: "POST",
       headers: {
         "Content-Type": "application/json",

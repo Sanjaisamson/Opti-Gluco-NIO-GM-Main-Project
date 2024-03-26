@@ -11,6 +11,7 @@ const {
 } = require("../constants/jobConstants");
 const { jobStatusTable } = require("../models/jobStatusModel");
 const { jobDataTable } = require("../models/jobDataModel");
+const { clientConfigTable } = require("../models/clientConfigModel");
 
 async function createJob(requestId) {
   try {
@@ -117,14 +118,17 @@ async function updateStatusOnServer(jobId, jobStatus, requestId) {
       jobStatus: jobStatus,
       requestId: requestId,
     });
-    const response = await fetch("http:localhost:3000/product/update-status", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Content-Length": Buffer.byteLength(requestData),
-      },
-      body: requestData,
-    });
+    const response = await fetch(
+      "http://192.168.1.11:3000/product/update-status",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Content-Length": Buffer.byteLength(requestData),
+        },
+        body: requestData,
+      }
+    );
     if (!response.ok) {
       const job = await jobStatusTable.findOne({
         where: { job_id: jobId },
@@ -153,7 +157,7 @@ async function sendResult(images, requestId, jobId, userId, productCode) {
       images: images,
       productCode: productCode,
     });
-    const response = await fetch("http:localhost:3000/product/results", {
+    const response = await fetch("http://192.168.1.11:3000/product/results", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -180,10 +184,32 @@ async function sendResult(images, requestId, jobId, userId, productCode) {
     throw error;
   }
 }
+async function registerClient(url, productCode) {
+  try {
+    const client = await clientConfigTable.findOne({
+      where: { product_code: productCode },
+    });
+    if (!client) {
+      await clientConfigTable.create({
+        product_code: productCode,
+        client_url: url,
+      });
+      return;
+    } else if (client.client_url != url) {
+      client.client_url = url;
+      await client.save();
+      return;
+    }
+    return;
+  } catch (error) {
+    throw error;
+  }
+}
 module.exports = {
   createJob,
   readData,
   executeCronjob,
   updateStatusOnServer,
   sendResult,
+  registerClient,
 };

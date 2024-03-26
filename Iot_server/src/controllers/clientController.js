@@ -19,4 +19,14 @@ async function initiateJob(req, res) {
     return res.sendStatus(RESPONSE_STATUS_CONSTANTS.SERVER_ERROR);
   }
 }
-module.exports = { initiateJob };
+
+async function registerClient(req, res) {
+  try {
+    const { url, productCode } = req.body.url;
+    await clientServices.registerClient(url, productCode);
+    return;
+  } catch (error) {
+    return res.sendStatus(RESPONSE_STATUS_CONSTANTS.SERVER_ERROR);
+  }
+}
+module.exports = { initiateJob, registerClient };

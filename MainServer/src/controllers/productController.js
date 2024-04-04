@@ -55,18 +55,17 @@ async function initiateJob(req, res) {
 async function updateStatus(req, res) {
   try {
     const { requestId, jobStatus, jobId } = req.body;
-    const updateStatusResponse = await productServices.updateStatus(
-      requestId,
-      jobStatus,
-      jobId
-    );
-    return updateStatusResponse;
+    console.log("data reached at controller for update status");
+    await productServices.updateStatus(requestId, jobStatus, jobId);
+    return res.sendStatus(RESPONSE_STATUS_CONSTANTS.SUCCESS);
   } catch (error) {
+    console.log("Sorry!!! failed to update status : from controller");
     return res.sendStatus(RESPONSE_STATUS_CONSTANTS.FAILED);
   }
 }
 async function processingResult(req, res) {
   try {
+    console.log("request reached here", req.body);
     const { images, requestId, userId, productCode } = req.body;
     const processingResultResponse = await productServices.processingResult(
       images,

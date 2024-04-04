@@ -18,7 +18,7 @@ async function createUser(userName, mailId, password) {
         user_mail: mailId,
       },
     });
-    if (!users || users.length === ARRAY_CONSTANTS.LENGTH_ZERO) {
+    if (!users || users.length === 0) {
       await userTable.create({
         user_name: userName,
         user_mail: mailId,
@@ -26,8 +26,8 @@ async function createUser(userName, mailId, password) {
       });
       return;
     }
-  } catch (err) {
-    throw err;
+  } catch (error) {
+    throw error;
   }
 }
 

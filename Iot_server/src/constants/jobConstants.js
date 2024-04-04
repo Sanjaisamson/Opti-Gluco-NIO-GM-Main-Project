@@ -6,8 +6,8 @@ const JOB_STATUS = {
 };
 
 const CRON_CONSTANTS = {
-  CRONE_JOB_INTERVAL: "*/1 * * * * *",
-  JOB_COUNT: 3,
+  CRONE_JOB_INTERVAL: "*/8 * * * * *",
+  JOB_COUNT: 15,
 };
 
 const DUMMY_DATA = {

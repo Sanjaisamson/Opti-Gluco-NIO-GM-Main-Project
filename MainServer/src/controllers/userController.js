@@ -7,13 +7,9 @@ async function createUser(req, res) {
   try {
     const { userName, mailId, password } = req.body;
     await userServices.createUser(userName, mailId, password);
-    return res.sendStatus();
-  } catch (err) {
-    const signupError = httpErrors(
-      RESPONSE_STATUS_CONSTANTS.FAILED,
-      "Unauthorized : User Registration failed!"
-    );
-    return res.send(signupError);
+    return res.sendStatus(RESPONSE_STATUS_CONSTANTS.SUCCESS);
+  } catch (error) {
+    return res.sendStatus(RESPONSE_STATUS_CONSTANTS.FAILED);
   }
 }
 
@@ -31,11 +27,7 @@ async function loginUser(req, res) {
     });
     res.send({ accessToken, loginResponse });
   } catch (error) {
-    const loginError = httpErrors(
-      RESPONSE_STATUS_CONSTANTS.FAILED,
-      "Unauthorized : User Login failed!"
-    );
-    return res.send(loginError);
+    return res.sendStatus(RESPONSE_STATUS_CONSTANTS.FAILED);
   }
 }
 
@@ -45,11 +37,7 @@ async function logoutUser(req, res) {
     res.clearCookie("jwt");
     return res.sendStatus(RESPONSE_STATUS_CONSTANTS.SUCCESS);
   } catch (err) {
-    const logoutError = httpErrors(
-      RESPONSE_STATUS_CONSTANTS.FAILED,
-      "Unauthorized : logout failed!"
-    );
-    return res.send(logoutError);
+    return res.sendStatus(RESPONSE_STATUS_CONSTANTS.FAILED);
   }
 }
 

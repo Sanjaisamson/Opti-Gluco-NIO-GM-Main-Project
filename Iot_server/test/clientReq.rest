@@ -22,3 +22,17 @@ Content-Type: application/json
 
 
 ###
+
+###
+
+POST http://localhost:5000/client/register-client
+Content-Type: application/json
+
+{
+    "userId": 20,
+    "productCode" : "OG_PR_25",
+    "url" : "192.168.1.1:3000"
+}
+
+
+###

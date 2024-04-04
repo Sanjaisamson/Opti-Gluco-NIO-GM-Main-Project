@@ -30,7 +30,7 @@ def preprocess_img(buffer_data):
 def predict():
     data = request.get_json()
     if not data:
-        return jsonify({'error': 'No data provided'}), 400
+        return jsonify({'error': 'No data provided'}), 
     model = load_model()
     buffer_data = data["bufferdata"]
     extracted_buffer_data = buffer_data["data"]
@@ -43,8 +43,6 @@ def predict():
     }
     predicted_class = np.argmax(predictions)
     predicted_label = class_labels[predicted_class]
-
-    print(predictions)
 
     print("Predicted category:", predicted_label)
 

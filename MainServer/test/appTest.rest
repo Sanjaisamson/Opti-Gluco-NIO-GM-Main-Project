@@ -4,8 +4,8 @@ POST http://localhost:3000/api/login
 Content-Type: application/json
 
 {
-    "mailId" : "user@user.com",
-    "password" : "user"
+    "mailId" : "admin@admin.com",
+    "password" : "adminadmin"
 }
 
 ###
@@ -15,9 +15,9 @@ POST http://localhost:3000/api/signup
 Content-Type: application/json
 
 {
-    "username" : "akash",
-    "mailid" : "akash@gmail.com",
-    "password" : "akash123"
+    "userName" : "admin",
+    "mailId" : "admin@admin.com",
+    "password" : "adminadmin"
 }
 ###
 

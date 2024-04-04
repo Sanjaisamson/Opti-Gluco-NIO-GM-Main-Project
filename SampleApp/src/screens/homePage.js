@@ -340,7 +340,7 @@ const HomeScreen = () => {
               setLoading(false);
               handleRecentData();
             }
-          }, 1000);
+          }, 30000);
         }
       } catch (error) {
         setStatus(CONSTANTS.STATUS_CONSTANTS.FAILED);

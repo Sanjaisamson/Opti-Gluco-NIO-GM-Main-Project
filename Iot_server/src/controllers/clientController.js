@@ -22,9 +22,9 @@ async function initiateJob(req, res) {
 
 async function registerClient(req, res) {
   try {
-    const { url, productCode } = req.body.url;
-    await clientServices.registerClient(url, productCode);
-    return;
+    const { url, productCode, userId } = req.body;
+    await clientServices.registerClient(url, productCode, userId);
+    return res.sendStatus(RESPONSE_STATUS_CONSTANTS.SUCCESS);
   } catch (error) {
     return res.sendStatus(RESPONSE_STATUS_CONSTANTS.SERVER_ERROR);
   }

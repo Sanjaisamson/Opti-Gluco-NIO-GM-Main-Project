@@ -36,5 +36,20 @@ productRouter.post(
 productRouter.post("/update-status", productController.updateStatus);
 productRouter.post("/results", productController.processingResult);
 productRouter.post("/check-job-status", productController.checkJobStatus);
+productRouter.post(
+  "/final-result",
+  authHandler.accessTokenVerification,
+  productController.getFinalResult
+);
+productRouter.post(
+  "/patient-data",
+  authHandler.accessTokenVerification,
+  productController.setPatientData
+);
+productRouter.post(
+  "/diabatic-chance",
+  authHandler.accessTokenVerification,
+  productController.predictDiabaticChance
+);
 
 module.exports = productRouter;

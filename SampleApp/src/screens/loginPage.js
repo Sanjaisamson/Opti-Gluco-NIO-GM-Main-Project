@@ -38,18 +38,25 @@ const LoginScreen = () => {
       if (response.status === CONSTANTS.RESPONSE_STATUS.SUCCESS) {
         setLoginStatus(CONSTANTS.STATUS_CONSTANTS.COMPLETED);
         const responseData = response.data;
+        console.log(responseData);
         await AsyncStorage.setItem(
           CONSTANTS.STORAGE_CONSTANTS.ACCESS_TOKEN,
           responseData.accessToken
         );
-        navigation.navigate(CONSTANTS.PATH_CONSTANTS.HOME, {
-          userId: responseData.loginResponse.user_id,
-          userName: responseData.loginResponse.user_name,
-        });
+        await AsyncStorage.setItem(
+          CONSTANTS.STORAGE_CONSTANTS.USER_NAME,
+          responseData.userName
+        );
+        // await AsyncStorage.setItem(
+        //   CONSTANTS.STORAGE_CONSTANTS.ACCESS_TOKEN,
+        //   responseData.accessToken
+        // );
+        navigation.navigate(CONSTANTS.PATH_CONSTANTS.HOME);
       } else {
         throw new Error(CONSTANTS.RESPONSE_STATUS.FAILED);
       }
     } catch (error) {
+      console.log("error", error);
       setLoginStatus(CONSTANTS.STATUS_CONSTANTS.FAILED);
       Vibration.vibrate(1000);
     }

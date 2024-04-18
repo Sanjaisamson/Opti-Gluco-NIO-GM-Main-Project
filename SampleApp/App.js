@@ -7,6 +7,8 @@ import RegistrationPage from "./src/screens/registerPage";
 import HomePage from "./src/screens/homePage";
 import AddProduct from "./src/screens/addProduct";
 import RecentData from "./src/screens/recentDataPage";
+import FinalReading from "./src/screens/finalReadings";
+import Questionnaire from "./src/screens/Q&AScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -23,6 +25,8 @@ const App = () => {
         <Stack.Screen name="Home" component={HomePage} />
         <Stack.Screen name="AddProduct" component={AddProduct} />
         <Stack.Screen name="RecentData" component={RecentData} />
+        <Stack.Screen name="FinalReading" component={FinalReading} />
+        <Stack.Screen name="Questionnaire" component={Questionnaire} />
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -47,20 +47,10 @@ const RecentData = () => {
     fetchData(currentPage);
   }, [currentPage]);
 
-  async function refreshAccessToken(userId) {
+  async function refreshAccessToken() {
     try {
-      const requestData = JSON.stringify({
-        userId: userId,
-      });
       const response = await axios.post(
-        `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/api/refresh`,
-        requestData,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
+        `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/api/refresh`
       );
       if (response.status === 200) {
         const responseData = response.data;
@@ -85,7 +75,7 @@ const RecentData = () => {
       const decodedToken = jwtDecode(listRecentDataAccessToken);
       const currentTime = Date.now() / 1000;
       if (decodedToken.exp < currentTime) {
-        const newToken = await refreshAccessToken(decodedToken.userId);
+        const newToken = await refreshAccessToken();
         listRecentDataAccessToken = newToken;
       }
 
@@ -151,23 +141,6 @@ const RecentData = () => {
     setTimeout(() => setRefreshing(false), 1000); // Simulated refresh
   };
 
-  const processReadingtime = (createdAt) => {
-    try {
-      console.log(createdAt);
-      const [datePart, timePart] = createdAt.split(" ");
-      const timeOnly = timePart.split(".")[0];
-      console.log("timeonly", timeOnly);
-      const [hours, minutes, seconds] = timeOnly.split(":");
-      let hoursIn12Format = parseInt(hours, 10);
-      const ampm = hoursIn12Format >= 12 ? "PM" : "AM";
-      hoursIn12Format %= 12;
-      hoursIn12Format = hoursIn12Format || 12;
-      const time12HourFormat = `${hoursIn12Format}:${minutes}:${seconds} ${ampm}`;
-      console.log("time at function", time12HourFormat);
-      return time12HourFormat;
-    } catch (error) {}
-  };
-
   const handleReferenceValue = async () => {
     try {
       hideModal();
@@ -177,14 +150,13 @@ const RecentData = () => {
       const decodedToken = jwtDecode(handleReferenceValueAccessToken);
       const currentTime = Date.now() / 1000;
       if (decodedToken.exp < currentTime) {
-        const newToken = await refreshAccessToken(decodedToken.userId);
+        const newToken = await refreshAccessToken();
         handleReferenceValueAccessToken = newToken;
       }
       const requestData = JSON.stringify({
         referenceValue: manualReferenceData,
         readingId: selectedReadingId,
       });
-
       const response = await axios.post(
         `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/product/Add-reference-value`,
         requestData,
@@ -249,13 +221,16 @@ const RecentData = () => {
                         })}
                       </Text>
                       <Text style={styles.text}>
+                        Test_id:{item.request_code}
+                      </Text>
+                      <Text style={styles.text}>
                         {new Date(item.createdAt).toLocaleTimeString([], {
                           hour: "2-digit",
                           minute: "2-digit",
                         })}
                       </Text>
                       <Text style={styles.text}>
-                        Blood-Glucose Level:{} mg/dl
+                        Blood-Glucose Level:{item.final_result} mg/dl
                       </Text>
                       <Text style={styles.text}>
                         Reference value :{item.refrence_value} mg/dl

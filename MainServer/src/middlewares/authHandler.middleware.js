@@ -8,7 +8,7 @@ const { RESPONSE_STATUS_CONSTANTS } = require("../constants/appConstants");
 
 async function accessTokenVerification(req, res, next) {
   try {
-    const header = req.headers["authorization"];
+    const header = await req.headers["authorization"];
     const bearerLessToken = header.split(" ")[1];
     const verifiedTokenData = jwt.verify(
       bearerLessToken,

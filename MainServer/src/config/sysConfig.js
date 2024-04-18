@@ -1,9 +1,9 @@
 const sysConfig = {
-  system_url: "192.168.29.121:3000",
+  system_url: "192.168.29.142:3000",
 };
 
 const deviceConfig = {
-  device_host: "192.168.29.97:3500",
+  device_host: "192.168.137.39:3500",
 };
 
 const mlServerConfig = {

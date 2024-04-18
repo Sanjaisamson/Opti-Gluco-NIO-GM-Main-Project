@@ -13,5 +13,10 @@ const requestLogTable = sequelize.define("requestLogTable", {
   user_id: DataTypes.INTEGER,
   job_id: DataTypes.STRING,
   job_status: DataTypes.STRING,
+  final_result: {
+    type: DataTypes.STRING,
+    defaultValue: null,
+  },
 });
+requestLogTable.sync({ alter: true });
 module.exports = { requestLogTable };

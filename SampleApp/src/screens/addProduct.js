@@ -6,7 +6,7 @@ import {
   Image,
   TouchableOpacity,
 } from "react-native";
-import { Text, Button, Avatar, TextInput } from "react-native-paper";
+import { Text, Avatar, TextInput } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
 import { useRoute } from "@react-navigation/native";
 import { jwtDecode } from "jwt-decode";
@@ -21,25 +21,16 @@ const avatarIcon = require("../../assets/avatar icon .jpg");
 const AddProductScreen = () => {
   const [registrationStatus, setRegistrationStatus] = useState("");
   const [productCode, setProductCode] = useState("");
-  const route = useRoute();
   const navigation = useNavigation();
 
-  const { userId } = route.params;
+  useEffect(() => {
+    refreshAccessToken();
+  }, []);
 
-  async function refreshAccessToken(userId) {
+  async function refreshAccessToken() {
     try {
-      const requestData = JSON.stringify({
-        userId: userId,
-      });
       const response = await axios.post(
-        `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/api/refresh`,
-        requestData,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
+        `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/api/refresh`
       );
       if (response.status === CONSTANTS.RESPONSE_STATUS.SUCCESS) {
         const responseData = response.data;
@@ -64,11 +55,10 @@ const AddProductScreen = () => {
       const decodedToken = jwtDecode(addProductAccessToken);
       const currentTime = Date.now() / 1000;
       if (decodedToken.exp < currentTime) {
-        const newToken = await refreshAccessToken(decodedToken.userId);
+        const newToken = await refreshAccessToken();
         addProductAccessToken = newToken;
       }
       const requestData = JSON.stringify({
-        userId: userId,
         productCode: productCode,
       });
       const response = await axios.post(
@@ -84,11 +74,9 @@ const AddProductScreen = () => {
       );
       if (response.status === CONSTANTS.RESPONSE_STATUS.SUCCESS) {
         setRegistrationStatus(CONSTANTS.STATUS_CONSTANTS.COMPLETED);
-        navigation.navigate(CONSTANTS.PATH_CONSTANTS.HOME, {
-          userId: userId,
-        });
+        navigation.navigate(CONSTANTS.PATH_CONSTANTS.HOME);
       } else {
-        throw new Error(CONSTANTS.RESPONSE_STATUS.FAILED);
+        setRegistrationStatus(CONSTANTS.STATUS_CONSTANTS.FAILED);
       }
     } catch (error) {
       setRegistrationStatus(CONSTANTS.STATUS_CONSTANTS.FAILED);

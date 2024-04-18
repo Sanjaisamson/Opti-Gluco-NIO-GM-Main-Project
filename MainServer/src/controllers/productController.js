@@ -27,10 +27,13 @@ async function removeProduct(req, res) {
 
 async function listProducts(req, res) {
   try {
+    console.log("call for list product....");
     const listProductResponse = await productServices.listProducts(
       req.user.user_id
     );
-    return res.send(listProductResponse);
+    return res
+      .status(RESPONSE_STATUS_CONSTANTS.SUCCESS)
+      .json(listProductResponse);
   } catch (error) {
     return res.sendStatus(RESPONSE_STATUS_CONSTANTS.FAILED);
   }
@@ -121,6 +124,56 @@ async function addReferenceValue(req, res) {
   }
 }
 
+async function getFinalResult(req, res) {
+  try {
+    const userId = req.user.user_id;
+    const requestId = req.body.requestId;
+    const resultInfo = await productServices.getFinalResult(userId, requestId);
+    return res.status(RESPONSE_STATUS_CONSTANTS.SUCCESS).json(resultInfo);
+  } catch (error) {
+    return res.status(RESPONSE_STATUS_CONSTANTS.FAILED);
+  }
+}
+
+async function setPatientData(req, res) {
+  try {
+    const userId = req.user.user_id;
+    const {
+      A1cValue,
+      fastingStatus,
+      lastFoodTime,
+      familyHealthData,
+      bloodPressure,
+    } = req.body;
+    const resultInfo = await productServices.setPatientData(
+      userId,
+      A1cValue,
+      familyHealthData,
+      fastingStatus,
+      lastFoodTime,
+      bloodPressure
+    );
+    return res.status(RESPONSE_STATUS_CONSTANTS.SUCCESS).json(resultInfo);
+  } catch (error) {
+    return res.status(RESPONSE_STATUS_CONSTANTS.FAILED);
+  }
+}
+
+async function predictDiabaticChance(req, res) {
+  try {
+    const userId = req.user.user_id;
+    const requestId = req.body.requestId;
+    console.log("requestid", requestId);
+    const diabaticChance = await productServices.predictDiabaticChance(
+      userId,
+      requestId
+    );
+    return res.status(RESPONSE_STATUS_CONSTANTS.SUCCESS).json(diabaticChance);
+  } catch (error) {
+    return res.status(RESPONSE_STATUS_CONSTANTS.FAILED);
+  }
+}
+
 module.exports = {
   registerProduct,
   removeProduct,
@@ -131,4 +184,7 @@ module.exports = {
   checkJobStatus,
   listRecentReadings,
   addReferenceValue,
+  getFinalResult,
+  setPatientData,
+  predictDiabaticChance,
 };

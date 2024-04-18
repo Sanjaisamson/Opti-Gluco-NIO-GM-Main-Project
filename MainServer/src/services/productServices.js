@@ -5,6 +5,7 @@ const { cloudinary } = require("../databases/cloudinary");
 const { productTable } = require("../model/productModel");
 const { requestLogTable } = require("../model/requestLogModel");
 const { resultDataTable } = require("../model/resultDataModel");
+const { patientDataTable } = require("../model/patientDataModel");
 const {
   RECENT_DATA_CONSTANTS,
   ARRAY_CONSTANTS,
@@ -20,7 +21,7 @@ const {
   deviceConfig,
   mlServerConfig,
 } = require("../config/sysConfig");
-
+const { userTable } = require("../model/userModel");
 async function registerProduct(userId, productId) {
   try {
     console.log("data is here ", userId, productId);
@@ -314,15 +315,39 @@ async function takeMlInfernce(
 
 async function processingResult(images, requestId, userId, productCode) {
   try {
-    const processedImage = await saveFileOnStorage(
+    const processedImageResults = await saveFileOnStorage(
       images,
       requestId,
       userId,
       productCode
     );
+    console.log("file processed successfully.......", processedImageResults);
+
+    const rangeCounts = {};
+    let mostFrequentRange = null;
+    let maxCount = 0;
+    console.log("loop started for get category");
+    for (let i = 0; i < processedImageResults.length; i++) {
+      const currentRange = processedImageResults[i];
+      rangeCounts[currentRange] = (rangeCounts[currentRange] || 0) + 1;
+
+      if (rangeCounts[currentRange] > maxCount) {
+        maxCount = rangeCounts[currentRange];
+        mostFrequentRange = currentRange;
+      }
+    }
+    console.log("loop ended");
+    console.log(
+      "Final sugar category:",
+      mostFrequentRange,
+      "with",
+      maxCount,
+      "occurrences"
+    );
     const requestLogResult = await requestLogTable.update(
       {
         job_status: JOB_STATUS.SUCCESS,
+        final_result: mostFrequentRange,
       },
       {
         where: {
@@ -330,7 +355,6 @@ async function processingResult(images, requestId, userId, productCode) {
         },
       }
     );
-    console.log("file saved successfully.......", processedImage);
     return requestLogResult;
   } catch (error) {
     await requestLogTable.update(
@@ -372,7 +396,7 @@ async function listRecentReadings(userId, currentPage, itemsPerPage) {
     if (!products || products.length === ARRAY_CONSTANTS.LENGTH_ZERO) {
       throw new Error(RESPONSE_STATUS_CONSTANTS.FAILED);
     }
-    const recentReadings = await resultDataTable.findAll({
+    const recentReadings = await requestLogTable.findAll({
       where: {
         user_id: userId.toString(),
         product_code: products.product_code,
@@ -425,6 +449,110 @@ async function addReferenceValue(userId, referenceValue, readingId) {
   }
 }
 
+async function getFinalResult(userId, requestId) {
+  try {
+    console.log(userId, requestId);
+    const resultInfo = await requestLogTable.findOne({
+      where: {
+        request_code: requestId,
+      },
+    });
+    console.log("result info...", resultInfo);
+    return resultInfo;
+  } catch (error) {
+    throw error;
+  }
+}
+
+async function setPatientData(
+  userId,
+  A1cValue,
+  familyHealthData,
+  fastingStatus,
+  lastFoodTime,
+  bloodPressure
+) {
+  try {
+    const patientData = await patientDataTable.findOne({
+      where: {
+        user_id: userId,
+      },
+    });
+    if (!patientData || patientData.length === ARRAY_CONSTANTS.LENGTH_ZERO) {
+      await patientDataTable.create({
+        user_id: userId,
+        A1c_value: A1cValue,
+        fasting_status: fastingStatus,
+        last_food_time: lastFoodTime,
+        family_health_data: familyHealthData,
+        blood_pressure: bloodPressure,
+      });
+    }
+    const patientdata = await patientDataTable.update(
+      {
+        A1c_value: A1cValue,
+        fasting_status: fastingStatus,
+        last_food_time: lastFoodTime,
+        family_health_data: familyHealthData,
+        blood_pressure: bloodPressure,
+      },
+      {
+        where: {
+          user_id: userId,
+        },
+      }
+    );
+  } catch (error) {
+    throw error;
+  }
+}
+
+async function predictDiabaticChance(userId, requestId) {
+  let diabaticChanceStatus = null;
+  try {
+    const patientData = await patientDataTable.findOne({
+      where: {
+        user_id: userId,
+      },
+    });
+    const userData = await userTable.findOne({
+      where: {
+        user_id: userId,
+      },
+    });
+    const resultInfo = await requestLogTable.findOne({
+      where: {
+        request_code: requestId,
+      },
+    });
+    if (patientData.A1c_value <= 5.7 && resultInfo.final_result == "85-95") {
+      diabaticChanceStatus = "normal";
+    } else if (
+      5.7 < patientData.A1c_value <= 6.4 &&
+      resultInfo.final_result == "96-110"
+    ) {
+      diabaticChanceStatus = "Pre Diabatic";
+    } else if (
+      patientData.A1c_value >= 6.5 &&
+      resultInfo.final_result == "111-125"
+    ) {
+      diabaticChanceStatus = "Diabatic";
+    } else {
+      diabaticChanceStatus = null;
+    }
+    console.log(
+      patientData.user_id,
+      userData.user_age,
+      resultInfo.final_result,
+      diabaticChanceStatus
+    );
+
+    return diabaticChanceStatus;
+  } catch (error) {
+    throw error;
+  }
+}
+
 module.exports = {
   registerProduct,
   removeProduct,
@@ -436,4 +564,7 @@ module.exports = {
   checkJobStatus,
   listRecentReadings,
   addReferenceValue,
+  getFinalResult,
+  setPatientData,
+  predictDiabaticChance,
 };

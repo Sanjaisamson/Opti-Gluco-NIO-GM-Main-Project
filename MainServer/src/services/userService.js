@@ -9,7 +9,7 @@ const {
   ARRAY_CONSTANTS,
 } = require("../constants/appConstants");
 
-async function createUser(userName, mailId, password) {
+async function createUser(userName, mailId, password, age, gender) {
   try {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
@@ -23,6 +23,8 @@ async function createUser(userName, mailId, password) {
         user_name: userName,
         user_mail: mailId,
         user_password: hashedPassword,
+        user_age: age,
+        user_gender: gender,
       });
       return;
     }

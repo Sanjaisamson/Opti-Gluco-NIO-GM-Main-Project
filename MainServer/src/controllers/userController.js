@@ -5,8 +5,8 @@ const { RESPONSE_STATUS_CONSTANTS } = require("../constants/appConstants");
 
 async function createUser(req, res) {
   try {
-    const { userName, mailId, password } = req.body;
-    await userServices.createUser(userName, mailId, password);
+    const { userName, mailId, password, age, gender } = req.body;
+    await userServices.createUser(userName, mailId, password, age, gender);
     return res.sendStatus(RESPONSE_STATUS_CONSTANTS.SUCCESS);
   } catch (error) {
     return res.sendStatus(RESPONSE_STATUS_CONSTANTS.FAILED);
@@ -25,7 +25,10 @@ async function loginUser(req, res) {
       httpOnly: true,
       maxAge: authConfig.cookieExpiry.maxAge,
     });
-    res.send({ accessToken, loginResponse });
+    console.log(loginResponse.user_name);
+    return res
+      .status(RESPONSE_STATUS_CONSTANTS.SUCCESS)
+      .json({ accessToken: accessToken, userName: loginResponse.user_name });
   } catch (error) {
     return res.sendStatus(RESPONSE_STATUS_CONSTANTS.FAILED);
   }

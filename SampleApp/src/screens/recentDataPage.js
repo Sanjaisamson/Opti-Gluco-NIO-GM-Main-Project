@@ -9,6 +9,7 @@ import {
   StyleSheet,
   Dimensions,
   Image,
+  StatusBar,
 } from "react-native";
 import {
   Text,
@@ -21,7 +22,8 @@ import {
 } from "react-native-paper";
 import { jwtDecode } from "jwt-decode";
 const logo = require("../../assets/opti-gluco-favicon-black.png"); //C:\Users\SANJAI\OneDrive\Documents\Main_Project\SampleApp\assets\opti-gluco-favicon-black.png
-
+const logoWhite = require("../../assets/opti-gluco-favicon-white.png");
+const label = require("../../assets/opti-gluco-high-resolution-logo-white-transparent.png");
 const RecentData = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [currentPage, setCurrentPage] = useState(0);
@@ -124,7 +126,7 @@ const RecentData = () => {
           style={{
             padding: 10,
             margin: 5,
-            backgroundColor: page === currentPage ? "blue" : "gray",
+            backgroundColor: page === currentPage ? "red" : "gray",
             borderRadius: 5,
           }}
         >
@@ -179,7 +181,7 @@ const RecentData = () => {
   };
   return (
     <PaperProvider>
-      <View style={{ flex: 1 }}>
+      <View style={styles.container}>
         <View>
           <Text style={styles.title}>Your Recent Readings....</Text>
         </View>
@@ -208,20 +210,17 @@ const RecentData = () => {
                     }}
                   >
                     <Image
-                      source={logo} // Replace with the path to your exciting image
+                      source={logoWhite} // Replace with the path to your exciting image
                       style={styles.image}
                     />
                     <View style={{ marginLeft: 5 }}>
-                      <Text style={{ fontWeight: "bold" }}>
+                      <Text style={{ fontWeight: "bold", color: "white" }}>
                         {new Date(item.createdAt).toLocaleDateString([], {
                           year: "numeric",
                           month: "long",
                           day: "numeric",
                           weekday: "long",
                         })}
-                      </Text>
-                      <Text style={styles.text}>
-                        Test_id:{item.request_code}
                       </Text>
                       <Text style={styles.text}>
                         {new Date(item.createdAt).toLocaleTimeString([], {
@@ -236,15 +235,6 @@ const RecentData = () => {
                         Reference value :{item.refrence_value} mg/dl
                       </Text>
                     </View>
-                  </View>
-                  <View style={{}}>
-                    <Button
-                      onPress={() => {
-                        showModal(item.result_id);
-                      }}
-                    >
-                      Add
-                    </Button>
                   </View>
                 </Card.Content>
               </Card>
@@ -328,11 +318,17 @@ const RecentData = () => {
   );
 };
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#000103",
+    paddingTop: StatusBar.currentHeight,
+  },
   card: {
     width: "95%",
     marginLeft: "auto",
     marginRight: "auto",
-    backgroundColor: "#f0f0f0",
+    margin: 5,
+    backgroundColor: "#1a1a1a",
     borderRadius: 0,
     shadowColor: "#010205", //"#000",
     shadowOffset: {
@@ -342,13 +338,15 @@ const styles = StyleSheet.create({
   },
   text: {
     fontSize: 12,
-    color: "#333",
+    color: "white",
   },
   title: {
     fontSize: 30,
     fontWeight: "bold",
     justifyContent: "center",
     margin: 50,
+    marginBottom: 30,
+    color: "white",
   },
   image: {
     width: 50,

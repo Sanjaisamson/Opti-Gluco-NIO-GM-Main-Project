@@ -162,13 +162,20 @@ async function setPatientData(req, res) {
 async function predictDiabaticChance(req, res) {
   try {
     const userId = req.user.user_id;
-    const requestId = req.body.requestId;
-    console.log("requestid", requestId);
-    const diabaticChance = await productServices.predictDiabaticChance(
-      userId,
-      requestId
-    );
+    console.log("call for predictDiabaticChance");
+    const diabaticChance = await productServices.predictDiabaticChance(userId);
     return res.status(RESPONSE_STATUS_CONSTANTS.SUCCESS).json(diabaticChance);
+  } catch (error) {
+    return res.status(RESPONSE_STATUS_CONSTANTS.FAILED);
+  }
+}
+
+async function getChartData(req, res) {
+  try {
+    console.log("call for chart data");
+    const userId = req.user.user_id;
+    const chartData = await productServices.getChartData(userId);
+    return res.status(RESPONSE_STATUS_CONSTANTS.SUCCESS).json(chartData);
   } catch (error) {
     return res.status(RESPONSE_STATUS_CONSTANTS.FAILED);
   }
@@ -187,4 +194,5 @@ module.exports = {
   getFinalResult,
   setPatientData,
   predictDiabaticChance,
+  getChartData,
 };

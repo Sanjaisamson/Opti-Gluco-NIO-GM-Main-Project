@@ -355,6 +355,16 @@ async function processingResult(images, requestId, userId, productCode) {
         },
       }
     );
+    await patientDataTable.update(
+      {
+        last_sugar_level: mostFrequentRange,
+      },
+      {
+        where: {
+          user_id: userId,
+        },
+      }
+    );
     return requestLogResult;
   } catch (error) {
     await requestLogTable.update(
@@ -401,6 +411,7 @@ async function listRecentReadings(userId, currentPage, itemsPerPage) {
         user_id: userId.toString(),
         product_code: products.product_code,
       },
+      order: [["createdAt", "ASC"]],
     });
 
     if (
@@ -507,7 +518,8 @@ async function setPatientData(
   }
 }
 
-async function predictDiabaticChance(userId, requestId) {
+async function predictDiabaticChance(userId) {
+  console.log("call for prediction is at service");
   let diabaticChanceStatus = null;
   try {
     const patientData = await patientDataTable.findOne({
@@ -520,34 +532,54 @@ async function predictDiabaticChance(userId, requestId) {
         user_id: userId,
       },
     });
-    const resultInfo = await requestLogTable.findOne({
-      where: {
-        request_code: requestId,
-      },
-    });
-    if (patientData.A1c_value <= 5.7 && resultInfo.final_result == "85-95") {
+    console.log(patientData);
+    if (
+      patientData.A1c_value <= 5.7 &&
+      patientData.last_sugar_level != "111-125"
+    ) {
       diabaticChanceStatus = "normal";
     } else if (
       5.7 < patientData.A1c_value <= 6.4 &&
-      resultInfo.final_result == "96-110"
+      patientData.last_sugar_level != "85-95"
     ) {
       diabaticChanceStatus = "Pre Diabatic";
     } else if (
       patientData.A1c_value >= 6.5 &&
-      resultInfo.final_result == "111-125"
+      patientData.last_sugar_level == "111-125"
     ) {
       diabaticChanceStatus = "Diabatic";
     } else {
       diabaticChanceStatus = null;
     }
-    console.log(
-      patientData.user_id,
-      userData.user_age,
-      resultInfo.final_result,
-      diabaticChanceStatus
-    );
+    console.log(patientData.user_id, userData.user_age, diabaticChanceStatus);
 
     return diabaticChanceStatus;
+  } catch (error) {
+    throw error;
+  }
+}
+
+async function getChartData(userId) {
+  try {
+    console.log("request for chart data", userId);
+    const products = await productTable.findOne({
+      where: {
+        user_id: userId,
+      },
+    });
+    if (!products || products.length === ARRAY_CONSTANTS.LENGTH_ZERO) {
+      throw new Error(RESPONSE_STATUS_CONSTANTS.FAILED);
+    }
+    const recentReadings = await requestLogTable.findAll({
+      where: {
+        user_id: userId.toString(),
+        product_code: products.product_code,
+      },
+      order: [["createdAt", "ASC"]],
+      limit: 5,
+    });
+    console.log(recentReadings);
+    return recentReadings;
   } catch (error) {
     throw error;
   }
@@ -567,4 +599,5 @@ module.exports = {
   getFinalResult,
   setPatientData,
   predictDiabaticChance,
+  getChartData,
 };

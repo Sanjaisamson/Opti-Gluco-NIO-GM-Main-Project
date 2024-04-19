@@ -8,6 +8,7 @@ import {
   StatusBar,
   Dimensions,
   TouchableOpacity,
+  RefreshControl,
 } from "react-native";
 import { ProgressChart } from "react-native-chart-kit";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -15,7 +16,7 @@ import "core-js/stable/atob";
 import { jwtDecode } from "jwt-decode";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { Text, Avatar, Card } from "react-native-paper";
+import { Text, Avatar, Card, PaperProvider } from "react-native-paper";
 import CONSTANTS from "../constants/appConstants";
 import axios from "axios";
 
@@ -28,10 +29,9 @@ const glucometerIcon = require("../../assets/alt_icon_red.png"); //alt_icon_red.
 
 function HomeTab() {
   const navigation = useNavigation();
-  const route = useRoute();
-  const [requestId, setRequestId] = useState("");
+  const [userName, setUserName] = useState("");
   const [status, setStatus] = useState("");
-
+  const [refreshing, setRefreshing] = useState(false);
   const windowWidth = Dimensions.get("window").width;
   const [diabaticChanceStatus, setDiabaticChanceStatus] = useState(null);
   const [diabaticChanceValue, setDiabaticChanceValue] = useState(0);
@@ -42,6 +42,10 @@ function HomeTab() {
   }, []);
   async function refreshAccessToken() {
     try {
+      const userName = await AsyncStorage.getItem(
+        CONSTANTS.STORAGE_CONSTANTS.USER_NAME
+      );
+      setUserName(userName);
       const response = await axios.post(
         `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/api/refresh`
       );
@@ -61,7 +65,15 @@ function HomeTab() {
       setStatus(CONSTANTS.STATUS_CONSTANTS.FAILED);
     }
   }
-  useEffect(() => {}, []);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    refreshAccessToken();
+    getDaibaticChance();
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 1000);
+  };
 
   const getDaibaticChance = async () => {
     let diabticChanceAccessToken = await AsyncStorage.getItem(
@@ -74,12 +86,9 @@ function HomeTab() {
         const newToken = await refreshAccessToken();
         accessToken = newToken;
       }
-      const diabticChanceRequestData = JSON.stringify({
-        requestId: requestId,
-      });
       const response = await axios.post(
         `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/product/diabatic-chance`,
-        diabticChanceRequestData,
+        {},
         {
           headers: {
             Authorization: `Bearer ${diabticChanceAccessToken}`,
@@ -90,7 +99,7 @@ function HomeTab() {
       );
       console.log(response.status);
       if (response.status === CONSTANTS.RESPONSE_STATUS.SUCCESS) {
-        // setStatus(CONSTANTS.STATUS_CONSTANTS.SUCCESS);
+        setStatus(CONSTANTS.STATUS_CONSTANTS.SUCCESS);
         const responseData = response.data;
         console.log(responseData);
         if (responseData === "normal") {
@@ -109,13 +118,12 @@ function HomeTab() {
         return;
       } else {
         console.log("server response error", response.status);
-        // setStatus(CONSTANTS.STATUS_CONSTANTS.FAILED);
-        // navigation.navigate(CONSTANTS.PATH_CONSTANTS.LOGIN);
+        setStatus(CONSTANTS.STATUS_CONSTANTS.FAILED);
         return;
       }
     } catch (error) {
       console.log("server Error ", error);
-      // setStatus(CONSTANTS.STATUS_CONSTANTS.FAILED);
+      setStatus(CONSTANTS.STATUS_CONSTANTS.FAILED);
     }
   };
   const addProduct = () => {
@@ -130,160 +138,181 @@ function HomeTab() {
     data: [, diabaticChanceValue],
   };
   return (
-    <View style={styles.container}>
-      <View
-        style={{
-          margin: 10,
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-          backgroundColor: "#000103",
-        }}
+    <PaperProvider>
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1 }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
       >
-        <View>
-          <Image
-            source={logo} // Replace with the path to your exciting image
-            style={styles.image}
-          />
-        </View>
-        <View>
-          <Avatar.Image size={30} source={avatarIcon} />
-        </View>
-      </View>
-      <View>
-        <View
-          style={{
-            margin: 20,
-            justifyContent: "space-between",
-          }}
-        >
-          <Card style={styles.homeCard}>
-            <View
-              style={{
-                margin: 10,
-                flexDirection: "row",
-                justifyContent: "space-between",
-              }}
-            >
-              <View style={{ width: "50%" }}>
-                <Text style={{ color: "red" }}>Hello,</Text>
-                {/* <Text style={{ color: "white", fontSize: 20 }}>{userName}</Text> */}
-              </View>
-              <View style={{ width: "50%", marginLeft: 20 }}>
-                <Image
-                  source={logoIcon} // Replace with the path to your exciting image
-                  style={styles.image}
-                />
-              </View>
-            </View>
-          </Card>
-        </View>
-        <View style={{ margin: 20 }}>
-          <Card style={styles.homeCard}>
-            <View
-              style={{
-                flexDirection: "row",
-                margin: 10,
-                justifyContent: "space-between",
-              }}
-            >
-              <View>
-                <Text
-                  style={{ color: "white", fontSize: 20, fontWeight: "bold" }}
-                >
-                  Connect Your Device
-                </Text>
-                <Text style={{ color: "#999999", fontSize: 15, marginTop: 10 }}>
-                  Pair your device and check your
-                </Text>
-                <Text style={{ color: "#999999", fontSize: 15 }}>
-                  Glucose Level
-                </Text>
-              </View>
-              <View>
-                <Image
-                  source={glucometerIcon} // Replace with the path to your exciting image
-                  style={{ height: 80, width: 70 }}
-                />
-              </View>
+        <View style={styles.container}>
+          <View
+            style={{
+              margin: 10,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              backgroundColor: "#000103",
+            }}
+          >
+            <View>
+              <Image
+                source={logo} // Replace with the path to your exciting image
+                style={styles.image}
+              />
             </View>
             <View>
-              <TouchableOpacity
-                style={{
-                  borderRadius: 5,
-                  height: 40,
-                  backgroundColor: "#333333", // grey shade
-                  justifyContent: "center",
+              <Avatar.Image size={30} source={avatarIcon} />
+            </View>
+          </View>
+          <View>
+            <View
+              style={{
+                margin: 20,
+                justifyContent: "space-between",
+              }}
+            >
+              <Card style={styles.homeCard}>
+                <View
+                  style={{
+                    margin: 10,
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <View style={{ width: "50%" }}>
+                    <Text style={{ color: "red" }}>Hello,</Text>
+                    <Text
+                      style={{
+                        color: "white",
+                        fontSize: 20,
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {userName}
+                    </Text>
+                  </View>
+                  <View style={{ width: "50%", marginLeft: 20 }}>
+                    <Image source={logoIcon} style={styles.image} />
+                  </View>
+                </View>
+              </Card>
+            </View>
+            <View style={{ margin: 20 }}>
+              <Card style={styles.homeCard}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    margin: 10,
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <View>
+                    <Text
+                      style={{
+                        color: "white",
+                        fontSize: 20,
+                        fontWeight: "bold",
+                      }}
+                    >
+                      Connect Your Device
+                    </Text>
+                    <Text
+                      style={{ color: "#999999", fontSize: 15, marginTop: 10 }}
+                    >
+                      Pair your device and check your
+                    </Text>
+                    <Text style={{ color: "#999999", fontSize: 15 }}>
+                      Glucose Level
+                    </Text>
+                  </View>
+                  <View>
+                    <Image
+                      source={glucometerIcon} // Replace with the path to your exciting image
+                      style={{ height: 80, width: 70 }}
+                    />
+                  </View>
+                </View>
+                <View>
+                  <TouchableOpacity
+                    style={{
+                      borderRadius: 5,
+                      height: 40,
+                      backgroundColor: "#333333", // grey shade
+                      justifyContent: "center",
+                    }}
+                    onPress={addProduct}
+                  >
+                    <Text
+                      style={{
+                        textAlign: "center",
+                        color: "white",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      Connect
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </Card>
+            </View>
+            <View>
+              <ProgressChart
+                data={data}
+                width={windowWidth}
+                height={220}
+                strokeWidth={16}
+                radius={50}
+                chartConfig={{
+                  backgroundColor: "red",
+                  backgroundGradientFrom: "#000103",
+                  backgroundGradientTo: "#000103",
+                  decimalPlaces: 2, // optional, defaults to 2dp
+                  color: (opacity = 1) => `rgba(${colorCode},${opacity})`,
+                  labelColor: (opacity = 1) =>
+                    `rgba(255, 255, 255, ${opacity})`,
+                  style: {
+                    borderRadius: 20,
+                  },
+                  propsForDots: {
+                    r: "6",
+                    strokeWidth: "2",
+                    stroke: "#ffa726",
+                  },
                 }}
-                onPress={addProduct}
-              >
+                hideLegend={false}
+              />
+            </View>
+            <View>
+              {diabaticChanceStatus === null && (
                 <Text
                   style={{
                     textAlign: "center",
                     color: "white",
+                    fontSize: 20,
                     fontWeight: "bold",
                   }}
                 >
-                  Connect
+                  Your Status is not updated
                 </Text>
-              </TouchableOpacity>
+              )}
+              {diabaticChanceStatus != null && (
+                <Text
+                  style={{
+                    textAlign: "center",
+                    color: "white",
+                    fontSize: 20,
+                    fontWeight: "bold",
+                  }}
+                >
+                  You are in a {diabaticChanceStatus} condition
+                </Text>
+              )}
             </View>
-          </Card>
+          </View>
         </View>
-        <View>
-          <ProgressChart
-            data={data}
-            width={windowWidth}
-            height={220}
-            strokeWidth={16}
-            radius={50}
-            chartConfig={{
-              backgroundColor: "red",
-              backgroundGradientFrom: "#000103",
-              backgroundGradientTo: "#000103",
-              decimalPlaces: 2, // optional, defaults to 2dp
-              color: (opacity = 1) => `rgba(${colorCode},${opacity})`,
-              labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-              style: {
-                borderRadius: 20,
-              },
-              propsForDots: {
-                r: "6",
-                strokeWidth: "2",
-                stroke: "#ffa726",
-              },
-            }}
-            hideLegend={false}
-          />
-        </View>
-        <View>
-          {diabaticChanceStatus === null && (
-            <Text
-              style={{
-                textAlign: "center",
-                color: "white",
-                fontSize: 20,
-                fontWeight: "bold",
-              }}
-            >
-              Your Status is not updated
-            </Text>
-          )}
-          {diabaticChanceStatus != null && (
-            <Text
-              style={{
-                textAlign: "center",
-                color: "white",
-                fontSize: 20,
-                fontWeight: "bold",
-              }}
-            >
-              You are in a {diabaticChanceStatus} condition
-            </Text>
-          )}
-        </View>
-      </View>
-    </View>
+      </ScrollView>
+    </PaperProvider>
   );
 }
 

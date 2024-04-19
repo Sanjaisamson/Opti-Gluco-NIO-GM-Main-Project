@@ -3,37 +3,19 @@ import React, { useState, useEffect } from "react";
 import {
   View,
   StyleSheet,
-  Alert,
   ScrollView,
   StatusBar,
   Dimensions,
-  RefreshControl,
   Image,
   TouchableOpacity,
 } from "react-native";
-import {
-  LineChart,
-  BarChart,
-  PieChart,
-  ProgressChart,
-  ContributionGraph,
-  StackedBarChart,
-} from "react-native-chart-kit";
-import {
-  CountdownCircleTimer,
-  useCountdown,
-} from "react-native-countdown-circle-timer";
-import { lazy, Suspense } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import "core-js/stable/atob";
 import { jwtDecode } from "jwt-decode";
-import { useRoute, useNavigation } from "@react-navigation/native";
+import { useNavigation } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import {
   Text,
   Avatar,
-  BottomNavigation,
-  Appbar,
   Button,
   Card,
   PaperProvider,
@@ -41,33 +23,56 @@ import {
   Portal,
 } from "react-native-paper";
 import CONSTANTS from "../constants/appConstants";
-import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import axios from "axios";
-import Spinner from "./spinner";
 
 const Tab = createBottomTabNavigator();
 
 const avatarIcon = require("../../assets/avatar icon .jpg");
 const logo = require("../../assets/opti-gluco-high-resolution-logo-white-transparent.png");
-const logoIcon = require("../../assets/opti-gluco-favicon-white.png"); //"C:\Users\SANJAI\OneDrive\Documents\Main_Project\SampleApp\assets\opti-gluco-favicon-white.png"
-const glucometerIcon = require("../../assets/alt_icon_red.png"); //alt_icon_red.png // optiGluco_alt_favicon.png
 
 function ProfileTab() {
   const navigation = useNavigation();
-  const [requestId, setRequestId] = useState("");
   const [userName, setUserName] = useState("");
   const windowHeight = Dimensions.get("window").height;
   const [visible, setVisible] = React.useState(false);
   const [isLoggedOut, setLogout] = useState(false);
   const [modalContent, setModalContent] = useState(null);
 
+  useEffect(() => {
+    refreshAccessToken();
+  }, []);
   const showModal = (content) => {
     setModalContent(content);
     setVisible(true);
   };
   const hideModal = () => setVisible(false);
   const containerStyle = { backgroundColor: "red" };
-
+  async function refreshAccessToken() {
+    try {
+      const userName = await AsyncStorage.getItem(
+        CONSTANTS.STORAGE_CONSTANTS.USER_NAME
+      );
+      setUserName(userName);
+      const response = await axios.post(
+        `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/api/refresh`
+      );
+      if (response.status === CONSTANTS.RESPONSE_STATUS.SUCCESS) {
+        const responseData = response.data;
+        await AsyncStorage.setItem(
+          CONSTANTS.STORAGE_CONSTANTS.ACCESS_TOKEN,
+          responseData.accessToken
+        );
+        console.log("refreshed successfully");
+        return responseData.accessToken;
+      } else {
+        setStatus(CONSTANTS.STATUS_CONSTANTS.FAILED);
+        navigation.navigate(CONSTANTS.PATH_CONSTANTS.LOGIN);
+      }
+    } catch (error) {
+      console.log(error);
+      setStatus(CONSTANTS.STATUS_CONSTANTS.FAILED);
+    }
+  }
   const handleAction = (action) => {
     if (action === "logout") {
       console.log("Logout action clicked");
@@ -115,6 +120,15 @@ function ProfileTab() {
       setLogout(false);
     }
   };
+  const handleRecentData = async () => {
+    try {
+      navigation.navigate(CONSTANTS.PATH_CONSTANTS.RECENT_DATA);
+    } catch (error) {
+      console.log("error on go to recent data", error);
+      setStatus(CONSTANTS.STATUS_CONSTANTS.FAILED);
+      navigation.navigate(CONSTANTS.PATH_CONSTANTS.LOGIN);
+    }
+  };
   const removeProduct = async () => {
     try {
       const removeProductAccessToken = await AsyncStorage.getItem(
@@ -156,26 +170,24 @@ function ProfileTab() {
                 style={styles.image}
               />
             </View>
-            <View>
-              <Avatar.Image size={30} source={avatarIcon} />
-            </View>
           </View>
           <View>
             <Card style={styles.card}>
               <Card.Content>
                 <View style={{ flexDirection: "row", alignItems: "center" }}>
-                  <Avatar.Image size={50} source={avatarIcon} />
+                  <Avatar.Image size={40} source={avatarIcon} />
                   <View style={{ marginLeft: 10 }}>
-                    {/* <Text
-                        style={{
-                          textAlign: "center",
-                          fontWeight: "bold",
-                          color: "white",
-                          fontSize: 20,
-                        }}
-                      >
-                        {userName}
-                      </Text> */}
+                    <Text
+                      style={{
+                        textAlign: "center",
+                        fontWeight: "bold",
+                        color: "white",
+                        fontSize: 20,
+                        marginLeft: 10,
+                      }}
+                    >
+                      {userName}
+                    </Text>
                   </View>
                   <View>
                     <Button icon="pen" onPress={editProfile}></Button>
@@ -193,7 +205,7 @@ function ProfileTab() {
                 <Card.Content
                   style={{ flexDirection: "row", alignItems: "center" }}
                 >
-                  <View>
+                  <View style={{ flexDirection: "row", alignItems: "center" }}>
                     <Text style={styles.title}>Logout</Text>
                   </View>
                   <View style={{ marginLeft: 255 }}>
@@ -204,8 +216,7 @@ function ProfileTab() {
                   </View>
                 </Card.Content>
               </Card>
-            </View>
-            <View style={styles.item}>
+
               <Card style={styles.cardContent}>
                 <Card.Content
                   style={{ flexDirection: "row", alignItems: "center" }}
@@ -217,6 +228,21 @@ function ProfileTab() {
                     <Button
                       icon="chevron-right"
                       onPress={() => showModal("Remove Product")}
+                    ></Button>
+                  </View>
+                </Card.Content>
+              </Card>
+              <Card style={styles.cardContent}>
+                <Card.Content
+                  style={{ flexDirection: "row", alignItems: "center" }}
+                >
+                  <View>
+                    <Text style={styles.title}>Recent Readings</Text>
+                  </View>
+                  <View style={{ marginLeft: 185 }}>
+                    <Button
+                      icon="chevron-right"
+                      onPress={handleRecentData}
                     ></Button>
                   </View>
                 </Card.Content>
@@ -362,7 +388,7 @@ const styles = StyleSheet.create({
     margin: 10,
     fontSize: 15,
     fontWeight: "bold",
-    color: "white",
+    color: "red",
   },
   text: {
     fontSize: 16,
@@ -396,7 +422,7 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   cardContent: {
-    marginTop: 1,
+    marginTop: 3,
     borderRadius: 0,
     backgroundColor: "#1a1a1a",
     flexDirection: "row",

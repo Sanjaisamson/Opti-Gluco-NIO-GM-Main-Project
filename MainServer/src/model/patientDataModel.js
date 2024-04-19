@@ -10,6 +10,7 @@ const patientDataTable = sequelize.define("patientData", {
   last_food_time: DataTypes.STRING,
   family_health_data: DataTypes.STRING,
   blood_pressure: DataTypes.STRING,
+  last_sugar_level: DataTypes.STRING,
 });
 
 patientDataTable.sync({ alter: true });

@@ -20,6 +20,7 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Text, Avatar, Button, Card, PaperProvider } from "react-native-paper";
 import CONSTANTS from "../constants/appConstants";
 import axios from "axios";
+import HomeTab from "./homeTab";
 
 const Tab = createBottomTabNavigator();
 
@@ -30,9 +31,11 @@ const glucometerIcon = require("../../assets/alt_icon_red.png"); //alt_icon_red.
 
 function ProductTab() {
   const [requestId, setRequestId] = useState("");
-  const [userName, setUserName] = useState("");
   const [status, setStatus] = useState(null);
   const [productList, setProductList] = useState([]);
+  const [recentReadings, setRecentReadings] = useState([]);
+  const [isChartReady, setisChartReady] = useState(false);
+  const [readingDates, setReadingDates] = useState([]);
   const navigation = useNavigation();
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -41,6 +44,7 @@ function ProductTab() {
   useEffect(() => {
     refreshAccessToken();
     fetchData();
+    getChartData();
   }, []);
 
   async function refreshAccessToken() {
@@ -61,6 +65,7 @@ function ProductTab() {
         navigation.navigate(CONSTANTS.PATH_CONSTANTS.LOGIN);
       }
     } catch (error) {
+      console.log(error);
       setStatus(CONSTANTS.STATUS_CONSTANTS.FAILED);
     }
   }
@@ -75,10 +80,9 @@ function ProductTab() {
         const newToken = await refreshAccessToken();
         accessToken = newToken;
       }
-      const requestBody = {};
       const listProductResponse = await axios.post(
         `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/product/list-products`,
-        requestBody,
+        {},
         {
           headers: {
             Authorization: `Bearer ${accessToken}`,
@@ -90,6 +94,7 @@ function ProductTab() {
         setProductList(listProductResponse.data);
       }
     } catch (error) {
+      console.log(error);
       setStatus(CONSTANTS.STATUS_CONSTANTS.FAILED);
     }
   };
@@ -118,6 +123,7 @@ function ProductTab() {
         return responseData;
       }
     } catch (error) {
+      console.log("error at check status", error);
       setStatus(CONSTANTS.STATUS_CONSTANTS.FAILED);
     }
   };
@@ -133,10 +139,9 @@ function ProductTab() {
       readDataAccessToken = newToken;
     }
     try {
-      const requestBody = {};
       const response = await axios.post(
         `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/product/start-job`,
-        requestBody,
+        {},
         {
           headers: {
             Authorization: `Bearer ${readDataAccessToken}`,
@@ -172,6 +177,7 @@ function ProductTab() {
         }, 30000);
       }
     } catch (error) {
+      console.log("error in reading data", error);
       setStatus(CONSTANTS.STATUS_CONSTANTS.FAILED);
     }
   };
@@ -189,22 +195,73 @@ function ProductTab() {
       { cancelable: false }
     );
   };
-  const handleRecentData = async () => {
+  const onRefresh = () => {
+    setRefreshing(true);
+    refreshAccessToken();
+    fetchData();
+    getChartData();
+    setTimeout(() => setRefreshing(false), 1000); // Simulated refresh
+  };
+
+  const getChartData = async () => {
+    console.log("started");
+    console.log(readingDates);
+    let accessToken = await AsyncStorage.getItem(
+      CONSTANTS.STORAGE_CONSTANTS.ACCESS_TOKEN
+    );
+    const decodedToken = jwtDecode(accessToken);
     try {
-      navigation.navigate(CONSTANTS.PATH_CONSTANTS.RECENT_DATA);
+      const currentTime = Date.now() / 1000;
+      if (decodedToken.exp < currentTime) {
+        const newToken = await refreshAccessToken();
+        accessToken = newToken;
+      }
+      const chartDataResponse = await axios.post(
+        `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/product/chart-data`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (chartDataResponse.status === CONSTANTS.RESPONSE_STATUS.SUCCESS) {
+        const data = chartDataResponse.data;
+        const readings = data.map((item) => {
+          const reading = item.final_result;
+          if (reading === "85-95") {
+            return 1;
+          } else if (reading === "96-110") {
+            return 2;
+          } else if (reading === "111-125") {
+            return 3;
+          }
+          return 0;
+        });
+        const dates = data.map((item) =>
+          new Date(item.createdAt).toLocaleDateString([], {
+            weekday: "long",
+          })
+        );
+        console.log(dates);
+        setRecentReadings(readings);
+        setReadingDates(dates);
+        setisChartReady(true);
+      }
     } catch (error) {
+      console.log("error on get chart data", error);
       setStatus(CONSTANTS.STATUS_CONSTANTS.FAILED);
-      navigation.navigate(CONSTANTS.PATH_CONSTANTS.LOGIN);
     }
   };
-  const handleRefresh = () => {
-    setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1000); // Simulated refresh
+  const homeTab = () => {
+    HomeTab;
   };
   const getFinalResult = () => {
     try {
       navigation.navigate("FinalReading");
     } catch (error) {
+      console.log("error on getting final data", error);
       setStatus(CONSTANTS.STATUS_CONSTANTS.FAILED);
     }
   };
@@ -212,202 +269,204 @@ function ProductTab() {
     try {
       navigation.navigate("Questionnaire");
     } catch (error) {
+      console.log("error on getting questionnaire", error);
       setStatus(CONSTANTS.STATUS_CONSTANTS.FAILED);
     }
   };
-  const data = {
-    labels: ["January", "February", "March", "April", "May", "June"],
-    datasets: [
-      {
-        data: [20, 45, 28, 80, 99, 43],
-        color: (opacity = 1) => `rgba(255, 0, 0, ${opacity})`, // optional
-        strokeWidth: 5, // optional
-      },
-    ],
-    legend: ["Recent Sugar levels"], // optional
-  };
   return (
-    <PaperProvider>
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-        <View style={styles.container}>
-          <View
-            style={{
-              margin: 10,
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <View>
-              <Image
-                source={logo} // Replace with the path to your exciting image
-                style={styles.image}
-              />
-            </View>
-            <View>
-              <Avatar.Image size={30} source={avatarIcon} />
-            </View>
+    <ScrollView
+      contentContainerStyle={{ flexGrow: 1 }}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
+    >
+      <View style={styles.container}>
+        <View
+          style={{
+            margin: 10,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <View>
+            <TouchableOpacity onPress={() => navigation.navigate("Home")}>
+              <Image source={logo} style={styles.image} />
+            </TouchableOpacity>
           </View>
           <View>
-            <View style={{ margin: 10 }}>
-              {productList && productList.length > 0 ? (
-                productList.map((product) => (
-                  <Card key={product.product_id} style={styles.card}>
-                    <View
-                      style={{
-                        margin: 20,
-                        flexDirection: "row",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                      }}
-                    >
-                      <View>
-                        <Text style={styles.text}>
-                          Device Id : {product.product_id}
-                        </Text>
-                        <Text style={styles.text}>
-                          Device Code : {product.product_code}
-                        </Text>
-                      </View>
-                      <View>
-                        <Image
-                          source={glucometerIcon} // Replace with the path to your exciting image
-                          style={{ height: 80, width: 70 }}
-                        />
-                      </View>
-                    </View>
-                    <View>
-                      <TouchableOpacity
-                        style={{
-                          borderRadius: 5,
-                          width: "100%",
-                          height: 40,
-                          backgroundColor: "#333333", // grey shade
-                          justifyContent: "center",
-                        }}
-                        onPress={readData}
-                      >
-                        <Text
-                          style={{
-                            textAlign: "center",
-                            color: "white",
-                            fontWeight: "bold",
-                          }}
-                        >
-                          Take Reading
-                        </Text>
-                      </TouchableOpacity>
-                    </View>
-                  </Card>
-                ))
-              ) : (
-                <Card style={styles.card}>
-                  <Card.Content>
-                    <Text style={styles.text}>No Products available .....</Text>
-                  </Card.Content>
-                </Card>
-              )}
-            </View>
-            <View />
-            <View>
-              {loading ? (
-                <View>
-                  <View>
-                    <Text style={styles.loadingText}>Loading...</Text>
-                  </View>
+            <TouchableOpacity onPress={() => navigation.navigate("Profile")}>
+              <Avatar.Image size={30} source={avatarIcon} />
+            </TouchableOpacity>
+          </View>
+        </View>
+        <View>
+          <View style={{ margin: 10 }}>
+            {productList && productList.length > 0 ? (
+              productList.map((product) => (
+                <Card key={product.product_id} style={styles.card}>
                   <View
                     style={{
                       margin: 20,
+                      flexDirection: "row",
                       justifyContent: "space-between",
                       alignItems: "center",
                     }}
                   >
-                    <CountdownCircleTimer
-                      isPlaying
-                      duration={60}
-                      strokeLinecap="round"
-                      strokeWidth={5}
-                      size={120}
-                      rotation="counterclockwise"
-                      colors={["#db0a07", "#0718db", "#f0d10c", "#078c24"]}
-                      colorsTime={[45, 30, 15, 0]}
-                      onComplete={() => {
-                        return { shouldRepeat: true, delay: 1 };
-                      }}
-                    >
-                      {({ remainingTime }) => (
-                        <Text style={styles.text}>{remainingTime}</Text>
-                      )}
-                    </CountdownCircleTimer>
+                    <View>
+                      <Text style={styles.text}>
+                        Device Id : {product.product_id}
+                      </Text>
+                      <Text style={styles.text}>
+                        Device Code : {product.product_code}
+                      </Text>
+                    </View>
+                    <View>
+                      <Image
+                        source={glucometerIcon} // Replace with the path to your exciting image
+                        style={{ height: 80, width: 70 }}
+                      />
+                    </View>
                   </View>
-                </View>
-              ) : (
-                <Text></Text>
-              )}
-            </View>
-            {status === CONSTANTS.STATUS_CONSTANTS.COMPLETED && (
-              <>
-                <Text style={styles.successMessage}>
-                  Action Successfully completed........
-                </Text>
-                {showAlert({ msg: CONSTANTS.STATUS_CONSTANTS.SUCCESS })}
-              </>
-            )}
-            {status === CONSTANTS.STATUS_CONSTANTS.PROGRESS && (
-              <>
-                <Text style={styles.successMessage}>
-                  Action on progress....Please wait
-                </Text>
-              </>
-            )}
-            {status === CONSTANTS.STATUS_CONSTANTS.FAILED && (
-              <>
-                <Text style={styles.errorMessage}>
-                  Sorry!! Action Failed. Please try again.
-                </Text>
-                {showAlert({ msg: CONSTANTS.STATUS_CONSTANTS.ERROR })}
-              </>
+                  <View>
+                    <TouchableOpacity
+                      style={{
+                        borderRadius: 5,
+                        width: "100%",
+                        height: 40,
+                        backgroundColor: "#333333", // grey shade
+                        justifyContent: "center",
+                      }}
+                      onPress={readData}
+                    >
+                      <Text
+                        style={{
+                          textAlign: "center",
+                          color: "white",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        Take Reading
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </Card>
+              ))
+            ) : (
+              <Card style={styles.card}>
+                <Card.Content>
+                  <Text style={styles.text}>No Products available .....</Text>
+                </Card.Content>
+              </Card>
             )}
           </View>
-          {/* <View>
-          <Button onPress={getFinalResult}>Final Readings </Button>
-        </View> */}
-          {/* <View>
-          <Button onPress={getQuestionnaire}>Q & A </Button>
-        </View> */}
+          <View />
           <View>
-            <Button onPress={handleRecentData}>Recent Readings </Button>
+            {loading ? (
+              <View>
+                <View>
+                  <Text style={styles.loadingText}>Loading...</Text>
+                </View>
+                <View
+                  style={{
+                    margin: 20,
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <CountdownCircleTimer
+                    isPlaying
+                    duration={60}
+                    strokeLinecap="round"
+                    strokeWidth={5}
+                    size={120}
+                    rotation="counterclockwise"
+                    colors={["#db0a07", "#0718db", "#f0d10c", "#078c24"]}
+                    colorsTime={[45, 30, 15, 0]}
+                    onComplete={() => {
+                      return { shouldRepeat: true, delay: 1 };
+                    }}
+                  >
+                    {({ remainingTime }) => (
+                      <Text style={styles.text}>{remainingTime}</Text>
+                    )}
+                  </CountdownCircleTimer>
+                </View>
+              </View>
+            ) : (
+              <Text></Text>
+            )}
           </View>
+          {status === CONSTANTS.STATUS_CONSTANTS.COMPLETED && (
+            <>
+              <Text style={styles.successMessage}>
+                Action Successfully completed........
+              </Text>
+              {showAlert({ msg: CONSTANTS.STATUS_CONSTANTS.SUCCESS })}
+            </>
+          )}
+          {status === CONSTANTS.STATUS_CONSTANTS.PROGRESS && (
+            <>
+              <Text style={styles.successMessage}>
+                Action on progress....Please wait
+              </Text>
+            </>
+          )}
+          {status === CONSTANTS.STATUS_CONSTANTS.FAILED && (
+            <>
+              <Text style={styles.errorMessage}>
+                Sorry!! Action Failed. Please try again.
+              </Text>
+              {showAlert({ msg: CONSTANTS.STATUS_CONSTANTS.ERROR })}
+            </>
+          )}
+        </View>
+        {isChartReady ? (
           <View
             style={{
               marginTop: 70,
             }}
           >
             <LineChart
-              data={data}
-              width={windowWidth}
+              data={{
+                labels: ["1rst", "2nd", "3rd", "4th"],
+                datasets: [
+                  {
+                    data: recentReadings,
+                  },
+                ],
+              }}
+              width={windowWidth} // from react-native
               height={220}
+              yAxisInterval={1} // optional, defaults to 1
               chartConfig={{
-                backgroundColor: "red",
+                backgroundColor: "#ffffff",
                 backgroundGradientFrom: "#000103",
                 backgroundGradientTo: "#000103",
                 decimalPlaces: 2, // optional, defaults to 2dp
-                color: (opacity = 1) => `rgba(255, 255, 255,${opacity})`,
+                color: (opacity = 1) => `rgba(255, 0, 0, ${opacity})`,
                 labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
                 style: {
-                  borderRadius: 20,
-                  backgroundColor: "red",
+                  borderRadius: 16,
                 },
                 propsForDots: {
-                  r: "7",
+                  r: "4",
+                  strokeWidth: "2",
+                  stroke: "white",
                 },
               }}
-              hideLegend={false}
+              bezier
+              style={{
+                marginVertical: 8,
+                borderRadius: 16,
+              }}
             />
           </View>
-        </View>
-      </ScrollView>
-    </PaperProvider>
+        ) : (
+          <Text style={styles.text}>Chart is not Available</Text>
+        )}
+      </View>
+    </ScrollView>
   );
 }
 const styles = StyleSheet.create({
@@ -424,42 +483,10 @@ const styles = StyleSheet.create({
     color: "red",
     marginTop: 10,
   },
-  processMessage: {
-    color: "blue",
-    marginTop: 10,
-  },
-  loadingText: {
-    fontSize: 30,
-    fontWeight: "bold",
-    color: "white", // Blue color
-    textAlign: "center",
-  },
-  item: {
-    marginVertical: 8,
-  },
-  header: {
-    margin: 10,
-    fontSize: 15,
-    fontWeight: "bold",
-    color: "white",
-  },
   text: {
     fontSize: 16,
     fontWeight: "bold",
     color: "white",
-  },
-  homeCard: {
-    backgroundColor: "#1a1a1a",
-    height: "auto",
-    borderRadius: 20,
-    shadowColor: "white",
-    shadowOffset: {
-      width: 0,
-      height: 0,
-    },
-    shadowOpacity: 1,
-    shadowRadius: 5,
-    elevation: 5,
   },
   card: {
     backgroundColor: "#1a1a1a",
@@ -474,49 +501,16 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 5,
   },
-  cardContent: {
-    marginTop: 1,
-    borderRadius: 0,
-    backgroundColor: "#1a1a1a",
-    flexDirection: "row",
-    alignItems: "center",
-    shadowColor: "#010205", //"#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-
-  title: {
-    fontSize: 15,
-    color: "white",
-  },
-  modalText: {
-    fontSize: 20,
+  loadingText: {
+    fontSize: 30,
     fontWeight: "bold",
+    color: "white", // Blue color
+    textAlign: "center",
   },
   image: {
     width: 200,
     height: 50, // Adjust according to your image size
     resizeMode: "contain",
-  },
-  bottomSheet: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    justifyContent: "flex-start",
-    alignItems: "center",
-    backgroundColor: "white",
-    borderTopLeftRadius: 10,
-    borderTopRightRadius: 10,
-    paddingVertical: 23,
-    paddingHorizontal: 25,
-    bottom: 0,
-    borderWidth: 1,
-    borderColor: "red",
   },
 });
 

@@ -51,5 +51,10 @@ productRouter.post(
   authHandler.accessTokenVerification,
   productController.predictDiabaticChance
 );
+productRouter.post(
+  "/chart-data",
+  authHandler.accessTokenVerification,
+  productController.getChartData
+);
 
 module.exports = productRouter;

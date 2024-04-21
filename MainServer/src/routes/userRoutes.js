@@ -5,7 +5,7 @@ const authHandler = require("../middlewares/authHandler.middleware");
 
 appRouter.post("/login", userController.loginUser);
 appRouter.post("/signup", userController.createUser);
-appRouter.post("/refresh", authHandler.refreshTokenVerification);
+appRouter.get("/refresh", authHandler.refreshTokenVerification);
 appRouter.post(
   "/logout",
   authHandler.accessTokenVerification,

@@ -11,6 +11,7 @@ import CONSTANTS from "../constants/appConstants";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import axios from "axios";
 import Spinner from "./spinner";
+import handleError from "../configFiles/errorHandler";
 
 const Tab = createBottomTabNavigator();
 
@@ -24,7 +25,7 @@ const HomeScreen = () => {
   }, []);
   async function refreshAccessToken() {
     try {
-      const response = await axios.post(
+      const response = await axios.get(
         `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/api/refresh`
       );
       if (response.status === CONSTANTS.RESPONSE_STATUS.SUCCESS) {
@@ -36,11 +37,11 @@ const HomeScreen = () => {
         console.log("refreshed successfully");
         return responseData.accessToken;
       } else {
-        setStatus(CONSTANTS.STATUS_CONSTANTS.FAILED);
         navigation.navigate(CONSTANTS.PATH_CONSTANTS.LOGIN);
       }
     } catch (error) {
-      setStatus(CONSTANTS.STATUS_CONSTANTS.FAILED);
+      handleError("Error getting Home screen", error);
+      navigation.navigate(CONSTANTS.PATH_CONSTANTS.LOGIN);
     }
   }
   return (

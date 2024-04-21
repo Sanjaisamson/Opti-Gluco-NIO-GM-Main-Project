@@ -24,7 +24,6 @@ const {
 const { userTable } = require("../model/userModel");
 async function registerProduct(userId, productId) {
   try {
-    console.log("data is here ", userId, productId);
     const product = await productTable.findOne({
       where: {
         user_id: userId,
@@ -62,13 +61,11 @@ async function registerProduct(userId, productId) {
       product.product_code === productId &&
       product.user_id === userId
     ) {
-      console.log("hioiiiii");
       const requestData = JSON.stringify({
         productCode: productId,
         url: sysConfig.system_url,
         userId: userId,
       });
-      console.log("data for request", requestData);
       const response = await fetch(
         `http://${deviceConfig.device_host}/client/register-client`, // 192.168.1.14:3500
         {
@@ -80,7 +77,6 @@ async function registerProduct(userId, productId) {
           body: requestData,
         }
       );
-      console.log(response);
       if (response.status != 200) {
         throw new Error(
           RESPONSE_STATUS_CONSTANTS.FAILED,
@@ -94,7 +90,6 @@ async function registerProduct(userId, productId) {
       "error in register the product"
     );
   } catch (error) {
-    console.log("error is this ", error);
     throw error;
   }
 }
@@ -155,7 +150,6 @@ async function initiateJob(userId) {
       product_code: product.product_code,
       request_code: requestId,
     });
-    console.log("error at request", product.product_code);
     const requestData = JSON.stringify({
       productCode: product.product_code,
       requestId: requestId,
@@ -164,7 +158,6 @@ async function initiateJob(userId) {
     const response = await fetch(
       `http://${deviceConfig.device_host}/client/start-job`,
       {
-        //http://192.168.1.14:3500/client/start-job
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -173,8 +166,6 @@ async function initiateJob(userId) {
         body: requestData,
       }
     );
-    console.log("heelloooo");
-    console.log(response);
     if (!response.ok) {
       throw new Error(RESPONSE_STATUS_CONSTANTS.FAILED, "error in start job");
     }
@@ -212,12 +203,6 @@ async function updateJobData(jobId, jobStatus, requestId) {
 }
 async function updateStatus(requestId, jobStatus, jobId) {
   try {
-    console.log(
-      "update status data reached services",
-      requestId,
-      jobStatus,
-      jobId
-    );
     const requestLog = await requestLogTable.findOne({
       where: {
         request_code: requestId,
@@ -228,7 +213,6 @@ async function updateStatus(requestId, jobStatus, jobId) {
     await requestLog.save();
     return;
   } catch (error) {
-    console.log("Sorry failed to update status !!!");
     const requestLog = await requestLogTable.findOne({
       where: {
         request_code: requestId,
@@ -326,7 +310,6 @@ async function processingResult(images, requestId, userId, productCode) {
     const rangeCounts = {};
     let mostFrequentRange = null;
     let maxCount = 0;
-    console.log("loop started for get category");
     for (let i = 0; i < processedImageResults.length; i++) {
       const currentRange = processedImageResults[i];
       rangeCounts[currentRange] = (rangeCounts[currentRange] || 0) + 1;
@@ -336,7 +319,6 @@ async function processingResult(images, requestId, userId, productCode) {
         mostFrequentRange = currentRange;
       }
     }
-    console.log("loop ended");
     console.log(
       "Final sugar category:",
       mostFrequentRange,
@@ -381,12 +363,11 @@ async function processingResult(images, requestId, userId, productCode) {
   }
 }
 
-async function checkJobStatus(jobId, requestId) {
+async function checkJobStatus(requestId) {
   try {
     const jobStatus = await requestLogTable.findOne({
       where: {
         request_code: requestId,
-        job_id: jobId,
       },
     });
     return jobStatus;
@@ -462,7 +443,6 @@ async function addReferenceValue(userId, referenceValue, readingId) {
 
 async function getFinalResult(userId, requestId) {
   try {
-    console.log(userId, requestId);
     const resultInfo = await requestLogTable.findOne({
       where: {
         request_code: requestId,
@@ -519,7 +499,6 @@ async function setPatientData(
 }
 
 async function predictDiabaticChance(userId) {
-  console.log("call for prediction is at service");
   let diabaticChanceStatus = null;
   try {
     const patientData = await patientDataTable.findOne({
@@ -532,7 +511,6 @@ async function predictDiabaticChance(userId) {
         user_id: userId,
       },
     });
-    console.log(patientData);
     if (
       patientData.A1c_value <= 5.7 &&
       patientData.last_sugar_level != "111-125"
@@ -551,7 +529,6 @@ async function predictDiabaticChance(userId) {
     } else {
       diabaticChanceStatus = null;
     }
-    console.log(patientData.user_id, userData.user_age, diabaticChanceStatus);
 
     return diabaticChanceStatus;
   } catch (error) {
@@ -561,7 +538,6 @@ async function predictDiabaticChance(userId) {
 
 async function getChartData(userId) {
   try {
-    console.log("request for chart data", userId);
     const products = await productTable.findOne({
       where: {
         user_id: userId,
@@ -578,7 +554,6 @@ async function getChartData(userId) {
       order: [["createdAt", "ASC"]],
       limit: 5,
     });
-    console.log(recentReadings);
     return recentReadings;
   } catch (error) {
     throw error;

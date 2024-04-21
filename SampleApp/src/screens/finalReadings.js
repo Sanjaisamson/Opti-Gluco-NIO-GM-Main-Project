@@ -30,7 +30,7 @@ const FinalReadingScreen = () => {
 
   async function refreshAccessToken() {
     try {
-      const response = await axios.post(
+      const response = await axios.get(
         `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/api/refresh`,
         {
           headers: {
@@ -85,9 +85,8 @@ const FinalReadingScreen = () => {
       if (response.status === CONSTANTS.RESPONSE_STATUS.SUCCESS) {
         setFinalResultStatus(CONSTANTS.STATUS_CONSTANTS.SUCCESS);
         const responseData = response.data;
-        console.log(response.data);
-        console.log("response Data", responseData.final_result);
         setFinalResult(responseData.final_result);
+        console.log("response Data", responseData.final_result);
         return;
       } else {
         setFinalResultStatus(CONSTANTS.STATUS_CONSTANTS.FAILED);
@@ -131,7 +130,7 @@ const FinalReadingScreen = () => {
       >
         <View>
           <Text style={styles.title}>
-            Your current sugar level is in between......
+            Your current sugar level is in between
           </Text>
           <Text>{finalResult}mg/dl</Text>
         </View>

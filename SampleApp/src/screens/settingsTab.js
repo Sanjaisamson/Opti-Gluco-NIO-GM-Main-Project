@@ -24,6 +24,7 @@ import {
 } from "react-native-paper";
 import CONSTANTS from "../constants/appConstants";
 import axios from "axios";
+import handleError from "../configFiles/errorHandler";
 
 const Tab = createBottomTabNavigator();
 
@@ -34,51 +35,55 @@ function ProfileTab() {
   const navigation = useNavigation();
   const [userName, setUserName] = useState("");
   const windowHeight = Dimensions.get("window").height;
-  const [visible, setVisible] = React.useState(false);
+  const [visible, setVisible] = useState(false);
+  const [status, setStatus] = useState("");
   const [isLoggedOut, setLogout] = useState(false);
   const [modalContent, setModalContent] = useState(null);
 
   useEffect(() => {
     refreshAccessToken();
   }, []);
+
   const showModal = (content) => {
     setModalContent(content);
     setVisible(true);
   };
+
   const hideModal = () => setVisible(false);
+
   const containerStyle = { backgroundColor: "red" };
-  async function refreshAccessToken() {
+
+  const refreshAccessToken = async () => {
     try {
       const userName = await AsyncStorage.getItem(
         CONSTANTS.STORAGE_CONSTANTS.USER_NAME
       );
       setUserName(userName);
-      const response = await axios.post(
+      const response = await axios.get(
         `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/api/refresh`
       );
+
       if (response.status === CONSTANTS.RESPONSE_STATUS.SUCCESS) {
-        const responseData = response.data;
+        const { accessToken } = response.data;
         await AsyncStorage.setItem(
           CONSTANTS.STORAGE_CONSTANTS.ACCESS_TOKEN,
-          responseData.accessToken
+          accessToken
         );
-        console.log("refreshed successfully");
-        return responseData.accessToken;
+        return accessToken;
       } else {
         setStatus(CONSTANTS.STATUS_CONSTANTS.FAILED);
         navigation.navigate(CONSTANTS.PATH_CONSTANTS.LOGIN);
       }
     } catch (error) {
-      console.log(error);
       setStatus(CONSTANTS.STATUS_CONSTANTS.FAILED);
+      navigation.navigate(CONSTANTS.PATH_CONSTANTS.LOGIN);
     }
-  }
+  };
+
   const handleAction = (action) => {
     if (action === "logout") {
-      console.log("Logout action clicked");
       logout();
     } else if (action === "Remove Product") {
-      console.log("Remove product action clicked");
       removeProduct();
     }
     hideModal();
@@ -87,28 +92,21 @@ function ProfileTab() {
   const editProfile = () => {
     console.log("edit profile menu clicked !!!");
   };
+
   const logout = async () => {
     try {
-      let logoutAccessToken = await AsyncStorage.getItem(
-        CONSTANTS.STORAGE_CONSTANTS.ACCESS_TOKEN
-      );
-      const decodedToken = jwtDecode(logoutAccessToken);
-      const currentTime = Date.now() / 1000;
-      if (decodedToken.exp < currentTime) {
-        const newToken = await refreshAccessToken();
-        logoutAccessToken = newToken;
-      }
-      const requestBody = {};
+      const accessToken = await refreshAccessToken();
       const response = await axios.post(
         `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/api/logout`,
-        requestBody,
+        {},
         {
           headers: {
-            Authorization: `Bearer ${logoutAccessToken}`,
+            Authorization: `Bearer ${accessToken}`,
           },
           withCredentials: true,
         }
       );
+
       if (response.status === CONSTANTS.RESPONSE_STATUS.SUCCESS) {
         await AsyncStorage.removeItem(CONSTANTS.STORAGE_CONSTANTS.ACCESS_TOKEN);
         setLogout(true);
@@ -120,29 +118,29 @@ function ProfileTab() {
       setLogout(false);
     }
   };
+
   const handleRecentData = async () => {
     try {
       navigation.navigate(CONSTANTS.PATH_CONSTANTS.RECENT_DATA);
     } catch (error) {
-      console.log("error on go to recent data", error);
       setStatus(CONSTANTS.STATUS_CONSTANTS.FAILED);
       navigation.navigate(CONSTANTS.PATH_CONSTANTS.LOGIN);
     }
   };
+
   const removeProduct = async () => {
     try {
-      const removeProductAccessToken = await AsyncStorage.getItem(
-        CONSTANTS.STORAGE_CONSTANTS.ACCESS_TOKEN
-      );
-      const response = await axios.post(
+      const accessToken = await refreshAccessToken();
+      const response = await axios.get(
         `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/product/remove`,
         {
           headers: {
-            Authorization: `Bearer ${removeProductAccessToken}`,
+            Authorization: `Bearer ${accessToken}`,
           },
           withCredentials: true,
         }
       );
+
       if (response.status === CONSTANTS.RESPONSE_STATUS.SUCCESS) {
         setStatus(CONSTANTS.STATUS_CONSTANTS.COMPLETED);
       } else {

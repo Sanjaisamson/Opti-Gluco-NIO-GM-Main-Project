@@ -16,13 +16,10 @@ import { LineChart } from "react-native-chart-kit";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { jwtDecode } from "jwt-decode";
 import { useNavigation } from "@react-navigation/native";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Text, Avatar, Button, Card, PaperProvider } from "react-native-paper";
 import CONSTANTS from "../constants/appConstants";
 import axios from "axios";
-import HomeTab from "./homeTab";
-
-const Tab = createBottomTabNavigator();
+import handleError from "../configFiles/errorHandler";
 
 const avatarIcon = require("../../assets/avatar icon .jpg");
 const logo = require("../../assets/opti-gluco-high-resolution-logo-white-transparent.png");
@@ -47,42 +44,33 @@ function ProductTab() {
     getChartData();
   }, []);
 
-  async function refreshAccessToken() {
+  const refreshAccessToken = async () => {
     try {
-      const response = await axios.post(
+      const response = await axios.get(
         `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/api/refresh`
       );
+
       if (response.status === CONSTANTS.RESPONSE_STATUS.SUCCESS) {
-        const responseData = response.data;
+        const { accessToken } = response.data;
         await AsyncStorage.setItem(
           CONSTANTS.STORAGE_CONSTANTS.ACCESS_TOKEN,
-          responseData.accessToken
+          accessToken
         );
-        console.log("refreshed successfully");
-        return responseData.accessToken;
+        return accessToken;
       } else {
         setStatus(CONSTANTS.STATUS_CONSTANTS.FAILED);
         navigation.navigate(CONSTANTS.PATH_CONSTANTS.LOGIN);
       }
     } catch (error) {
-      console.log(error);
       setStatus(CONSTANTS.STATUS_CONSTANTS.FAILED);
+      navigation.navigate(CONSTANTS.PATH_CONSTANTS.LOGIN);
     }
-  }
+  };
   const fetchData = async () => {
-    let accessToken = await AsyncStorage.getItem(
-      CONSTANTS.STORAGE_CONSTANTS.ACCESS_TOKEN
-    );
-    const decodedToken = jwtDecode(accessToken);
     try {
-      const currentTime = Date.now() / 1000;
-      if (decodedToken.exp < currentTime) {
-        const newToken = await refreshAccessToken();
-        accessToken = newToken;
-      }
-      const listProductResponse = await axios.post(
+      const accessToken = await refreshAccessToken();
+      const response = await axios.get(
         `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/product/list-products`,
-        {},
         {
           headers: {
             Authorization: `Bearer ${accessToken}`,
@@ -90,21 +78,23 @@ function ProductTab() {
           },
         }
       );
-      if (listProductResponse.status === CONSTANTS.RESPONSE_STATUS.SUCCESS) {
-        setProductList(listProductResponse.data);
+
+      if (response.status === CONSTANTS.RESPONSE_STATUS.SUCCESS) {
+        setProductList(response.data);
+      } else {
+        handleError("Failed to fetch product list");
       }
     } catch (error) {
-      console.log(error);
-      setStatus(CONSTANTS.STATUS_CONSTANTS.FAILED);
+      handleError("Error fetching product list", error);
     }
   };
-  const checkStatus = async (jobId, requestId) => {
+  const checkStatus = async () => {
     try {
-      const checkStatusAccessToken = await AsyncStorage.getItem(
-        CONSTANTS.STORAGE_CONSTANTS.ACCESS_TOKEN
+      const accessToken = await refreshAccessToken();
+      const requestId = await AsyncStorage.getItem(
+        CONSTANTS.STORAGE_CONSTANTS.REQUEST_ID
       );
       const requestData = JSON.stringify({
-        jobId: jobId,
         requestId: requestId,
       });
       const response = await axios.post(
@@ -112,91 +102,90 @@ function ProductTab() {
         requestData,
         {
           headers: {
-            Authorization: `Bearer ${checkStatusAccessToken}`,
+            Authorization: `Bearer ${accessToken}`,
             "Content-Type": "application/json",
           },
-          withCredentials: true,
         }
       );
+
       if (response.status === CONSTANTS.RESPONSE_STATUS.SUCCESS) {
-        const responseData = response.data;
-        return responseData;
+        console.log("checking status", response.data.job_status);
+        return response.data;
+      } else {
+        setLoading(false);
+        handleError("Failed to check job status");
       }
     } catch (error) {
-      console.log("error at check status", error);
-      setStatus(CONSTANTS.STATUS_CONSTANTS.FAILED);
+      setLoading(false);
+      handleError("Error checking job status", error);
+    }
+  };
+
+  const getQuestionnaire = () => {
+    try {
+      navigation.navigate("Questionnaire");
+    } catch (error) {
+      handleError("Error getting questionnaire", error);
+    }
+  };
+  const getFinalResult = () => {
+    try {
+      navigation.navigate("FinalReading");
+    } catch (error) {
+      handleError("Error getting final data", error);
     }
   };
 
   const readData = async () => {
-    let readDataAccessToken = await AsyncStorage.getItem(
-      CONSTANTS.STORAGE_CONSTANTS.ACCESS_TOKEN
-    );
-    const decodedToken = jwtDecode(readDataAccessToken);
-    const currentTime = Date.now() / 1000;
-    if (decodedToken.exp < currentTime) {
-      const newToken = await refreshAccessToken();
-      readDataAccessToken = newToken;
-    }
     try {
+      let accessToken = await refreshAccessToken();
       const response = await axios.post(
         `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/product/start-job`,
         {},
         {
           headers: {
-            Authorization: `Bearer ${readDataAccessToken}`,
+            Authorization: `Bearer ${accessToken}`,
             "Content-Type": "application/json",
           },
           withCredentials: true,
         }
       );
       if (response.status === CONSTANTS.RESPONSE_STATUS.SUCCESS) {
-        const responseData = response.data;
-        setRequestId(responseData.requestId);
+        const { requestId } = response.data;
+        setRequestId(requestId);
         await AsyncStorage.setItem(
           CONSTANTS.STORAGE_CONSTANTS.REQUEST_ID,
-          responseData.requestId
+          requestId
         );
-        console.log("request id : ", responseData.requestId);
         setStatus(CONSTANTS.STATUS_CONSTANTS.PROGRESS);
         setLoading(true);
         getQuestionnaire();
         const intervalId = setInterval(async () => {
-          const currentStatus = await checkStatus(
-            responseData.jobId,
-            responseData.requestId
-          );
+          const currentStatus = await checkStatus();
           if (
             currentStatus.job_status === CONSTANTS.STATUS_CONSTANTS.COMPLETED
           ) {
             setStatus(CONSTANTS.STATUS_CONSTANTS.COMPLETED);
             clearInterval(intervalId);
+            getFinalResult(requestId);
             setLoading(false);
-            getFinalResult(responseData.requestId);
+          } else if (
+            currentStatus.job_status === CONSTANTS.STATUS_CONSTANTS.FAILED
+          ) {
+            clearInterval(intervalId);
+            setLoading(false);
+            handleError("Job failed");
           }
         }, 30000);
       }
     } catch (error) {
-      console.log("error in reading data", error);
-      setStatus(CONSTANTS.STATUS_CONSTANTS.FAILED);
+      setLoading(false);
+      handleError("Error starting job", error);
     }
-  };
-
-  const showAlert = ({ msg }) => {
-    Alert.alert(
-      "Opti-Gluco",
-      msg,
-      [
-        {
-          text: "OK",
-          onPress: () => {},
-        },
-      ],
-      { cancelable: false }
-    );
   };
   const onRefresh = () => {
     setRefreshing(true);
+    setLoading(false);
     refreshAccessToken();
     fetchData();
     getChartData();
@@ -204,21 +193,19 @@ function ProductTab() {
   };
 
   const getChartData = async () => {
-    console.log("started");
-    console.log(readingDates);
-    let accessToken = await AsyncStorage.getItem(
-      CONSTANTS.STORAGE_CONSTANTS.ACCESS_TOKEN
-    );
-    const decodedToken = jwtDecode(accessToken);
     try {
+      let accessToken = await AsyncStorage.getItem(
+        CONSTANTS.STORAGE_CONSTANTS.ACCESS_TOKEN
+      );
+      const decodedToken = jwtDecode(accessToken);
       const currentTime = Date.now() / 1000;
+
       if (decodedToken.exp < currentTime) {
-        const newToken = await refreshAccessToken();
-        accessToken = newToken;
+        accessToken = await refreshAccessToken();
       }
-      const chartDataResponse = await axios.post(
+
+      const response = await axios.get(
         `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/product/chart-data`,
-        {},
         {
           headers: {
             Authorization: `Bearer ${accessToken}`,
@@ -226,51 +213,36 @@ function ProductTab() {
           },
         }
       );
-      if (chartDataResponse.status === CONSTANTS.RESPONSE_STATUS.SUCCESS) {
-        const data = chartDataResponse.data;
-        const readings = data.map((item) => {
-          const reading = item.final_result;
-          if (reading === "85-95") {
-            return 1;
-          } else if (reading === "96-110") {
-            return 2;
-          } else if (reading === "111-125") {
-            return 3;
-          }
-          return 0;
-        });
+
+      if (response.status === CONSTANTS.RESPONSE_STATUS.SUCCESS) {
+        const data = response.data;
+        if (data.length === 0) {
+          const readings = [0, 0, 0, 0, 0];
+          setRecentReadings(readings);
+        } else {
+          const readings = data.map((item) => {
+            const { final_result: reading } = item;
+            if (reading === "85-95") {
+              return 1;
+            } else if (reading === "96-110") {
+              return 2;
+            } else if (reading === "111-125") {
+              return 3;
+            }
+            return 0;
+          });
+          setRecentReadings(readings);
+        }
         const dates = data.map((item) =>
           new Date(item.createdAt).toLocaleDateString([], {
             weekday: "long",
           })
         );
-        console.log(dates);
-        setRecentReadings(readings);
         setReadingDates(dates);
         setisChartReady(true);
       }
     } catch (error) {
-      console.log("error on get chart data", error);
-      setStatus(CONSTANTS.STATUS_CONSTANTS.FAILED);
-    }
-  };
-  const homeTab = () => {
-    HomeTab;
-  };
-  const getFinalResult = () => {
-    try {
-      navigation.navigate("FinalReading");
-    } catch (error) {
-      console.log("error on getting final data", error);
-      setStatus(CONSTANTS.STATUS_CONSTANTS.FAILED);
-    }
-  };
-  const getQuestionnaire = () => {
-    try {
-      navigation.navigate("Questionnaire");
-    } catch (error) {
-      console.log("error on getting questionnaire", error);
-      setStatus(CONSTANTS.STATUS_CONSTANTS.FAILED);
+      handleError("Error getting chart data", error);
     }
   };
   return (
@@ -376,7 +348,7 @@ function ProductTab() {
                 >
                   <CountdownCircleTimer
                     isPlaying
-                    duration={60}
+                    duration={120}
                     strokeLinecap="round"
                     strokeWidth={5}
                     size={120}
@@ -402,7 +374,6 @@ function ProductTab() {
               <Text style={styles.successMessage}>
                 Action Successfully completed........
               </Text>
-              {showAlert({ msg: CONSTANTS.STATUS_CONSTANTS.SUCCESS })}
             </>
           )}
           {status === CONSTANTS.STATUS_CONSTANTS.PROGRESS && (
@@ -417,7 +388,6 @@ function ProductTab() {
               <Text style={styles.errorMessage}>
                 Sorry!! Action Failed. Please try again.
               </Text>
-              {showAlert({ msg: CONSTANTS.STATUS_CONSTANTS.ERROR })}
             </>
           )}
         </View>
@@ -429,7 +399,7 @@ function ProductTab() {
           >
             <LineChart
               data={{
-                labels: ["1rst", "2nd", "3rd", "4th"],
+                labels: ["1rst", "2nd", "3rd", "4th", "5th"],
                 datasets: [
                   {
                     data: recentReadings,

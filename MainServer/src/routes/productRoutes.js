@@ -8,7 +8,7 @@ productRouter.post(
   authHandler.accessTokenVerification,
   productController.registerProduct
 );
-productRouter.post(
+productRouter.get(
   "/remove",
   authHandler.accessTokenVerification,
   productController.removeProduct
@@ -18,7 +18,7 @@ productRouter.post(
   authHandler.accessTokenVerification,
   productController.initiateJob
 );
-productRouter.post(
+productRouter.get(
   "/list-products",
   authHandler.accessTokenVerification,
   productController.listProducts
@@ -46,12 +46,12 @@ productRouter.post(
   authHandler.accessTokenVerification,
   productController.setPatientData
 );
-productRouter.post(
+productRouter.get(
   "/diabatic-chance",
   authHandler.accessTokenVerification,
   productController.predictDiabaticChance
 );
-productRouter.post(
+productRouter.get(
   "/chart-data",
   authHandler.accessTokenVerification,
   productController.getChartData

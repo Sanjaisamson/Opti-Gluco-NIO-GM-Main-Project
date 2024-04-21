@@ -1,5 +1,5 @@
 const sysConfig = {
-  system_url: "192.168.29.142:3000",
+  system_url: "192.168.1.6:3000",
 };
 
 const deviceConfig = {

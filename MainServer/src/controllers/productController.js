@@ -7,6 +7,7 @@ const {
 
 async function registerProduct(req, res) {
   try {
+    console.log("call for register product");
     const userId = req.user.user_id;
     const productId = req.body.productCode;
     await productServices.registerProduct(userId, productId);
@@ -18,6 +19,7 @@ async function registerProduct(req, res) {
 
 async function removeProduct(req, res) {
   try {
+    console.log("call for remove product");
     await productServices.removeProduct(req.user.user_id);
     return res.sendStatus(RESPONSE_STATUS_CONSTANTS.SUCCESS);
   } catch (error) {
@@ -35,12 +37,13 @@ async function listProducts(req, res) {
       .status(RESPONSE_STATUS_CONSTANTS.SUCCESS)
       .json(listProductResponse);
   } catch (error) {
-    return res.sendStatus(RESPONSE_STATUS_CONSTANTS.FAILED);
+    return res.status(RESPONSE_STATUS_CONSTANTS.FAILED);
   }
 }
 
 async function initiateJob(req, res) {
   try {
+    console.log("call for initiate job....");
     const initiateJobResponse = await productServices.initiateJob(
       req.user.user_id
     );
@@ -49,26 +52,27 @@ async function initiateJob(req, res) {
       initiateJobResponse.jobStatus,
       initiateJobResponse.requestId
     );
-    return res.send(initiateJobResponse);
+    return res
+      .status(RESPONSE_STATUS_CONSTANTS.SUCCESS)
+      .json(initiateJobResponse);
   } catch (error) {
-    return res.sendStatus(RESPONSE_STATUS_CONSTANTS.FAILED);
+    return res.status(RESPONSE_STATUS_CONSTANTS.FAILED);
   }
 }
 
 async function updateStatus(req, res) {
   try {
+    console.log("call for update status.....");
     const { requestId, jobStatus, jobId } = req.body;
-    console.log("data reached at controller for update status");
     await productServices.updateStatus(requestId, jobStatus, jobId);
     return res.sendStatus(RESPONSE_STATUS_CONSTANTS.SUCCESS);
   } catch (error) {
-    console.log("Sorry!!! failed to update status : from controller");
     return res.sendStatus(RESPONSE_STATUS_CONSTANTS.FAILED);
   }
 }
 async function processingResult(req, res) {
   try {
-    console.log("request reached here", req.body);
+    console.log("call for prosessing result");
     const { images, requestId, userId, productCode } = req.body;
     const processingResultResponse = await productServices.processingResult(
       images,
@@ -84,14 +88,13 @@ async function processingResult(req, res) {
 
 async function checkJobStatus(req, res) {
   try {
-    const { jobId, requestId } = req.body;
-    const statusResponse = await productServices.checkJobStatus(
-      jobId,
-      requestId
-    );
-
-    return res.send(statusResponse);
+    const { requestId } = req.body;
+    console.log("call for checker");
+    const statusResponse = await productServices.checkJobStatus(requestId);
+    console.log("checker responded");
+    return res.status(RESPONSE_STATUS_CONSTANTS.SUCCESS).json(statusResponse);
   } catch (error) {
+    console.log("error in check status", error);
     return res.sendStatus(RESPONSE_STATUS_CONSTANTS.FAILED);
   }
 }

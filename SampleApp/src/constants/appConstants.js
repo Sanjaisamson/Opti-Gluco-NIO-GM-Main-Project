@@ -1,7 +1,7 @@
 ("REACT_NATIVE_PACKAGER_HOSTNAME=192.168.1.3 npx expo start");
 
 const SERVER_CONSTANTS = {
-  localhost: "192.168.249.227",
+  localhost: "192.168.1.6",
   port: "3000",
 };
 const RESPONSE_STATUS = {
@@ -25,7 +25,7 @@ const PATH_CONSTANTS = {
 };
 
 const STATUS_CONSTANTS = {
-  SUCCESS: "Success",
+  SUCCESS: "Completed",
   COMPLETED: "Completed",
   FAILED: "Failed",
   PROGRESS: "On-progress",

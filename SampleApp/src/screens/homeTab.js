@@ -13,14 +13,11 @@ import {
 import { ProgressChart } from "react-native-chart-kit";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import "core-js/stable/atob";
-import { jwtDecode } from "jwt-decode";
-import { useRoute, useNavigation } from "@react-navigation/native";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { useNavigation } from "@react-navigation/native";
 import { Text, Avatar, Card, PaperProvider } from "react-native-paper";
 import CONSTANTS from "../constants/appConstants";
+import handleError from "../configFiles/errorHandler";
 import axios from "axios";
-
-const Tab = createBottomTabNavigator();
 
 const avatarIcon = require("../../assets/avatar icon .jpg");
 const logo = require("../../assets/opti-gluco-high-resolution-logo-white-transparent.png");
@@ -30,108 +27,94 @@ const glucometerIcon = require("../../assets/alt_icon_red.png"); //alt_icon_red.
 function HomeTab() {
   const navigation = useNavigation();
   const [userName, setUserName] = useState("");
-  const [status, setStatus] = useState("");
+  const [isChartReady, setisChartReady] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const windowWidth = Dimensions.get("window").width;
   const [diabaticChanceStatus, setDiabaticChanceStatus] = useState(null);
   const [diabaticChanceValue, setDiabaticChanceValue] = useState(0);
   const [colorCode, setColorCode] = useState("255,255,255");
+
   useEffect(() => {
     refreshAccessToken();
-    getDaibaticChance();
+    getDiabaticChance();
   }, []);
-  async function refreshAccessToken() {
+
+  const refreshAccessToken = async () => {
     try {
       const userName = await AsyncStorage.getItem(
         CONSTANTS.STORAGE_CONSTANTS.USER_NAME
       );
       setUserName(userName);
-      const response = await axios.post(
+
+      const response = await axios.get(
         `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/api/refresh`
       );
+
       if (response.status === CONSTANTS.RESPONSE_STATUS.SUCCESS) {
-        const responseData = response.data;
+        const { accessToken } = response.data;
         await AsyncStorage.setItem(
           CONSTANTS.STORAGE_CONSTANTS.ACCESS_TOKEN,
-          responseData.accessToken
+          accessToken
         );
-        console.log("refreshed successfully");
-        return responseData.accessToken;
+        return accessToken;
       } else {
-        setStatus(CONSTANTS.STATUS_CONSTANTS.FAILED);
         navigation.navigate(CONSTANTS.PATH_CONSTANTS.LOGIN);
       }
     } catch (error) {
-      setStatus(CONSTANTS.STATUS_CONSTANTS.FAILED);
+      navigation.navigate(CONSTANTS.PATH_CONSTANTS.LOGIN);
     }
-  }
+  };
 
   const onRefresh = () => {
     setRefreshing(true);
     refreshAccessToken();
-    getDaibaticChance();
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 1000);
+    getDiabaticChance();
+    setTimeout(() => setRefreshing(false), 1000);
   };
 
-  const getDaibaticChance = async () => {
-    let diabticChanceAccessToken = await AsyncStorage.getItem(
-      CONSTANTS.STORAGE_CONSTANTS.ACCESS_TOKEN
-    );
-    const decodedToken = jwtDecode(diabticChanceAccessToken);
+  const getDiabaticChance = async () => {
+    let accessToken = await refreshAccessToken();
     try {
-      const currentTime = Date.now() / 1000;
-      if (decodedToken.exp < currentTime) {
-        const newToken = await refreshAccessToken();
-        accessToken = newToken;
-      }
-      const response = await axios.post(
+      const response = await axios.get(
         `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/product/diabatic-chance`,
-        {},
         {
           headers: {
-            Authorization: `Bearer ${diabticChanceAccessToken}`,
+            Authorization: `Bearer ${accessToken}`,
             "Content-Type": "application/json",
           },
           withCredentials: true,
         }
       );
-      console.log(response.status);
+
       if (response.status === CONSTANTS.RESPONSE_STATUS.SUCCESS) {
-        setStatus(CONSTANTS.STATUS_CONSTANTS.SUCCESS);
         const responseData = response.data;
-        console.log(responseData);
+
         if (responseData === "normal") {
           setDiabaticChanceValue(0.25);
           setColorCode("0,255,0");
           setDiabaticChanceStatus("normal");
+          setisChartReady(true);
         } else if (responseData === "Pre Diabatic") {
           setDiabaticChanceValue(0.5);
           setColorCode("255, 209, 34");
           setDiabaticChanceStatus("Pre Diabatic");
+          setisChartReady(true);
         } else if (responseData === "Diabatic") {
           setDiabaticChanceValue(0.9);
           setColorCode("255, 0, 0");
           setDiabaticChanceStatus("Diabatic");
+          setisChartReady(true);
         }
-        return;
-      } else {
-        console.log("server response error", response.status);
-        setStatus(CONSTANTS.STATUS_CONSTANTS.FAILED);
-        return;
       }
     } catch (error) {
-      console.log("server Error ", error);
-      setStatus(CONSTANTS.STATUS_CONSTANTS.FAILED);
+      handleError("Error getting Diabatic chance");
     }
   };
+
   const addProduct = () => {
     try {
       navigation.navigate(CONSTANTS.PATH_CONSTANTS.ADD_PRODUCT);
-    } catch (error) {
-      setStatus(CONSTANTS.STATUS_CONSTANTS.FAILED);
-    }
+    } catch (error) {}
   };
   const data = {
     label: ["", "", ""],
@@ -256,59 +239,65 @@ function HomeTab() {
                 </View>
               </Card>
             </View>
-            <View>
-              <ProgressChart
-                data={data}
-                width={windowWidth}
-                height={220}
-                strokeWidth={16}
-                radius={50}
-                chartConfig={{
-                  backgroundColor: "red",
-                  backgroundGradientFrom: "#000103",
-                  backgroundGradientTo: "#000103",
-                  decimalPlaces: 2, // optional, defaults to 2dp
-                  color: (opacity = 1) => `rgba(${colorCode},${opacity})`,
-                  labelColor: (opacity = 1) =>
-                    `rgba(255, 255, 255, ${opacity})`,
-                  style: {
-                    borderRadius: 20,
-                  },
-                  propsForDots: {
-                    r: "6",
-                    strokeWidth: "2",
-                    stroke: "#ffa726",
-                  },
-                }}
-                hideLegend={false}
-              />
-            </View>
-            <View>
-              {diabaticChanceStatus === null && (
-                <Text
-                  style={{
-                    textAlign: "center",
-                    color: "white",
-                    fontSize: 20,
-                    fontWeight: "bold",
-                  }}
-                >
-                  Your Status is not updated
-                </Text>
-              )}
-              {diabaticChanceStatus != null && (
-                <Text
-                  style={{
-                    textAlign: "center",
-                    color: "white",
-                    fontSize: 20,
-                    fontWeight: "bold",
-                  }}
-                >
-                  You are in a {diabaticChanceStatus} condition
-                </Text>
-              )}
-            </View>
+            {isChartReady ? (
+              <View>
+                <View>
+                  <ProgressChart
+                    data={data}
+                    width={windowWidth}
+                    height={220}
+                    strokeWidth={16}
+                    radius={50}
+                    chartConfig={{
+                      backgroundColor: "red",
+                      backgroundGradientFrom: "#000103",
+                      backgroundGradientTo: "#000103",
+                      decimalPlaces: 2, // optional, defaults to 2dp
+                      color: (opacity = 1) => `rgba(${colorCode},${opacity})`,
+                      labelColor: (opacity = 1) =>
+                        `rgba(255, 255, 255, ${opacity})`,
+                      style: {
+                        borderRadius: 20,
+                      },
+                      propsForDots: {
+                        r: "6",
+                        strokeWidth: "2",
+                        stroke: "#ffa726",
+                      },
+                    }}
+                    hideLegend={false}
+                  />
+                </View>
+                <View>
+                  {diabaticChanceStatus === null && (
+                    <Text
+                      style={{
+                        textAlign: "center",
+                        color: "white",
+                        fontSize: 20,
+                        fontWeight: "bold",
+                      }}
+                    >
+                      Your Status is not updated
+                    </Text>
+                  )}
+                  {diabaticChanceStatus != null && (
+                    <Text
+                      style={{
+                        textAlign: "center",
+                        color: "white",
+                        fontSize: 20,
+                        fontWeight: "bold",
+                      }}
+                    >
+                      You are in a {diabaticChanceStatus} condition
+                    </Text>
+                  )}
+                </View>
+              </View>
+            ) : (
+              <Text>Chart Data Not Available</Text>
+            )}
           </View>
         </View>
       </ScrollView>

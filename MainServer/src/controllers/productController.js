@@ -141,22 +141,33 @@ async function getFinalResult(req, res) {
 async function setPatientData(req, res) {
   try {
     const userId = req.user.user_id;
+    console.log("request body", req.body);
     const {
-      A1cValue,
-      fastingStatus,
-      lastFoodTime,
-      familyHealthData,
-      bloodPressure,
+      genderValue,
+      age,
+      hypertensionValue,
+      heartdiseaseValue,
+      smokingHistoryValue,
+      height,
+      weight,
+      BMI_Value,
+      HbA1c_Value,
     } = req.body;
     const resultInfo = await productServices.setPatientData(
       userId,
-      A1cValue,
-      familyHealthData,
-      fastingStatus,
-      lastFoodTime,
-      bloodPressure
+      genderValue,
+      age,
+      hypertensionValue,
+      heartdiseaseValue,
+      smokingHistoryValue,
+      height,
+      weight,
+      BMI_Value,
+      HbA1c_Value
     );
-    return res.status(RESPONSE_STATUS_CONSTANTS.SUCCESS).json(resultInfo);
+    console.log("resultinfo", resultInfo);
+    const predictedResult = await productServices.predictDiabaticChance(userId);
+    return res.status(RESPONSE_STATUS_CONSTANTS.SUCCESS).json(predictedResult);
   } catch (error) {
     return res.status(RESPONSE_STATUS_CONSTANTS.FAILED);
   }

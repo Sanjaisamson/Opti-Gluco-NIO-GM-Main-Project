@@ -14,5 +14,5 @@ const userTable = sequelize.define("userTable", {
   user_age: DataTypes.STRING,
   user_gender: DataTypes.STRING,
 });
-userTable.sync({ alter: true });
+// userTable.sync({ alter: true });
 module.exports = { userTable };

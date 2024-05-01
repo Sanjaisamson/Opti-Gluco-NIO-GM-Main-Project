@@ -194,16 +194,7 @@ function ProductTab() {
 
   const getChartData = async () => {
     try {
-      let accessToken = await AsyncStorage.getItem(
-        CONSTANTS.STORAGE_CONSTANTS.ACCESS_TOKEN
-      );
-      const decodedToken = jwtDecode(accessToken);
-      const currentTime = Date.now() / 1000;
-
-      if (decodedToken.exp < currentTime) {
-        accessToken = await refreshAccessToken();
-      }
-
+      const accessToken = await refreshAccessToken();
       const response = await axios.get(
         `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/product/chart-data`,
         {
@@ -213,7 +204,6 @@ function ProductTab() {
           },
         }
       );
-
       if (response.status === CONSTANTS.RESPONSE_STATUS.SUCCESS) {
         const data = response.data;
         if (data.length === 0) {
@@ -332,7 +322,6 @@ function ProductTab() {
               </Card>
             )}
           </View>
-          <View />
           <View>
             {loading ? (
               <View>
@@ -394,7 +383,7 @@ function ProductTab() {
         {isChartReady ? (
           <View
             style={{
-              marginTop: 70,
+              marginTop: 20,
             }}
           >
             <LineChart
@@ -402,7 +391,7 @@ function ProductTab() {
                 labels: ["1rst", "2nd", "3rd", "4th", "5th"],
                 datasets: [
                   {
-                    data: recentReadings,
+                    data: [1, 3, 2, 1, 2], //recentReadings,
                   },
                 ],
               }}
@@ -410,7 +399,6 @@ function ProductTab() {
               height={220}
               yAxisInterval={1} // optional, defaults to 1
               chartConfig={{
-                backgroundColor: "#ffffff",
                 backgroundGradientFrom: "#000103",
                 backgroundGradientTo: "#000103",
                 decimalPlaces: 2, // optional, defaults to 2dp
@@ -435,6 +423,31 @@ function ProductTab() {
         ) : (
           <Text style={styles.text}>Chart is not Available</Text>
         )}
+        <View>
+          <View>
+            <TouchableOpacity
+              style={{
+                borderRadius: 5,
+                width: "95%",
+                height: 40,
+                margin: 10,
+                backgroundColor: "#333333", // grey shade
+                justifyContent: "center",
+              }}
+              onPress={() => navigation.navigate("Questionnaire")}
+            >
+              <Text
+                style={{
+                  textAlign: "center",
+                  color: "white",
+                  fontWeight: "bold",
+                }}
+              >
+                Prediction
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       </View>
     </ScrollView>
   );

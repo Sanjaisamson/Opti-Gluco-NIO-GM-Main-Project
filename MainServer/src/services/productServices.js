@@ -267,7 +267,7 @@ async function takeMlInfernce(
       bufferdata: imageBuffer,
     });
     const response = await fetch(
-      `http://${mlServerConfig.ml_server_host}/predict`,
+      `http://${mlServerConfig.ml_server_host}/sugar-level`,
       {
         method: "POST",
         headers: {
@@ -455,52 +455,12 @@ async function getFinalResult(userId, requestId) {
   }
 }
 
-async function setPatientData(
-  userId,
-  A1cValue,
-  familyHealthData,
-  fastingStatus,
-  lastFoodTime,
-  bloodPressure
-) {
-  try {
-    const patientData = await patientDataTable.findOne({
-      where: {
-        user_id: userId,
-      },
-    });
-    if (!patientData || patientData.length === ARRAY_CONSTANTS.LENGTH_ZERO) {
-      await patientDataTable.create({
-        user_id: userId,
-        A1c_value: A1cValue,
-        fasting_status: fastingStatus,
-        last_food_time: lastFoodTime,
-        family_health_data: familyHealthData,
-        blood_pressure: bloodPressure,
-      });
-    }
-    const patientdata = await patientDataTable.update(
-      {
-        A1c_value: A1cValue,
-        fasting_status: fastingStatus,
-        last_food_time: lastFoodTime,
-        family_health_data: familyHealthData,
-        blood_pressure: bloodPressure,
-      },
-      {
-        where: {
-          user_id: userId,
-        },
-      }
-    );
-  } catch (error) {
-    throw error;
-  }
-}
-
 async function predictDiabaticChance(userId) {
   let diabaticChanceStatus = null;
+  let genderValue = null;
+  let sugarValue = null;
   try {
+    console.log("call reched at predict data service ");
     const patientData = await patientDataTable.findOne({
       where: {
         user_id: userId,
@@ -511,26 +471,120 @@ async function predictDiabaticChance(userId) {
         user_id: userId,
       },
     });
-    if (
-      patientData.A1c_value <= 5.7 &&
-      patientData.last_sugar_level != "111-125"
-    ) {
-      diabaticChanceStatus = "normal";
-    } else if (
-      5.7 < patientData.A1c_value <= 6.4 &&
-      patientData.last_sugar_level != "85-95"
-    ) {
-      diabaticChanceStatus = "Pre Diabatic";
-    } else if (
-      patientData.A1c_value >= 6.5 &&
-      patientData.last_sugar_level == "111-125"
-    ) {
-      diabaticChanceStatus = "Diabatic";
+    if (userData.user_gender === "male") {
+      genderValue = "1";
+    } else if (userData.user_gender === "female") {
+      genderValue = "0";
     } else {
-      diabaticChanceStatus = null;
+      genderValue = "2";
     }
-
+    if (patientData.last_sugar_level === "85-95") {
+      sugarValue = "0";
+    } else if (patientData.last_sugar_level === "96-110") {
+      sugarValue = "1";
+    } else if (patientData.last_sugar_level === "111-125") {
+      sugarValue = "2";
+    } else {
+      sugarValue = "3";
+    }
+    const requestData = JSON.stringify({
+      gender: genderValue,
+      age: userData.user_age,
+      hypertension_status: patientData.hypertension_status,
+      heartdisease_status: patientData.heartdisease_status,
+      smoking_status: patientData.smoking_status,
+      height: patientData.height,
+      weight: patientData.weight,
+      BMI_Value: patientData.BMI_Value,
+      HbA1c: patientData.HbA1c,
+      sugar_level: sugarValue,
+    });
+    console.log(requestData);
+    const response = await fetch(
+      `http://${mlServerConfig.ml_server_host}/prediction`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Content-Length": Buffer.byteLength(requestData),
+        },
+        body: requestData,
+      }
+    );
+    if (!response.ok) {
+      throw new Error(
+        RESPONSE_STATUS_CONSTANTS.FAILED,
+        "error in sending image for ml inference"
+      );
+    }
+    const result = await response.json();
+    console.log("prediction result", result);
+    if (result === 1 && patientData.HbA1c >= 6.5) {
+      diabaticChanceStatus = "Diabatic";
+    } else if (result === 0 && patientData.HbA1c >= 6.5) {
+      diabaticChanceStatus = "Diabatic";
+    } else if (result === 1 && 5.7 < patientData.HbA1c <= 6.4) {
+      diabaticChanceStatus = "Pre Diabatic";
+    } else if (result === 0 && patientData.HbA1c <= 5.4) {
+      diabaticChanceStatus = "normal";
+    }
     return diabaticChanceStatus;
+  } catch (error) {
+    throw error;
+  }
+}
+
+async function setPatientData(
+  userId,
+  genderValue,
+  age,
+  hypertensionValue,
+  heartdiseaseValue,
+  smokingHistoryValue,
+  height,
+  weight,
+  BMI_Value,
+  HbA1c_Value
+) {
+  try {
+    const patientData = await patientDataTable.findOne({
+      where: {
+        user_id: userId,
+      },
+    });
+    console.log("patient data", patientData);
+    if (!patientData || patientData.length === ARRAY_CONSTANTS.LENGTH_ZERO) {
+      await patientDataTable.create({
+        user_id: userId,
+        hypertension_status: hypertensionValue,
+        heartdisease_status: heartdiseaseValue,
+        smoking_status: smokingHistoryValue,
+        height: height,
+        weight: weight,
+        BMI_Value: BMI_Value,
+        HbA1c: HbA1c_Value,
+      });
+      return;
+    } else {
+      console.log("updating");
+      const patientdata = await patientDataTable.update(
+        {
+          hypertension_status: hypertensionValue,
+          heartdisease_status: heartdiseaseValue,
+          smoking_status: smokingHistoryValue,
+          height: height,
+          weight: weight,
+          BMI_Value: BMI_Value,
+          HbA1c: HbA1c_Value,
+        },
+        {
+          where: {
+            user_id: userId,
+          },
+        }
+      );
+      return;
+    }
   } catch (error) {
     throw error;
   }

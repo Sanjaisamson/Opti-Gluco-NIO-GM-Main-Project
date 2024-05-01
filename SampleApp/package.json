@@ -27,6 +27,7 @@
     "react-native": "0.73.4",
     "react-native-chart-kit": "^6.12.0",
     "react-native-countdown-circle-timer": "^3.2.1",
+    "react-native-element-dropdown": "^2.10.4",
     "react-native-gesture-handler": "~2.14.0",
     "react-native-paper": "^5.12.3",
     "react-native-picker-select": "^9.1.3",

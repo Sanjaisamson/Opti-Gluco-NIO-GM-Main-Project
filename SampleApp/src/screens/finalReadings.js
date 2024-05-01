@@ -24,7 +24,6 @@ const FinalReadingScreen = () => {
   const navigation = useNavigation();
 
   useEffect(() => {
-    refreshAccessToken();
     handleFinalReading();
   }, []);
 
@@ -56,18 +55,7 @@ const FinalReadingScreen = () => {
 
   const handleFinalReading = async () => {
     try {
-      let finalResultAccessToken = await AsyncStorage.getItem(
-        CONSTANTS.STORAGE_CONSTANTS.ACCESS_TOKEN
-      );
-      let requestId = await AsyncStorage.getItem(
-        CONSTANTS.STORAGE_CONSTANTS.REQUEST_ID
-      );
-      const decodedToken = jwtDecode(finalResultAccessToken);
-      const currentTime = Date.now() / 1000;
-      if (decodedToken.exp < currentTime) {
-        const newToken = await refreshAccessToken();
-        finalResultAccessToken = newToken;
-      }
+      const accessToken = await refreshAccessToken();
       const requestData = JSON.stringify({
         requestId: requestId,
       });
@@ -76,7 +64,7 @@ const FinalReadingScreen = () => {
         requestData,
         {
           headers: {
-            Authorization: `Bearer ${finalResultAccessToken}`,
+            Authorization: `Bearer ${accessToken}`,
             "Content-Type": "application/json",
           },
           withCredentials: true,
@@ -132,7 +120,7 @@ const FinalReadingScreen = () => {
           <Text style={styles.title}>
             Your current sugar level is in between
           </Text>
-          <Text>{finalResult}mg/dl</Text>
+          <Text style={styles.title}>{finalResult}mg/dl</Text>
         </View>
         <View>
           <TouchableOpacity

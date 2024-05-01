@@ -18,5 +18,5 @@ const requestLogTable = sequelize.define("requestLogTable", {
     defaultValue: null,
   },
 });
-requestLogTable.sync({ alter: true });
+// requestLogTable.sync({ alter: true });
 module.exports = { requestLogTable };

@@ -7,18 +7,22 @@ const appRoutes = require("./routes/userRoutes");
 const productRoutes = require("./routes/productRoutes");
 const { dbConnect } = require("./databases/db");
 
+app.use(cookieParser());
+app.use(cors());
+
 app.use(express.json({ limit: "50mb" }));
 
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
-dbConnect();
+async function bootstrap() {
+  await dbConnect();
+  app.use("/api", appRoutes);
+  app.use("/product", productRoutes);
+  app.listen(PORT, () => {
+    console.log(`Server listening on port ${PORT}`);
+  });
+}
 
-app.use(cookieParser());
-app.use(cors());
+bootstrap();
 
-app.use("/api", appRoutes);
-app.use("/product", productRoutes);
-
-app.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}`);
-});
+module.exports = { app };

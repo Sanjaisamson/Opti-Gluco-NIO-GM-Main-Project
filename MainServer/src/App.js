@@ -18,9 +18,11 @@ async function bootstrap() {
   await dbConnect();
   app.use("/api", appRoutes);
   app.use("/product", productRoutes);
-  app.listen(PORT, () => {
-    console.log(`Server listening on port ${PORT}`);
-  });
+  if (process.env.NODE_ENV !== "test") {
+    app.listen(PORT, () => {
+      console.log(`Server listening on port ${PORT}`);
+    });
+  }
 }
 
 bootstrap();

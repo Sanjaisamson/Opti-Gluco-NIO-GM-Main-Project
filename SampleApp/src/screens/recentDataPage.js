@@ -21,9 +21,7 @@ import {
   TextInput,
 } from "react-native-paper";
 import { jwtDecode } from "jwt-decode";
-const logo = require("../../assets/opti-gluco-favicon-black.png"); //C:\Users\SANJAI\OneDrive\Documents\Main_Project\SampleApp\assets\opti-gluco-favicon-black.png
 const logoWhite = require("../../assets/opti-gluco-favicon-white.png");
-const label = require("../../assets/opti-gluco-high-resolution-logo-white-transparent.png");
 const RecentData = () => {
   const [totalPages, setTotalPages] = useState(0);
   const [currentPage, setCurrentPage] = useState(0);
@@ -51,8 +49,11 @@ const RecentData = () => {
 
   async function refreshAccessToken() {
     try {
-      const response = await axios.post(
-        `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/api/refresh`
+      const server_IP = await AsyncStorage.getItem(
+        CONSTANTS.STORAGE_CONSTANTS.SERVER_IP
+      );
+      const response = await axios.get(
+        `http://${server_IP}:${CONSTANTS.SERVER_CONSTANTS.port}/api/refresh`
       );
       if (response.status === 200) {
         const responseData = response.data;
@@ -71,16 +72,10 @@ const RecentData = () => {
 
   const fetchData = async (currentPage) => {
     try {
-      let listRecentDataAccessToken = await AsyncStorage.getItem(
-        CONSTANTS.STORAGE_CONSTANTS.ACCESS_TOKEN
+      const accessToken = await refreshAccessToken();
+      const server_IP = await AsyncStorage.getItem(
+        CONSTANTS.STORAGE_CONSTANTS.SERVER_IP
       );
-      const decodedToken = jwtDecode(listRecentDataAccessToken);
-      const currentTime = Date.now() / 1000;
-      if (decodedToken.exp < currentTime) {
-        const newToken = await refreshAccessToken();
-        listRecentDataAccessToken = newToken;
-      }
-
       const newPage = currentPage === 0 ? 1 : currentPage; // Update currentPage correctly
       setCurrentPage(newPage);
 
@@ -88,13 +83,12 @@ const RecentData = () => {
         currentPage: newPage,
         itemsPerPage,
       });
-
       const response = await axios.post(
-        `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/product/recent-readings`,
+        `http://${server_IP}:${CONSTANTS.SERVER_CONSTANTS.port}/product/recent-readings`,
         requestData,
         {
           headers: {
-            Authorization: `Bearer ${listRecentDataAccessToken}`,
+            Authorization: `Bearer ${accessToken}`,
             "Content-Type": "application/json",
           },
           withCredentials: true,
@@ -146,25 +140,20 @@ const RecentData = () => {
   const handleReferenceValue = async () => {
     try {
       hideModal();
-      let handleReferenceValueAccessToken = await AsyncStorage.getItem(
-        CONSTANTS.STORAGE_CONSTANTS.ACCESS_TOKEN
+      const server_IP = await AsyncStorage.getItem(
+        CONSTANTS.STORAGE_CONSTANTS.SERVER_IP
       );
-      const decodedToken = jwtDecode(handleReferenceValueAccessToken);
-      const currentTime = Date.now() / 1000;
-      if (decodedToken.exp < currentTime) {
-        const newToken = await refreshAccessToken();
-        handleReferenceValueAccessToken = newToken;
-      }
+      const accessToken = await refreshAccessToken();
       const requestData = JSON.stringify({
         referenceValue: manualReferenceData,
         readingId: selectedReadingId,
       });
       const response = await axios.post(
-        `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/product/Add-reference-value`,
+        `http://${server_IP}:${CONSTANTS.SERVER_CONSTANTS.port}/product/Add-reference-value`,
         requestData,
         {
           headers: {
-            Authorization: `Bearer ${handleReferenceValueAccessToken}`,
+            Authorization: `Bearer ${accessToken}`,
             "Content-Type": "application/json",
           },
           withCredentials: true,
@@ -172,7 +161,6 @@ const RecentData = () => {
       );
 
       if (response.status === CONSTANTS.RESPONSE_STATUS.SUCCESS) {
-        const data = response.data;
         setStatus(CONSTANTS.STATUS_CONSTANTS.SUCCESS);
       }
     } catch (error) {

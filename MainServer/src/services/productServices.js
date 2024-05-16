@@ -40,7 +40,7 @@ async function registerProduct(userId, productId) {
         userId: userId,
       });
       const response = await fetch(
-        `http://${deviceConfig.device_host}/client/register-client`, // 192.168.1.14:3500 ${deviceConfig.device_host}
+        `http://${deviceConfig.device_host}/client/register-client`, // http://${deviceConfig.device_host}/client/register-client 192.168.1.14:3500 ${deviceConfig.device_host}
         {
           method: "POST",
           headers: {
@@ -196,7 +196,7 @@ async function updateJobData(jobId, jobStatus, requestId) {
     requestLog.job_id = jobId;
     requestLog.job_status = jobStatus;
     await requestLog.save();
-    return requestLog;
+    return;
   } catch (error) {
     throw error;
   }
@@ -448,7 +448,6 @@ async function getFinalResult(userId, requestId) {
         request_code: requestId,
       },
     });
-    console.log("result info...", resultInfo);
     return resultInfo;
   } catch (error) {
     throw error;
@@ -460,7 +459,6 @@ async function predictDiabaticChance(userId) {
   let genderValue = null;
   let sugarValue = null;
   try {
-    console.log("call reched at predict data service ");
     const patientData = await patientDataTable.findOne({
       where: {
         user_id: userId,
@@ -499,7 +497,6 @@ async function predictDiabaticChance(userId) {
       HbA1c: patientData.HbA1c,
       sugar_level: sugarValue,
     });
-    console.log(requestData);
     const response = await fetch(
       `http://${mlServerConfig.ml_server_host}/prediction`,
       {
@@ -518,15 +515,18 @@ async function predictDiabaticChance(userId) {
       );
     }
     const result = await response.json();
-    console.log("prediction result", result);
     if (result === 1 && patientData.HbA1c >= 6.5) {
       diabaticChanceStatus = "Diabatic";
     } else if (result === 0 && patientData.HbA1c >= 6.5) {
+      diabaticChanceStatus = "Diabatic";
+    } else if (result === 0 && 5.7 < patientData.HbA1c <= 6.4) {
       diabaticChanceStatus = "Diabatic";
     } else if (result === 1 && 5.7 < patientData.HbA1c <= 6.4) {
       diabaticChanceStatus = "Pre Diabatic";
     } else if (result === 0 && patientData.HbA1c <= 5.4) {
       diabaticChanceStatus = "normal";
+    } else if (result === 1 && patientData.HbA1c <= 5.4) {
+      diabaticChanceStatus = "Pre Diabatic";
     }
     return diabaticChanceStatus;
   } catch (error) {
@@ -552,7 +552,6 @@ async function setPatientData(
         user_id: userId,
       },
     });
-    console.log("patient data", patientData);
     if (!patientData || patientData.length === ARRAY_CONSTANTS.LENGTH_ZERO) {
       await patientDataTable.create({
         user_id: userId,
@@ -566,7 +565,6 @@ async function setPatientData(
       });
       return;
     } else {
-      console.log("updating");
       const patientdata = await patientDataTable.update(
         {
           hypertension_status: hypertensionValue,

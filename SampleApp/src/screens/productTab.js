@@ -3,7 +3,6 @@ import React, { useState, useEffect } from "react";
 import {
   View,
   StyleSheet,
-  Alert,
   ScrollView,
   StatusBar,
   Dimensions,
@@ -14,16 +13,14 @@ import {
 import { CountdownCircleTimer } from "react-native-countdown-circle-timer";
 import { LineChart } from "react-native-chart-kit";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { jwtDecode } from "jwt-decode";
 import { useNavigation } from "@react-navigation/native";
-import { Text, Avatar, Button, Card, PaperProvider } from "react-native-paper";
+import { Text, Avatar, Card } from "react-native-paper";
 import CONSTANTS from "../constants/appConstants";
 import axios from "axios";
 import handleError from "../configFiles/errorHandler";
 
 const avatarIcon = require("../../assets/avatar icon .jpg");
 const logo = require("../../assets/opti-gluco-high-resolution-logo-white-transparent.png");
-const logoIcon = require("../../assets/opti-gluco-favicon-white.png"); //"C:\Users\SANJAI\OneDrive\Documents\Main_Project\SampleApp\assets\opti-gluco-favicon-white.png"
 const glucometerIcon = require("../../assets/alt_icon_red.png"); //alt_icon_red.png // optiGluco_alt_favicon.png
 
 function ProductTab() {
@@ -46,8 +43,11 @@ function ProductTab() {
 
   const refreshAccessToken = async () => {
     try {
+      const server_IP = await AsyncStorage.getItem(
+        CONSTANTS.STORAGE_CONSTANTS.SERVER_IP
+      );
       const response = await axios.get(
-        `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/api/refresh`
+        `http://${server_IP}:${CONSTANTS.SERVER_CONSTANTS.port}/api/refresh`
       );
 
       if (response.status === CONSTANTS.RESPONSE_STATUS.SUCCESS) {
@@ -68,9 +68,12 @@ function ProductTab() {
   };
   const fetchData = async () => {
     try {
+      const server_IP = await AsyncStorage.getItem(
+        CONSTANTS.STORAGE_CONSTANTS.SERVER_IP
+      );
       const accessToken = await refreshAccessToken();
       const response = await axios.get(
-        `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/product/list-products`,
+        `http://${server_IP}:${CONSTANTS.SERVER_CONSTANTS.port}/product/list-products`,
         {
           headers: {
             Authorization: `Bearer ${accessToken}`,
@@ -94,11 +97,14 @@ function ProductTab() {
       const requestId = await AsyncStorage.getItem(
         CONSTANTS.STORAGE_CONSTANTS.REQUEST_ID
       );
+      const server_IP = await AsyncStorage.getItem(
+        CONSTANTS.STORAGE_CONSTANTS.SERVER_IP
+      );
       const requestData = JSON.stringify({
         requestId: requestId,
       });
       const response = await axios.post(
-        `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/product/check-job-status`,
+        `http://${server_IP}:${CONSTANTS.SERVER_CONSTANTS.port}/product/check-job-status`,
         requestData,
         {
           headers: {
@@ -109,7 +115,6 @@ function ProductTab() {
       );
 
       if (response.status === CONSTANTS.RESPONSE_STATUS.SUCCESS) {
-        console.log("checking status", response.data.job_status);
         return response.data;
       } else {
         setLoading(false);
@@ -118,14 +123,6 @@ function ProductTab() {
     } catch (error) {
       setLoading(false);
       handleError("Error checking job status", error);
-    }
-  };
-
-  const getQuestionnaire = () => {
-    try {
-      navigation.navigate("Questionnaire");
-    } catch (error) {
-      handleError("Error getting questionnaire", error);
     }
   };
   const getFinalResult = () => {
@@ -138,9 +135,12 @@ function ProductTab() {
 
   const readData = async () => {
     try {
+      const server_IP = await AsyncStorage.getItem(
+        CONSTANTS.STORAGE_CONSTANTS.SERVER_IP
+      );
       let accessToken = await refreshAccessToken();
       const response = await axios.post(
-        `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/product/start-job`,
+        `http://${server_IP}:${CONSTANTS.SERVER_CONSTANTS.port}/product/start-job`,
         {},
         {
           headers: {
@@ -149,6 +149,10 @@ function ProductTab() {
           },
           withCredentials: true,
         }
+      );
+      console.log(
+        "Initiated job response reached with status code",
+        response.status
       );
       if (response.status === CONSTANTS.RESPONSE_STATUS.SUCCESS) {
         const { requestId } = response.data;
@@ -159,9 +163,9 @@ function ProductTab() {
         );
         setStatus(CONSTANTS.STATUS_CONSTANTS.PROGRESS);
         setLoading(true);
-        getQuestionnaire();
         const intervalId = setInterval(async () => {
           const currentStatus = await checkStatus();
+          console.log("status of job", currentStatus);
           if (
             currentStatus.job_status === CONSTANTS.STATUS_CONSTANTS.COMPLETED
           ) {
@@ -186,6 +190,7 @@ function ProductTab() {
   const onRefresh = () => {
     setRefreshing(true);
     setLoading(false);
+    setStatus(null);
     refreshAccessToken();
     fetchData();
     getChartData();
@@ -194,9 +199,12 @@ function ProductTab() {
 
   const getChartData = async () => {
     try {
+      const server_IP = await AsyncStorage.getItem(
+        CONSTANTS.STORAGE_CONSTANTS.SERVER_IP
+      );
       const accessToken = await refreshAccessToken();
       const response = await axios.get(
-        `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/product/chart-data`,
+        `http://${server_IP}:${CONSTANTS.SERVER_CONSTANTS.port}/product/chart-data`,
         {
           headers: {
             Authorization: `Bearer ${accessToken}`,

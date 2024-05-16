@@ -21,12 +21,15 @@ const LoginScreen = () => {
 
   const handleLogin = async () => {
     try {
+      const server_IP = await AsyncStorage.getItem(
+        CONSTANTS.STORAGE_CONSTANTS.SERVER_IP
+      );
       const requestData = JSON.stringify({
         mailId: email,
         password: password,
       });
       const response = await axios.post(
-        `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/api/login`,
+        `http://${server_IP}:${CONSTANTS.SERVER_CONSTANTS.port}/api/login`,
         requestData,
         {
           headers: {
@@ -38,7 +41,7 @@ const LoginScreen = () => {
       if (response.status === CONSTANTS.RESPONSE_STATUS.SUCCESS) {
         setLoginStatus(CONSTANTS.STATUS_CONSTANTS.COMPLETED);
         const responseData = response.data;
-        console.log(responseData);
+        console.log("user logged in successfully....");
         await AsyncStorage.setItem(
           CONSTANTS.STORAGE_CONSTANTS.ACCESS_TOKEN,
           responseData.accessToken
@@ -47,10 +50,6 @@ const LoginScreen = () => {
           CONSTANTS.STORAGE_CONSTANTS.USER_NAME,
           responseData.userName
         );
-        // await AsyncStorage.setItem(
-        //   CONSTANTS.STORAGE_CONSTANTS.ACCESS_TOKEN,
-        //   responseData.accessToken
-        // );
         navigation.navigate(CONSTANTS.PATH_CONSTANTS.HOME);
       } else {
         throw new Error(CONSTANTS.RESPONSE_STATUS.FAILED);

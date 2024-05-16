@@ -6,16 +6,13 @@ import {
   Image,
   TouchableOpacity,
 } from "react-native";
-import { Text, Button, Avatar, TextInput } from "react-native-paper";
+import { Text, Avatar } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
-import { useRoute } from "@react-navigation/native";
-import { jwtDecode } from "jwt-decode";
 import axios from "axios";
 import CONSTANTS from "../constants/appConstants";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const logo = require("../../assets/opti-gluco-high-resolution-logo-white-transparent.png");
-const logoIcon = require("../../assets/opti-gluco-favicon-white.png");
 const avatarIcon = require("../../assets/avatar icon .jpg");
 
 const FinalReadingScreen = () => {
@@ -29,8 +26,11 @@ const FinalReadingScreen = () => {
 
   async function refreshAccessToken() {
     try {
+      const server_IP = await AsyncStorage.getItem(
+        CONSTANTS.STORAGE_CONSTANTS.SERVER_IP
+      );
       const response = await axios.get(
-        `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/api/refresh`,
+        `http://${server_IP}:${CONSTANTS.SERVER_CONSTANTS.port}/api/refresh`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -55,12 +55,18 @@ const FinalReadingScreen = () => {
 
   const handleFinalReading = async () => {
     try {
+      const server_IP = await AsyncStorage.getItem(
+        CONSTANTS.STORAGE_CONSTANTS.SERVER_IP
+      );
+      const requestId = await AsyncStorage.getItem(
+        CONSTANTS.STORAGE_CONSTANTS.REQUEST_ID
+      );
       const accessToken = await refreshAccessToken();
       const requestData = JSON.stringify({
         requestId: requestId,
       });
       const response = await axios.post(
-        `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/product/final-result`,
+        `http://${server_IP}:${CONSTANTS.SERVER_CONSTANTS.port}/product/final-result`,
         requestData,
         {
           headers: {
@@ -74,7 +80,6 @@ const FinalReadingScreen = () => {
         setFinalResultStatus(CONSTANTS.STATUS_CONSTANTS.SUCCESS);
         const responseData = response.data;
         setFinalResult(responseData.final_result);
-        console.log("response Data", responseData.final_result);
         return;
       } else {
         setFinalResultStatus(CONSTANTS.STATUS_CONSTANTS.FAILED);
@@ -117,10 +122,10 @@ const FinalReadingScreen = () => {
         }}
       >
         <View>
-          <Text style={styles.title}>
-            Your current sugar level is in between
-          </Text>
-          <Text style={styles.title}>{finalResult}mg/dl</Text>
+          <Text style={styles.title}></Text>
+          <Text
+            style={styles.title}
+          >{`Your current sugar level is in between ${finalResult} mg/dl`}</Text>
         </View>
         <View>
           <TouchableOpacity

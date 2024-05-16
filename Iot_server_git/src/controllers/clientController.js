@@ -4,9 +4,9 @@ async function initiateJob(req, res) {
   try {
     const { userId, productCode, requestId, captureDelay, totalTime } =
       req.body;
-	  console.log("data at controller for reading")
+    console.log("data at controller for reading");
     const initiateJobResponse = await clientServices.createJob(requestId);
-	  console.log("successfylly job initiated")
+    console.log("successfylly job initiated");
     clientServices.startJob(
       initiateJobResponse.jobId,
       requestId,
@@ -18,19 +18,22 @@ async function initiateJob(req, res) {
       jobStatus: initiateJobResponse.jobStatus,
     });
   } catch (error) {
-	  console.log(error)
+    console.log(error);
     return res.sendStatus(RESPONSE_STATUS_CONSTANTS.SERVER_ERROR);
   }
 }
 
 async function registerClient(req, res) {
   try {
+    console.log("data at controller for register client");
     const { url, productCode, userId } = req.body;
-	  console.log("data at controller for register client")
+    if (!url || !productCode || !userId) {
+      throw new Error(400, "one of the data is missing");
+    }
     await clientServices.registerClient(url, productCode, userId);
     return res.sendStatus(RESPONSE_STATUS_CONSTANTS.SUCCESS);
   } catch (error) {
-	  console.log(error)
+    console.log(error);
     return res.sendStatus(RESPONSE_STATUS_CONSTANTS.SERVER_ERROR);
   }
 }

@@ -8,12 +8,12 @@ import {
   Image,
   TouchableOpacity,
 } from "react-native";
-import { Text, Button, Avatar } from "react-native-paper";
+import { Text, Avatar } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
 import CONSTANTS from "../constants/appConstants";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const logo = require("../../assets/opti-gluco-high-resolution-logo-white-transparent.png");
-const logoIcon = require("../../assets/opti-gluco-favicon-white.png");
 const avatarIcon = require("../../assets/avatar icon .jpg");
 
 const RegisterScreen = () => {
@@ -27,6 +27,7 @@ const RegisterScreen = () => {
 
   const handleRegister = async () => {
     try {
+      console.log("call for create user....");
       const requestData = JSON.stringify({
         userName: userName,
         mailId: email,
@@ -34,9 +35,12 @@ const RegisterScreen = () => {
         age: age,
         gender: gender,
       });
-
+      const server_IP = await AsyncStorage.getItem(
+        CONSTANTS.STORAGE_CONSTANTS.SERVER_IP
+      );
+      console.log(server_IP);
       const response = await axios.post(
-        `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/api/signup`,
+        `http://${server_IP}:${CONSTANTS.SERVER_CONSTANTS.port}/api/signup`,
         requestData,
         {
           headers: {
@@ -48,6 +52,7 @@ const RegisterScreen = () => {
 
       if (response.status === 200) {
         setRegistrationStatus(CONSTANTS.STATUS_CONSTANTS.COMPLETED);
+        console.log("user created successfully.....");
         navigation.navigate(CONSTANTS.PATH_CONSTANTS.LOGIN);
       } else {
         throw new Error(404);

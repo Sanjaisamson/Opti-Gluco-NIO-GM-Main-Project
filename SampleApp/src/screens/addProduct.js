@@ -8,7 +8,6 @@ import {
 } from "react-native";
 import { Text, Avatar, TextInput } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
-import { useRoute } from "@react-navigation/native";
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
 import CONSTANTS from "../constants/appConstants";
@@ -29,8 +28,11 @@ const AddProductScreen = () => {
 
   async function refreshAccessToken() {
     try {
+      const server_IP = await AsyncStorage.getItem(
+        CONSTANTS.STORAGE_CONSTANTS.SERVER_IP
+      );
       const response = await axios.get(
-        `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/api/refresh`
+        `http://${server_IP}:${CONSTANTS.SERVER_CONSTANTS.port}/api/refresh`
       );
       if (response.status === CONSTANTS.RESPONSE_STATUS.SUCCESS) {
         const responseData = response.data;
@@ -49,24 +51,19 @@ const AddProductScreen = () => {
 
   const handleAddProduct = async () => {
     try {
-      let addProductAccessToken = await AsyncStorage.getItem(
-        CONSTANTS.STORAGE_CONSTANTS.ACCESS_TOKEN
+      const server_IP = await AsyncStorage.getItem(
+        CONSTANTS.STORAGE_CONSTANTS.SERVER_IP
       );
-      const decodedToken = jwtDecode(addProductAccessToken);
-      const currentTime = Date.now() / 1000;
-      if (decodedToken.exp < currentTime) {
-        const newToken = await refreshAccessToken();
-        addProductAccessToken = newToken;
-      }
+      const accessToken = await refreshAccessToken();
       const requestData = JSON.stringify({
         productCode: productCode,
       });
       const response = await axios.post(
-        `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/product/register`,
+        `http://${server_IP}:${CONSTANTS.SERVER_CONSTANTS.port}/product/register`,
         requestData,
         {
           headers: {
-            Authorization: `Bearer ${addProductAccessToken}`,
+            Authorization: `Bearer ${accessToken}`,
             "Content-Type": "application/json",
           },
           withCredentials: true,

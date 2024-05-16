@@ -7,12 +7,9 @@ import {
   StatusBar,
   Dimensions,
   Image,
-  TouchableOpacity,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { jwtDecode } from "jwt-decode";
 import { useNavigation } from "@react-navigation/native";
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import {
   Text,
   Avatar,
@@ -24,9 +21,6 @@ import {
 } from "react-native-paper";
 import CONSTANTS from "../constants/appConstants";
 import axios from "axios";
-import handleError from "../configFiles/errorHandler";
-
-const Tab = createBottomTabNavigator();
 
 const avatarIcon = require("../../assets/avatar icon .jpg");
 const logo = require("../../assets/opti-gluco-high-resolution-logo-white-transparent.png");
@@ -59,8 +53,11 @@ function ProfileTab() {
         CONSTANTS.STORAGE_CONSTANTS.USER_NAME
       );
       setUserName(userName);
+      const server_IP = await AsyncStorage.getItem(
+        CONSTANTS.STORAGE_CONSTANTS.SERVER_IP
+      );
       const response = await axios.get(
-        `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/api/refresh`
+        `http://${server_IP}:${CONSTANTS.SERVER_CONSTANTS.port}/api/refresh`
       );
 
       if (response.status === CONSTANTS.RESPONSE_STATUS.SUCCESS) {
@@ -96,8 +93,11 @@ function ProfileTab() {
   const logout = async () => {
     try {
       const accessToken = await refreshAccessToken();
+      const server_IP = await AsyncStorage.getItem(
+        CONSTANTS.STORAGE_CONSTANTS.SERVER_IP
+      );
       const response = await axios.post(
-        `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/api/logout`,
+        `http://${server_IP}:${CONSTANTS.SERVER_CONSTANTS.port}/api/logout`,
         {},
         {
           headers: {
@@ -131,8 +131,11 @@ function ProfileTab() {
   const removeProduct = async () => {
     try {
       const accessToken = await refreshAccessToken();
+      const server_IP = await AsyncStorage.getItem(
+        CONSTANTS.STORAGE_CONSTANTS.SERVER_IP
+      );
       const response = await axios.get(
-        `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/product/remove`,
+        `http://${server_IP}:${CONSTANTS.SERVER_CONSTANTS.port}/product/remove`,
         {
           headers: {
             Authorization: `Bearer ${accessToken}`,

@@ -1,7 +1,7 @@
 ("REACT_NATIVE_PACKAGER_HOSTNAME=192.168.1.3 npx expo start");
 
 const SERVER_CONSTANTS = {
-  localhost: "192.168.1.7",
+  localhost: "192.168.1.8",
   port: "3000",
 };
 const RESPONSE_STATUS = {
@@ -13,15 +13,19 @@ const STORAGE_CONSTANTS = {
   ACCESS_TOKEN: "accessToken",
   USER_NAME: "userName",
   REQUEST_ID: "requestId",
+  SERVER_IP: "serverIP",
+  DIABETIC_CONDITION: "diabeticCondition",
 };
 const PATH_CONSTANTS = {
   HOME: "Home",
+  Add_IP_Screen: "Add_IP",
   LOGIN: "Login",
   REGISTER: "Register",
   SPLASH: "Splash",
   ADD_PRODUCT: "AddProduct",
   RECENT_DATA: "RecentData",
   FINAL_READING: "FinalReading",
+  PREDICTION: "Prediction",
 };
 
 const STATUS_CONSTANTS = {

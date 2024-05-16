@@ -25,8 +25,11 @@ const HomeScreen = () => {
   }, []);
   async function refreshAccessToken() {
     try {
+      const server_IP = await AsyncStorage.getItem(
+        CONSTANTS.STORAGE_CONSTANTS.SERVER_IP
+      );
       const response = await axios.get(
-        `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/api/refresh`
+        `http://${server_IP}:${CONSTANTS.SERVER_CONSTANTS.port}/api/refresh`
       );
       if (response.status === CONSTANTS.RESPONSE_STATUS.SUCCESS) {
         const responseData = response.data;
@@ -34,7 +37,6 @@ const HomeScreen = () => {
           CONSTANTS.STORAGE_CONSTANTS.ACCESS_TOKEN,
           responseData.accessToken
         );
-        console.log("refreshed successfully");
         return responseData.accessToken;
       } else {
         navigation.navigate(CONSTANTS.PATH_CONSTANTS.LOGIN);

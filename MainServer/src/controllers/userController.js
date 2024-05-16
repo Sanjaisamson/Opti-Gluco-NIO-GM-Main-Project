@@ -5,6 +5,7 @@ const { RESPONSE_STATUS_CONSTANTS } = require("../constants/appConstants");
 
 async function createUser(req, res) {
   try {
+    console.log("call for create user.....");
     const { userName, mailId, password, age, gender } = req.body;
     await userServices.createUser(userName, mailId, password, age, gender);
     return res.sendStatus(RESPONSE_STATUS_CONSTANTS.SUCCESS);
@@ -15,6 +16,7 @@ async function createUser(req, res) {
 
 async function loginUser(req, res) {
   try {
+    console.log("call for login....");
     const { mailId, password } = req.body;
     const loginResponse = await userServices.loginUser(mailId, password);
     const { refreshToken, accessToken } = await userServices.generateTokens(
@@ -36,6 +38,7 @@ async function loginUser(req, res) {
 
 async function logoutUser(req, res) {
   try {
+    console.log("call for logout user....");
     await userServices.logoutUser(req.user.user_id);
     res.clearCookie("jwt");
     return res.sendStatus(RESPONSE_STATUS_CONSTANTS.SUCCESS);

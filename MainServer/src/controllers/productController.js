@@ -10,6 +10,9 @@ async function registerProduct(req, res) {
     console.log("call for register product");
     const userId = req.user.user_id;
     const productId = req.body.productCode;
+    if (!productId) {
+      throw new Error(400, "Product code is missing");
+    }
     await productServices.registerProduct(userId, productId);
     return res.sendStatus(RESPONSE_STATUS_CONSTANTS.SUCCESS);
   } catch (error) {
@@ -52,6 +55,7 @@ async function initiateJob(req, res) {
       initiateJobResponse.jobStatus,
       initiateJobResponse.requestId
     );
+    console.log("Job initiated.....");
     return res
       .status(RESPONSE_STATUS_CONSTANTS.SUCCESS)
       .json(initiateJobResponse);
@@ -89,18 +93,17 @@ async function processingResult(req, res) {
 async function checkJobStatus(req, res) {
   try {
     const { requestId } = req.body;
-    console.log("call for checker");
+    console.log("call for check status......");
     const statusResponse = await productServices.checkJobStatus(requestId);
-    console.log("checker responded");
     return res.status(RESPONSE_STATUS_CONSTANTS.SUCCESS).json(statusResponse);
   } catch (error) {
-    console.log("error in check status", error);
     return res.sendStatus(RESPONSE_STATUS_CONSTANTS.FAILED);
   }
 }
 
 async function listRecentReadings(req, res) {
   try {
+    console.log("call for list recent data.....");
     const recentReadingsResponse = await productServices.listRecentReadings(
       req.user.user_id,
       req.body.currentPage,
@@ -129,6 +132,7 @@ async function addReferenceValue(req, res) {
 
 async function getFinalResult(req, res) {
   try {
+    console.log("call for final result......");
     const userId = req.user.user_id;
     const requestId = req.body.requestId;
     const resultInfo = await productServices.getFinalResult(userId, requestId);
@@ -140,8 +144,8 @@ async function getFinalResult(req, res) {
 
 async function setPatientData(req, res) {
   try {
+    console.log("call for set patient data.....");
     const userId = req.user.user_id;
-    console.log("request body", req.body);
     const {
       genderValue,
       age,
@@ -165,7 +169,6 @@ async function setPatientData(req, res) {
       BMI_Value,
       HbA1c_Value
     );
-    console.log("resultinfo", resultInfo);
     const predictedResult = await productServices.predictDiabaticChance(userId);
     return res.status(RESPONSE_STATUS_CONSTANTS.SUCCESS).json(predictedResult);
   } catch (error) {
@@ -176,7 +179,7 @@ async function setPatientData(req, res) {
 async function predictDiabaticChance(req, res) {
   try {
     const userId = req.user.user_id;
-    console.log("call for predictDiabaticChance");
+    console.log("call for predictDiabaticChance.....");
     const diabaticChance = await productServices.predictDiabaticChance(userId);
     return res.status(RESPONSE_STATUS_CONSTANTS.SUCCESS).json(diabaticChance);
   } catch (error) {

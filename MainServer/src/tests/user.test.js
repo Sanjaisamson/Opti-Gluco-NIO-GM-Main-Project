@@ -61,21 +61,29 @@ describe("User Routes", () => {
   });
   test("throw an error if email id already exist", async () => {
     const mockUser = {
-        user_name: "testuser",
-        user_mail: "test@example.com",
-        user_password: "hashedPassword",
-        user_age: "25",
-        user_gender: "male",
-      };
-      userTable.findOne = jest.fn().mockResolvedValueOnce(null);
-      userTable.create = jest.fn().mockResolvedValueOnce(mockUser);
-      const newUser = {
-        userName: "testuser",
-        mailId: "test@example.com",
-        age: 25,
-        gender: "male",
-      };
-  })
+      user_name: "testuser",
+      user_mail: "test@example.com",
+      user_password: "hashedPassword",
+      user_age: "25",
+      user_gender: "male",
+    };
+    userTable.findOne = jest.fn().mockResolvedValueOnce(null);
+    userTable.create = jest.fn().mockResolvedValueOnce(mockUser);
+    const newUser = {
+      userName: "testuser",
+      mailId: "test@example.com",
+      age: 25,
+      gender: "male",
+    };
+    const existingUser = { mail: "user@gmail.com" };
+    jest.spyOn(userTable, "findOne").mockResolvedValue(existingUser);
+    const response = await request(server) // Pass the server instance to supertest
+      .post("/api/signup")
+      .send(newUser)
+      .expect(400);
+
+    expect(response.status).toBe(400);
+  });
 });
 
 afterAll(() => {

@@ -15,7 +15,6 @@ import {
   Portal,
   PaperProvider,
   Dialog,
-  Icon,
 } from "react-native-paper";
 import { Dropdown } from "react-native-element-dropdown";
 import AntDesign from "@expo/vector-icons/AntDesign";
@@ -26,14 +25,12 @@ import CONSTANTS from "../constants/appConstants";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const logo = require("../../assets/opti-gluco-high-resolution-logo-white-transparent.png");
-const logoIcon = require("../../assets/opti-gluco-favicon-white.png");
 const avatarIcon = require("../../assets/avatar icon .jpg");
 
 const QuestionnaireScreen = () => {
   const [actionStatus, setActionStatus] = useState("");
   const [referenceValue, setReferenceValue] = useState("");
   const [age, setAge] = useState(null);
-  const route = useRoute();
   const navigation = useNavigation();
   const [visible, setVisible] = useState(false);
 
@@ -43,8 +40,11 @@ const QuestionnaireScreen = () => {
 
   async function refreshAccessToken() {
     try {
+      const server_IP = await AsyncStorage.getItem(
+        CONSTANTS.STORAGE_CONSTANTS.SERVER_IP
+      );
       const response = await axios.get(
-        `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/api/refresh`
+        `http://${server_IP}:${CONSTANTS.SERVER_CONSTANTS.port}/api/refresh`
       );
       if (response.status === CONSTANTS.RESPONSE_STATUS.SUCCESS) {
         const responseData = response.data;
@@ -135,8 +135,6 @@ const QuestionnaireScreen = () => {
   const handleQuestionnaire = async () => {
     try {
       const accessToken = await refreshAccessToken();
-      console.log("call reached");
-      console.log("hello", accessToken);
       const requestData = JSON.stringify({
         genderValue,
         age,
@@ -148,10 +146,11 @@ const QuestionnaireScreen = () => {
         BMI_Value,
         HbA1c_Value,
       });
-      console.log("request", requestData);
-      console.log("hiii");
+      const server_IP = await AsyncStorage.getItem(
+        CONSTANTS.STORAGE_CONSTANTS.SERVER_IP
+      );
       const response = await axios.post(
-        `http://${CONSTANTS.SERVER_CONSTANTS.localhost}:${CONSTANTS.SERVER_CONSTANTS.port}/product/patient-data`,
+        `http://${server_IP}:${CONSTANTS.SERVER_CONSTANTS.port}/product/patient-data`,
         requestData,
         {
           headers: {
@@ -163,7 +162,12 @@ const QuestionnaireScreen = () => {
       );
       if (response.status === CONSTANTS.RESPONSE_STATUS.SUCCESS) {
         setActionStatus(CONSTANTS.STATUS_CONSTANTS.COMPLETED);
-        navigation.goBack();
+        console.log("Your Condition is ", response.data);
+        await AsyncStorage.setItem(
+          CONSTANTS.STORAGE_CONSTANTS.DIABETIC_CONDITION,
+          response.data
+        );
+        navigation.navigate(CONSTANTS.PATH_CONSTANTS.PREDICTION);
       } else {
         throw new Error(CONSTANTS.RESPONSE_STATUS.FAILED);
       }
@@ -492,7 +496,6 @@ const QuestionnaireScreen = () => {
                 onPress={() => {
                   const BMI = weight / (height * height);
                   const formattedBMI = BMI.toFixed(2);
-                  console.log("BMI", formattedBMI);
                   setBMI_Value(formattedBMI);
                   showDialog();
                 }}
